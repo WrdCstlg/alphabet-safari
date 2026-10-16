@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#FF85A2">
+  <meta name="description" content="Fun, interactive English and Arabic alphabet learning app for children under 5 with voice, sounds, letter tracing, games, and sticker rewards.">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Alphabet Fun">
+  <title>Alphabet Safari 🦁🎈 | Learn English & Arabic for Kids</title>
+  
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/jpeg" href="assets/mascot.jpg">
+  <link rel="apple-touch-icon" href="assets/mascot.jpg">
+
+  <!-- Google Fonts for playful, friendly typography in English and Arabic -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Fredoka:wght@400;500;600;700&family=Quicksand:wght@600;700&family=Amiri:wght@700&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Floating Background Elements for magical toddler atmosphere -->
+  <div class="sky-elements" aria-hidden="true">
+    <div class="cloud cloud-1">☁️</div>
+    <div class="cloud cloud-2">☁️</div>
+    <div class="cloud cloud-3">⛅</div>
+    <div class="balloon-bg b1">🎈</div>
+    <div class="balloon-bg b2">🎈</div>
+    <div class="balloon-bg b3">🎈</div>
+    <div class="star-bg s1">⭐</div>
+    <div class="star-bg s2">✨</div>
+    <div class="star-bg s3">🌟</div>
+  </div>
+
+  <!-- Main App Shell -->
+  <div id="app" class="app-container">
+    
+    <!-- Top Nav / Control Bar -->
+    <header class="app-header">
+      <div class="header-left">
+        <div class="app-brand" id="brand-logo" role="button" tabindex="0" title="Alphabet Safari">
+          <img src="assets/mascot.jpg" alt="Leo and Noor" class="brand-mascot-avatar pulse-anim">
+          <div class="brand-text">
+            <h1 class="brand-title"><span class="eng-text">Alphabet Safari</span><span class="ar-text">سفاري الحروف</span></h1>
+            <span class="brand-subtitle"><span class="eng-text">Learn • Listen • Play</span><span class="ar-text">تعلّم • استمع • العب</span></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Language Switcher & Rewards -->
+      <div class="header-center">
+        <div class="lang-toggle-container" role="group" aria-label="Language selection">
+          <button id="btn-lang-en" class="lang-btn active" data-lang="en">
+            <span class="lang-flag">🇬🇧</span>
+            <span class="lang-label">English</span>
+          </button>
+          <button id="btn-lang-ar" class="lang-btn" data-lang="ar">
+            <span class="lang-flag">🌙</span>
+            <span class="lang-label">العربية</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="header-right">
+        <!-- Star Counter Reward -->
+        <button id="btn-rewards" class="star-badge-btn" title="View Star Rewards & Stickers">
+          <img src="assets/star_badge.jpg" alt="Star badge" class="star-icon spin-wiggle">
+          <span id="star-count" class="star-count-num">0</span>
+          <span class="star-label"><span class="eng-text">Stars</span><span class="ar-text">نجوم</span></span>
+        </button>
+
+        <!-- Audio Speed / Repeat -->
+        <button id="btn-voice-speed" class="tool-btn" title="Voice Speed: Slow (Turtle), Normal (Puppy), Fast (Cheetah)">
+          <span id="speed-icon">🐢</span>
+        </button>
+
+        <!-- Music / Sound toggle -->
+        <button id="btn-sound-toggle" class="tool-btn" title="Sound Effects Toggle">
+          <span id="sound-icon">🔊</span>
+        </button>
+
+        <!-- Install / Android App info button -->
+        <button id="btn-android-app" class="tool-btn android-highlight" title="Download / Install Android App">
+          <span class="android-icon">📱</span>
+          <span class="btn-text-short"><span class="eng-text">App</span><span class="ar-text">تطبيق</span></span>
+        </button>
+
+        <!-- Parent Gate Settings -->
+        <button id="btn-parents" class="tool-btn" title="Parents & Teachers Settings">
+          <span>⚙️</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Navigation Tabs / Modes -->
+    <nav class="mode-nav" aria-label="Learning Activities">
+      <button class="mode-tab active" data-mode="explore">
+        <span class="mode-icon">📖</span>
+        <span class="mode-name"><span class="eng-text">Explore</span><span class="ar-text">الحروف</span></span>
+      </button>
+      <button class="mode-tab" data-mode="trace">
+        <span class="mode-icon">✏️</span>
+        <span class="mode-name"><span class="eng-text">Trace</span><span class="ar-text">تخطيط</span></span>
+      </button>
+      <button class="mode-tab" data-mode="balloon">
+        <span class="mode-icon">🎈</span>
+        <span class="mode-name"><span class="eng-text">Pop Balloons</span><span class="ar-text">فرقعة البالون</span></span>
+      </button>
+      <button class="mode-tab" data-mode="match">
+        <span class="mode-icon">🧩</span>
+        <span class="mode-name"><span class="eng-text">Find Letter</span><span class="ar-text">اختر الحرف</span></span>
+      </button>
+      <button class="mode-tab" data-mode="memory">
+        <span class="mode-icon">🎴</span>
+        <span class="mode-name"><span class="eng-text">Memory Cards</span><span class="ar-text">لعبة الذاكرة</span></span>
+      </button>
+      <button class="mode-tab" data-mode="stickers">
+        <span class="mode-icon">⭐</span>
+        <span class="mode-name"><span class="eng-text">Sticker Park</span><span class="ar-text">ملصقاتي</span></span>
+      </button>
+    </nav>
+
+    <!-- Mascot Speech Cheer Bubble -->
+    <aside class="mascot-bar">
+      <div class="mascot-mascot" id="interactive-mascot">
+        <img src="assets/mascot.jpg" alt="Leo the Lion and Noor the Bunny" class="mascot-img-sm bouncy">
+      </div>
+      <div class="mascot-bubble" id="mascot-message">
+        <span id="mascot-bubble-text">Hi little buddy! Tap any letter to start learning! 🌟</span>
+        <button id="btn-speak-bubble" class="bubble-speaker-btn" title="Hear voice">🔊</button>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT VIEWPORTS -->
+    <main class="content-area">
+
+      <!-- ================= MODE 1: EXPLORE ALPHABET ================= -->
+      <section id="view-explore" class="app-view active">
+        <!-- Spotlight Card Display -->
+        <div class="spotlight-card-wrapper">
+          <div class="spotlight-card" id="spotlight-card">
+            
+            <div class="spotlight-header">
+              <span class="spotlight-index" id="spotlight-index">Letter 1 of 26</span>
+              <div class="spotlight-tags">
+                <span class="phonics-pill" id="spotlight-phonics">Sound: /æ/</span>
+                <span class="translit-pill" id="spotlight-translit" style="display:none;">Alif</span>
+              </div>
+            </div>
+
+            <div class="spotlight-body">
+              <!-- Large Bouncy Letter with Speak Action -->
+              <div class="spotlight-letter-box" id="spotlight-letter-box" role="button" tabindex="0" title="Tap to hear letter sound">
+                <span class="spotlight-big-letter" id="spotlight-letter">A a</span>
+                <div class="sound-wave-icon">🔊</div>
+              </div>
+
+              <!-- Arabic Harakat / Vowel Buttons (Shown only in Arabic mode) -->
+              <div class="arabic-vowels-bar" id="arabic-vowels-bar" style="display:none;">
+                <span class="vowel-title">الحركات:</span>
+                <button class="vowel-btn" data-vowel="fatha" title="Fat-ha (A)">
+                  <span class="vowel-char" id="vowel-fatha">أَ</span>
+                  <span class="vowel-name">فَتْحَة (a)</span>
+                </button>
+                <button class="vowel-btn" data-vowel="damma" title="Damma (Oo)">
+                  <span class="vowel-char" id="vowel-damma">أُ</span>
+                  <span class="vowel-name">ضَمَّة (u)</span>
+                </button>
+                <button class="vowel-btn" data-vowel="kasra" title="Kasra (Ee)">
+                  <span class="vowel-char" id="vowel-kasra">إِ</span>
+                  <span class="vowel-name">كَسْرَة (i)</span>
+                </button>
+                <button class="vowel-btn" data-vowel="sukun" title="Sukun">
+                  <span class="vowel-char" id="vowel-sukun">أْ</span>
+                  <span class="vowel-name">سُكُونْ (stop)</span>
+                </button>
+              </div>
+
+              <!-- Associated Object & Illustration -->
+              <div class="spotlight-object-box" id="spotlight-object-box" role="button" tabindex="0" title="Tap to hear word!">
+                <div class="spotlight-illustration" id="spotlight-illustration">
+                  🍎
+                </div>
+                <div class="spotlight-word-details">
+                  <span class="spotlight-word" id="spotlight-word">Apple</span>
+                  <span class="spotlight-word-meaning" id="spotlight-word-meaning">crunchy sweet fruit</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Card Bottom Action Bar -->
+            <div class="spotlight-controls">
+              <button id="btn-prev-letter" class="nav-arrow-btn prev-btn" title="Previous Letter">
+                <span>◀</span>
+              </button>
+              
+              <button id="btn-play-all-sound" class="action-btn play-btn" title="Hear full phonic sentence">
+                <span>🔊</span>
+                <span class="eng-text">Hear Sound</span>
+                <span class="ar-text">استمع للحرف</span>
+              </button>
+
+              <button id="btn-jump-trace" class="action-btn trace-jump-btn" title="Practice tracing this letter">
+                <span>✏️</span>
+                <span class="eng-text">Trace Me</span>
+                <span class="ar-text">اكتب الحرف</span>
+              </button>
+
+              <button id="btn-jukebox" class="action-btn jukebox-btn" title="Autoplay Slideshow">
+                <span id="jukebox-icon">▶️</span>
+                <span id="jukebox-text" class="eng-text">Auto Play</span>
+                <span id="jukebox-text-ar" class="ar-text" style="display:none;">تشغيل تلقائي</span>
+              </button>
+
+              <button id="btn-next-letter" class="nav-arrow-btn next-btn" title="Next Letter">
+                <span>▶</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Full Alphabet Grid for Quick Toddler Tap -->
+        <div class="alphabet-grid-section">
+          <div class="grid-section-header">
+            <h2 class="grid-title">
+              <span class="eng-text">Touch any letter to jump:</span>
+              <span class="ar-text">المس أي حرف لاكتشافه:</span>
+            </h2>
+            <div class="grid-tools">
+              <button id="btn-case-toggle" class="grid-tool-btn" title="Toggle Uppercase / Lowercase">
+                <span id="case-toggle-text">Aa / A</span>
+              </button>
+            </div>
+          </div>
+          <div class="letters-grid" id="letters-grid">
+            <!-- Dynamically populated letter buttons -->
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= MODE 2: MAGIC LETTER TRACING ================= -->
+      <section id="view-trace" class="app-view">
+        <div class="trace-container">
+          <div class="trace-toolbar">
+            <div class="trace-letter-info">
+              <span class="trace-current-label"><span class="eng-text">Tracing Letter:</span><span class="ar-text">تخطيط الحرف:</span></span>
+              <span class="trace-current-char" id="trace-current-char">A</span>
+            </div>
+
+            <div class="trace-brush-colors" id="trace-colors" role="radiogroup" aria-label="Sparkle brush colors">
+              <button class="color-dot active" style="background: linear-gradient(135deg, #FF4B4B, #FF8533);" data-color="rainbow" title="Rainbow Sparkle"></button>
+              <button class="color-dot" style="background: #2575fc;" data-color="#2575fc" title="Ocean Blue"></button>
+              <button class="color-dot" style="background: #20bf6b;" data-color="#20bf6b" title="Emerald Green"></button>
+              <button class="color-dot" style="background: #f7b731;" data-color="#f7b731" title="Golden Honey"></button>
+              <button class="color-dot" style="background: #a55eea;" data-color="#a55eea" title="Purple Magic"></button>
+              <button class="color-dot" style="background: #ff5e7e;" data-color="#ff5e7e" title="Pink Candy"></button>
+            </div>
+
+            <div class="trace-actions">
+              <button id="btn-trace-sound" class="btn-sm-fun" title="Listen to letter">
+                <span>🔊</span>
+              </button>
+              <button id="btn-trace-clear" class="btn-sm-fun" title="Clear canvas">
+                <span>🧹</span>
+                <span class="eng-text">Clear</span>
+                <span class="ar-text">مسح</span>
+              </button>
+              <button id="btn-trace-check" class="btn-sm-fun btn-fun-primary" title="Check my drawing">
+                <span>🌟</span>
+                <span class="eng-text">I Did It!</span>
+                <span class="ar-text">أحسنت!</span>
+              </button>
+              <button id="btn-trace-next" class="btn-sm-fun" title="Next letter">
+                <span>▶</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Tracing Interactive Canvas Area -->
+          <div class="canvas-wrapper" id="canvas-wrapper">
+            <canvas id="trace-guide-canvas" class="trace-layer guide-layer" width="600" height="500"></canvas>
+            <canvas id="trace-user-canvas" class="trace-layer user-layer" width="600" height="500"></canvas>
+            
+            <div class="trace-prompt-overlay" id="trace-prompt-overlay">
+              <span class="prompt-hand-icon">👆</span>
+              <span class="prompt-text"><span class="eng-text">Use your finger or mouse to trace!</span><span class="ar-text">حرّك إصبعك لتتبع الخطوط المنقطة!</span></span>
+            </div>
+          </div>
+
+          <!-- Letters picker ribbon below canvas -->
+          <div class="trace-letter-ribbon" id="trace-letter-ribbon">
+            <!-- Letter chips -->
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= MODE 3: POP BALLOONS MINI-GAME ================= -->
+      <section id="view-balloon" class="app-view">
+        <div class="balloon-game-container">
+          <div class="game-header-bar">
+            <div class="target-prompt-card">
+              <span class="target-title"><span class="eng-text">Pop this letter:</span><span class="ar-text">فرقع هذا الحرف:</span></span>
+              <div class="target-big-badge" id="balloon-target-badge" role="button" tabindex="0">
+                <span id="balloon-target-letter">B</span>
+                <span class="repeat-sound-chip">🔊</span>
+              </div>
+            </div>
+
+            <div class="game-stats">
+              <div class="stat-box">
+                <span class="stat-icon">⭐</span>
+                <span class="stat-val" id="balloon-score">0</span>
+                <span class="stat-lbl"><span class="eng-text">Pops</span><span class="ar-text">نقاط</span></span>
+              </div>
+              <div class="stat-box">
+                <span class="stat-icon">🎯</span>
+                <span class="stat-val" id="balloon-streak">0</span>
+                <span class="stat-lbl"><span class="eng-text">Streak</span><span class="ar-text">متتالي</span></span>
+              </div>
+              <button id="btn-balloon-restart" class="btn-sm-fun" title="New Game">
+                <span>🔄</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Sky Canvas for Floating Balloons -->
+          <div class="balloon-sky" id="balloon-sky">
+            <!-- Balloons generated dynamically with floating animations -->
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= MODE 4: FIND LETTER / PICTURE MATCH ================= -->
+      <section id="view-match" class="app-view">
+        <div class="match-game-container">
+          <div class="match-quest-card">
+            <div class="quest-avatar-box">
+              <div class="quest-illustration" id="match-quest-icon">🦁</div>
+              <button id="btn-match-quest-sound" class="bubble-speaker-btn quest-speaker" title="Listen to word">🔊</button>
+            </div>
+            <div class="quest-text-box">
+              <span class="quest-sub"><span class="eng-text">Which letter starts:</span><span class="ar-text">ما هو الحرف الذي تبدأ به:</span></span>
+              <h2 class="quest-word" id="match-quest-word">Lion</h2>
+              <span class="quest-hint" id="match-quest-hint">"L... Lion!"</span>
+            </div>
+          </div>
+
+          <!-- 3 or 4 Big Juicy Choice Buttons -->
+          <div class="match-options-grid" id="match-options-grid">
+            <!-- Choice buttons populated dynamically -->
+          </div>
+
+          <div class="match-feedback-bar" id="match-feedback-bar">
+            <span class="feedback-text" id="match-feedback-text">Tap the letter above! 🌟</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= MODE 5: MEMORY CARDS ================= -->
+      <section id="view-memory" class="app-view">
+        <div class="memory-game-container">
+          <div class="memory-header-bar">
+            <div class="memory-info">
+              <span class="memory-title"><span class="eng-text">Find the matching pairs!</span><span class="ar-text">ابحث عن الأزواج المتطابقة!</span></span>
+            </div>
+            <div class="memory-controls">
+              <button id="btn-memory-difficulty" class="btn-sm-fun" title="Change Card Count">
+                <span id="memory-diff-label">6 Cards (Easy)</span>
+              </button>
+              <button id="btn-memory-reset" class="btn-sm-fun" title="Shuffle & Restart">
+                <span>🔄</span>
+                <span class="eng-text">Shuffle</span>
+                <span class="ar-text">خلط</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Card Grid -->
+          <div class="memory-grid" id="memory-grid">
+            <!-- Cards populated dynamically -->
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= MODE 6: STICKER PARK REWARDS ================= -->
+      <section id="view-stickers" class="app-view">
+        <div class="stickers-container">
+          <div class="stickers-header">
+            <div class="stickers-title-group">
+              <h2><span class="eng-text">🌟 Your Magic Sticker Park</span><span class="ar-text">🌟 حديقة الملصقات السحرية</span></h2>
+              <p><span class="eng-text">Earn stars by playing to unlock cute stickers! Drag or tap to place them!</span><span class="ar-text">اجمع النجوم لفتح ملصقات مرحة! المس لتضعها في الحديقة!</span></p>
+            </div>
+            <div class="stickers-actions">
+              <button id="btn-clear-stickers-board" class="btn-sm-fun" title="Clear board">
+                <span>🧹</span>
+                <span class="eng-text">Clear Park</span>
+                <span class="ar-text">تنظيف</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Unlocked Sticker Tray -->
+          <div class="sticker-tray" id="sticker-tray">
+            <!-- Stickers listed here -->
+          </div>
+
+          <!-- Interactive Play Canvas for placing stickers -->
+          <div class="sticker-canvas-playground" id="sticker-playground">
+            <div class="playground-scenery">
+              <div class="scenery-hills"></div>
+              <div class="scenery-rainbow">🌈</div>
+              <div class="scenery-sun">☀️</div>
+            </div>
+            <div class="placed-stickers-layer" id="placed-stickers-layer">
+              <!-- Toddler places stickers here -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- CELEBRATION CONFETTI OVERLAY -->
+    <canvas id="confetti-canvas" class="confetti-overlay" aria-hidden="true"></canvas>
+
+    <!-- POPUP MODALS -->
+
+    <!-- 1. Android App Download & Install Info Modal -->
+    <div class="modal-overlay" id="modal-android" aria-hidden="true">
+      <div class="modal-card modal-card-wide" role="dialog" aria-labelledby="android-modal-title">
+        <div class="modal-header">
+          <div class="modal-title-wrap">
+            <span class="modal-icon-badge">📱</span>
+            <h2 id="android-modal-title"><span class="eng-text">Download & Install on Android</span><span class="ar-text">تثبيت التطبيق على أندرويد</span></h2>
+          </div>
+          <button class="modal-close-btn" data-close="modal-android" aria-label="Close">✕</button>
+        </div>
+        
+        <div class="modal-body android-install-body">
+          <div class="install-banner">
+            <img src="assets/mascot.jpg" alt="Alphabet Safari Icon" class="install-app-icon">
+            <div class="install-banner-text">
+              <h3><span class="eng-text">Alphabet Safari Kids (English & Arabic)</span><span class="ar-text">سفاري الحروف للأطفال (عربي وإنجليزي)</span></h3>
+              <p><span class="eng-text">Designed specially for toddlers & preschoolers (Ages 2-5). Works 100% offline with zero ads, high-clarity voice output, and child-safe controls.</span><span class="ar-text">مصمم خصيصاً للأطفال الصغار (الأعمار ٢-٥). يعمل بدون إنترنت ١٠٠٪ بدون إعلانات، مع نطق صوتي واضح جداً وحماية للأطفال.</span></p>
+            </div>
+          </div>
+
+          <div class="install-options-grid">
+            <!-- Option A: 1-Tap Instant Install (PWA) -->
+            <div class="install-option-card highlighted-option">
+              <div class="opt-badge"><span class="eng-text">⚡ Fastest & Instant</span><span class="ar-text">⚡ الأسرع والأسهل</span></div>
+              <h4><span class="eng-text">Method 1: Install Directly to Android Home Screen</span><span class="ar-text">الطريقة الأولى: التثبيت المباشر على شاشة أندرويد</span></h4>
+              <p><span class="eng-text">Turn this web app into a real full-screen Android app with one tap without downloading huge files:</span><span class="ar-text">حوّل هذا التطبيق لتطبيق كامل على شاشة جهازك بلمسة واحدة:</span></p>
+              <button id="btn-trigger-pwa-install" class="action-btn btn-install-now">
+                <span>📲</span>
+                <span class="eng-text">Install on this Device</span>
+                <span class="ar-text">تثبيت على هذا الجهاز</span>
+              </button>
+              <ul class="install-steps-list">
+                <li><span class="eng-text">1. Tap <strong>"Install on this Device"</strong> above (or tap Chrome Menu <strong>⋮</strong>).</span><span class="ar-text">١. اضغط على زر <strong>"تثبيت على هذا الجهاز"</strong> أعلاه (أو قائمة كروم <strong>⋮</strong>).</span></li>
+                <li><span class="eng-text">2. Select <strong>"Install app"</strong> or <strong>"Add to Home Screen"</strong>.</span><span class="ar-text">٢. اختر <strong>"تثبيت التطبيق"</strong> أو <strong>"إضافة إلى الشاشة الرئيسية"</strong>.</span></li>
+                <li><span class="eng-text">3. The app icon appears on your home screen and launches full screen offline!</span><span class="ar-text">٣. ستظهر أيقونة التطبيق على شاشتك الرئيسية ويعمل بملء الشاشة بدون إنترنت!</span></li>
+              </ul>
+            </div>
+
+            <!-- Option B: Android Studio / APK Project -->
+            <div class="install-option-card">
+              <div class="opt-badge"><span class="eng-text">📦 Complete Android Project</span><span class="ar-text">📦 مشروع أندرويد ستوديو كامل</span></div>
+              <h4><span class="eng-text">Method 2: Standalone Android APK Source Code</span><span class="ar-text">الطريقة الثانية: ملفات تطبيق أندرويد APK المباشرة</span></h4>
+              <p><span class="eng-text">A complete native Android Studio wrapper is pre-configured right inside this project folder in the <code>android/</code> directory!</span><span class="ar-text">مشروع أندرويد ستوديو متكامل وجاهز للتشغيل والبناء داخل مجلد <code>android/</code>!</span></p>
+              <div class="code-pill-box">
+                <code>Children's Arabic and English Alphabet/android/</code>
+              </div>
+              <ul class="install-steps-list">
+                <li><span class="eng-text">• Pre-configured with <code>AndroidManifest.xml</code>, <code>MainActivity.kt</code>, Gradle build script.</span><span class="ar-text">• جاهز مع ملفات <code>AndroidManifest.xml</code> و <code>MainActivity.kt</code> وأدوات البناء.</span></li>
+                <li><span class="eng-text">• Full-screen immersive mode enabled for child hands.</span><span class="ar-text">• وضع ملء الشاشة لمنع خروج الطفل بالخطأ.</span></li>
+                <li><span class="eng-text">• Supports building debug & release <code>.apk</code> ready to install on any Android phone or tablet.</span><span class="ar-text">• يمكن إنشاء ملف <code>.apk</code> وتثبيته على أي هاتف أو جهاز لوحي بنظام أندرويد.</span></li>
+                <li><span class="eng-text">• Detailed instructions included in <code>README-ANDROID.md</code>.</span><span class="ar-text">• دليل كامل ومفصل في ملف <code>README-ANDROID.md</code>.</span></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="action-btn modal-dismiss-btn" data-close="modal-android">
+            <span class="eng-text">Got It, Let's Play!</span>
+            <span class="ar-text">حسناً، لنلعب!</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. Parents & Teachers Settings Modal (Protected by Child Gate) -->
+    <div class="modal-overlay" id="modal-parents" aria-hidden="true">
+      <div class="modal-card" role="dialog" aria-labelledby="parents-modal-title">
+        
+        <!-- Child Gate Challenge (Simple math or star tap to keep toddlers from changing settings) -->
+        <div id="parents-gate-view" class="parents-gate-box">
+          <div class="gate-icon">🔒</div>
+          <h3><span class="eng-text">Grown-ups Only!</span><span class="ar-text">للكبار فقط!</span></h3>
+          <p id="gate-question-text">Tap the matching number: <strong id="gate-target-num">3</strong></p>
+          <div class="gate-buttons" id="gate-options">
+            <!-- 3 options -->
+          </div>
+        </div>
+
+        <!-- Actual Settings View (Shown once gate passes) -->
+        <div id="parents-settings-view" class="parents-settings-box" style="display:none;">
+          <div class="modal-header">
+            <div class="modal-title-wrap">
+              <span class="modal-icon-badge">⚙️</span>
+              <h2 id="parents-modal-title"><span class="eng-text">Parents & Teachers Corner</span><span class="ar-text">إعدادات الوالدين والمعلمين</span></h2>
+            </div>
+            <button class="modal-close-btn" data-close="modal-parents" aria-label="Close">✕</button>
+          </div>
+
+          <div class="modal-body">
+            <div class="setting-row">
+              <div class="setting-info">
+                <span class="setting-name">Pronunciation Speed</span>
+                <span class="setting-desc">Pacing for speech synthesis</span>
+              </div>
+              <select id="setting-voice-speed" class="setting-select">
+                <option value="0.75" selected>Slow & Clear (Toddlers)</option>
+                <option value="0.95">Natural (Preschoolers)</option>
+                <option value="1.15">Quick</option>
+              </select>
+            </div>
+
+            <div class="setting-row">
+              <div class="setting-info">
+                <span class="setting-name">Arabic Harakat (Vowels)</span>
+                <span class="setting-desc">Show Fat-ha, Damma, Kasra buttons</span>
+              </div>
+              <label class="switch-toggle">
+                <input type="checkbox" id="setting-arabic-vowels" checked>
+                <span class="slider round"></span>
+              </label>
+            </div>
+
+            <div class="setting-row">
+              <div class="setting-info">
+                <span class="setting-name">English Transliteration</span>
+                <span class="setting-desc">Show phonetic names (e.g. Alif, Baa)</span>
+              </div>
+              <label class="switch-toggle">
+                <input type="checkbox" id="setting-translit" checked>
+                <span class="slider round"></span>
+              </label>
+            </div>
+
+            <div class="setting-row">
+              <div class="setting-info">
+                <span class="setting-name">Sound Effects & Chimes</span>
+                <span class="setting-desc">Play marimba notes and cheers</span>
+              </div>
+              <label class="switch-toggle">
+                <input type="checkbox" id="setting-sound-effects" checked>
+                <span class="slider round"></span>
+              </label>
+            </div>
+
+            <div class="setting-row">
+              <div class="setting-info">
+                <span class="setting-name">Reset Stars & Stickers</span>
+                <span class="setting-desc">Clear progress for a fresh start</span>
+              </div>
+              <button id="btn-reset-progress" class="btn-sm-danger">Reset Progress</button>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button class="action-btn modal-dismiss-btn" data-close="modal-parents">Done</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- 3. Celebration Badge Reward Modal -->
+    <div class="modal-overlay" id="modal-celebrate" aria-hidden="true">
+      <div class="modal-card modal-celebrate-card" role="dialog">
+        <div class="celebrate-avatar-wrap">
+          <img src="assets/star_badge.jpg" alt="Super Star" class="celebrate-star-img pop-in">
+        </div>
+        <h2 class="celebrate-title"><span class="eng-text">Super Star! ⭐</span><span class="ar-text">أحسنت يا بطل! ⭐</span></h2>
+        <p class="celebrate-msg" id="celebrate-text">You earned 5 stars and unlocked a new sticker!</p>
+        <button class="action-btn btn-celebrate-ok" data-close="modal-celebrate">
+          <span class="eng-text">Yay! Keep Playing 🎉</span>
+          <span class="ar-text">رائع! استمر في اللعب 🎉</span>
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

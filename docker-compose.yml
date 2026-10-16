@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  alphabet-safari:
+    build: .
+    container_name: alphabet-safari-app
+    restart: unless-stopped
+    ports:
+      - "8085:80"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost/"]
+      interval: 10s
+      timeout: 3s
+      retries: 3

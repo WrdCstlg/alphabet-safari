@@ -1,0 +1,7 @@
+.DS_Store
+Thumbs.db
+*.pdf
+android/.gradle/
+android/app/build/
+android/build/
+*.log

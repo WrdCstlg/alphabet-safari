@@ -1,0 +1,5 @@
+android/
+*.pdf
+.git
+.gitignore
+README-ANDROID.md

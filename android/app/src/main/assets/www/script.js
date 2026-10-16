@@ -11,65 +11,10 @@
   // DATASETS: ENGLISH & ARABIC ALPHABETS
   // ==========================================================================
 
-  const ENGLISH_ALPHABET = [
-    { char: 'A', lower: 'a', name: 'A', phonics: '/æ/', word: 'Apple', emoji: '🍎', meaning: 'Sweet red fruit', speechHint: 'A is for Apple. Ah, ah, apple!' },
-    { char: 'B', lower: 'b', name: 'B', phonics: '/b/', word: 'Bear', emoji: '🐻', meaning: 'Fluffy friendly bear', speechHint: 'B is for Bear. Buh, buh, bear!' },
-    { char: 'C', lower: 'c', name: 'C', phonics: '/k/', word: 'Cat', emoji: '🐱', meaning: 'Playful cute kitten', speechHint: 'C is for Cat. Cuh, cuh, cat! Meow!' },
-    { char: 'D', lower: 'd', name: 'D', phonics: '/d/', word: 'Duck', emoji: '🦆', meaning: 'Swimming yellow duck', speechHint: 'D is for Duck. Duh, duh, duck! Quack!' },
-    { char: 'E', lower: 'e', name: 'E', phonics: '/e/', word: 'Elephant', emoji: '🐘', meaning: 'Big gentle elephant', speechHint: 'E is for Elephant. Eh, eh, elephant!' },
-    { char: 'F', lower: 'f', name: 'F', phonics: '/f/', word: 'Frog', emoji: '🐸', meaning: 'Hopping green frog', speechHint: 'F is for Frog. Fuh, fuh, frog! Ribbit!' },
-    { char: 'G', lower: 'g', name: 'G', phonics: '/ɡ/', word: 'Giraffe', emoji: '🦒', meaning: 'Tall yellow giraffe', speechHint: 'G is for Giraffe. Juh, juh, giraffe!' },
-    { char: 'H', lower: 'h', name: 'H', phonics: '/h/', word: 'Horse', emoji: '🐴', meaning: 'Galloping brown horse', speechHint: 'H is for Horse. Huh, huh, horse!' },
-    { char: 'I', lower: 'i', name: 'I', phonics: '/aɪ/', word: 'Ice Cream', emoji: '🍦', meaning: 'Yummy cold ice cream', speechHint: 'I is for Ice Cream. Yummy!' },
-    { char: 'J', lower: 'j', name: 'J', phonics: '/dʒ/', word: 'Jellyfish', emoji: '🪼', meaning: 'Floating sea creature', speechHint: 'J is for Jellyfish. Juh, juh, jellyfish!' },
-    { char: 'K', lower: 'k', name: 'K', phonics: '/k/', word: 'Kangaroo', emoji: '🦘', meaning: 'Bouncing mother kangaroo', speechHint: 'K is for Kangaroo. Kuh, kuh, kangaroo!' },
-    { char: 'L', lower: 'l', name: 'L', phonics: '/l/', word: 'Lion', emoji: '🦁', meaning: 'Brave king lion', speechHint: 'L is for Lion. Luh, luh, lion! Roar!' },
-    { char: 'M', lower: 'm', name: 'M', phonics: '/m/', word: 'Monkey', emoji: '🐵', meaning: 'Cheeky banana monkey', speechHint: 'M is for Monkey. Muh, muh, monkey!' },
-    { char: 'N', lower: 'n', name: 'N', phonics: '/n/', word: 'Nest', emoji: '🪺', meaning: 'Cozy bird eggs nest', speechHint: 'N is for Nest. Nuh, nuh, nest!' },
-    { char: 'O', lower: 'o', name: 'O', phonics: '/ɒ/', word: 'Owl', emoji: '🦉', meaning: 'Wise night owl', speechHint: 'O is for Owl. Ah, ah, owl! Hoot!' },
-    { char: 'P', lower: 'p', name: 'P', phonics: '/p/', word: 'Penguin', emoji: '🐧', meaning: 'Cute waddling penguin', speechHint: 'P is for Penguin. Puh, puh, penguin!' },
-    { char: 'Q', lower: 'q', name: 'Q', phonics: '/kw/', word: 'Queen', emoji: '👑', meaning: 'Royal sparkling crown', speechHint: 'Q is for Queen. Kwuh, kwuh, queen!' },
-    { char: 'R', lower: 'r', name: 'R', phonics: '/r/', word: 'Rainbow', emoji: '🌈', meaning: 'Magic colorful sky', speechHint: 'R is for Rainbow. Ruh, ruh, rainbow!' },
-    { char: 'S', lower: 's', name: 'S', phonics: '/s/', word: 'Sun', emoji: '☀️', meaning: 'Warm shining sun', speechHint: 'S is for Sun. Suh, suh, sun!' },
-    { char: 'T', lower: 't', name: 'T', phonics: '/t/', word: 'Tiger', emoji: '🐯', meaning: 'Striped jungle tiger', speechHint: 'T is for Tiger. Tuh, tuh, tiger!' },
-    { char: 'U', lower: 'u', name: 'U', phonics: '/ʌ/', word: 'Umbrella', emoji: '☂️', meaning: 'Rainy day umbrella', speechHint: 'U is for Umbrella. Uh, uh, umbrella!' },
-    { char: 'V', lower: 'v', name: 'V', phonics: '/v/', word: 'Violin', emoji: '🎻', meaning: 'Sweet musical violin', speechHint: 'V is for Violin. Vuh, vuh, violin!' },
-    { char: 'W', lower: 'w', name: 'W', phonics: '/w/', word: 'Whale', emoji: '🐳', meaning: 'Giant ocean blue whale', speechHint: 'W is for Whale. Wuh, wuh, whale!' },
-    { char: 'X', lower: 'x', name: 'X', phonics: '/ks/', word: 'Xylophone', emoji: '🎼', meaning: 'Rainbow chime instrument', speechHint: 'X is for Xylophone. Ding ding ding!' },
-    { char: 'Y', lower: 'y', name: 'Y', phonics: '/j/', word: 'Yo-yo', emoji: '🪀', meaning: 'Spinning toy yo-yo', speechHint: 'Y is for Yo-yo. Yuh, yuh, yo-yo!' },
-    { char: 'Z', lower: 'z', name: 'Z', phonics: '/z/', word: 'Zebra', emoji: '🦓', meaning: 'Black and white zebra', speechHint: 'Z is for Zebra. Zzz, zzz, zebra!' }
-  ];
-
-  const ARABIC_ALPHABET = [
-    { char: 'أ', name: 'أَلِف', translit: 'Alif', phonics: 'A / Ah', word: 'أَرْنَب', wordTranslit: 'Arnab', emoji: '🐰', meaning: 'أرنب يقفز (Rabbit)', fatha: 'أَ', damma: 'أُ', kasra: 'إِ', sukun: 'أْ', speechHint: 'حرف الألف... ألف... أرنب! أَرْنَبْ' },
-    { char: 'ب', name: 'بَاء', translit: 'Baa', phonics: 'B / Ba', word: 'بَطَّة', wordTranslit: 'Batta', emoji: '🦆', meaning: 'بطة تسبح (Duck)', fatha: 'بَ', damma: 'بُ', kasra: 'بِ', sukun: 'بْ', speechHint: 'حرف الباء... باء... بطة! بَطَّة' },
-    { char: 'ت', name: 'تَاء', translit: 'Taa', phonics: 'T / Ta', word: 'تُفَّاحَة', wordTranslit: 'Tuffaha', emoji: '🍎', meaning: 'تفاحة لذيذة (Apple)', fatha: 'تَ', damma: 'تُ', kasra: 'تِ', sukun: 'تْ', speechHint: 'حرف التاء... تاء... تفاحة! تُفَّاحَة' },
-    { char: 'ث', name: 'ثَاء', translit: 'Thaa', phonics: 'Th / Tha', word: 'ثَعْلَب', wordTranslit: "Tha'lab", emoji: '🦊', meaning: 'ثعلب ذكي (Fox)', fatha: 'ثَ', damma: 'ثُ', kasra: 'ثِ', sukun: 'ثْ', speechHint: 'حرف الثاء... ثاء... ثعلب! ثَعْلَبْ' },
-    { char: 'ج', name: 'جِيم', translit: 'Jeem', phonics: 'J / Ja', word: 'جَمَل', wordTranslit: 'Jamal', emoji: '🐪', meaning: 'سفينة الصحراء (Camel)', fatha: 'جَ', damma: 'جُ', kasra: 'جِ', sukun: 'جْ', speechHint: 'حرف الجيم... جيم... جمل! جَمَلْ' },
-    { char: 'ح', name: 'حَاء', translit: 'Haa', phonics: 'H / Ha', word: 'حِصَان', wordTranslit: 'Hisaan', emoji: '🐴', meaning: 'حصان رشيق (Horse)', fatha: 'حَ', damma: 'حُ', kasra: 'حِ', sukun: 'حْ', speechHint: 'حرف الحاء... حاء... حصان! حِصَانْ' },
-    { char: 'خ', name: 'خَاء', translit: 'Khaa', phonics: 'Kh / Kha', word: 'خَرُوف', wordTranslit: 'Kharoof', emoji: '🐑', meaning: 'خروف لطيف (Sheep)', fatha: 'خَ', damma: 'خُ', kasra: 'خِ', sukun: 'خْ', speechHint: 'حرف الخاء... خاء... خروف! خَرُوفْ' },
-    { char: 'د', name: 'دَال', translit: 'Daal', phonics: 'D / Da', word: 'دُبّ', wordTranslit: 'Dubb', emoji: '🐻', meaning: 'دب كبير (Bear)', fatha: 'دَ', damma: 'دُ', kasra: 'دِ', sukun: 'دْ', speechHint: 'حرف الدال... دال... دب! دُبّ' },
-    { char: 'ذ', name: 'ذَال', translit: 'Dhaal', phonics: 'Dh / Dha', word: 'ذُرَة', wordTranslit: 'Dhurah', emoji: '🌽', meaning: 'ذرة صفراء حلوة (Corn)', fatha: 'ذَ', damma: 'ذُ', kasra: 'ذِ', sukun: 'ذْ', speechHint: 'حرف الذال... ذال... ذرة! ذُرَة' },
-    { char: 'ر', name: 'رَاء', translit: 'Raa', phonics: 'R / Ra', word: 'رُمَّان', wordTranslit: 'Rumman', emoji: '🍒', meaning: 'رمان أحمر شهي (Pomegranate)', fatha: 'رَ', damma: 'رُ', kasra: 'رِ', sukun: 'رْ', speechHint: 'حرف الراء... راء... رمان! رُمَّانْ' },
-    { char: 'ز', name: 'زَاي', translit: 'Zay', phonics: 'Z / Za', word: 'زَرَافَة', wordTranslit: 'Zarafa', emoji: '🦒', meaning: 'زرافة طويلة (Giraffe)', fatha: 'زَ', damma: 'زُ', kasra: 'زِ', sukun: 'زْ', speechHint: 'حرف الزاي... زاي... زرافة! زَرَافَة' },
-    { char: 'س', name: 'سِين', translit: 'Seen', phonics: 'S / Sa', word: 'سَمَكَة', wordTranslit: 'Samaka', emoji: '🐟', meaning: 'سمكة ملونة في الماء (Fish)', fatha: 'سَ', damma: 'سُ', kasra: 'سِ', sukun: 'سْ', speechHint: 'حرف السين... سين... سمكة! سَمَكَة' },
-    { char: 'ش', name: 'شِين', translit: 'Sheen', phonics: 'Sh / Sha', word: 'شَمْس', wordTranslit: 'Shams', emoji: '☀️', meaning: 'شمس دافئة مشرقة (Sun)', fatha: 'شَ', damma: 'شُ', kasra: 'شِ', sukun: 'شْ', speechHint: 'حرف الشين... شين... شمس! شَمْس' },
-    { char: 'ص', name: 'صَاد', translit: 'Saad', phonics: 'S / Sa', word: 'صَقْر', wordTranslit: 'Saqr', emoji: '🦅', meaning: 'صقر جارح سريع (Falcon)', fatha: 'صَ', damma: 'صُ', kasra: 'صِ', sukun: 'صْ', speechHint: 'حرف الصاد... صاد... صقر! صَقْر' },
-    { char: 'ض', name: 'ضَاد', translit: 'Daad', phonics: 'D / Da', word: 'ضِفْدَع', wordTranslit: "Difda'", emoji: '🐸', meaning: 'ضفدع يقفز في البركة (Frog)', fatha: 'ضَ', damma: 'ضُ', kasra: 'ضِ', sukun: 'ضْ', speechHint: 'حرف الضاد... ضاد... ضفدع! ضِفْدَع' },
-    { char: 'ط', name: 'طَاء', translit: "Taa'", phonics: 'T / Ta', word: 'طَائِرَة', wordTranslit: "Taa'ira", emoji: '✈️', meaning: 'طائرة تحلق في السماء (Airplane)', fatha: 'طَ', damma: 'طُ', kasra: 'طِ', sukun: 'طْ', speechHint: 'حرف الطاء... طاء... طائرة! طَائِرَة' },
-    { char: 'ظ', name: 'ظَاء', translit: "Zhaa'", phonics: 'Zh / Zha', word: 'ظَرْف', wordTranslit: 'Zharf', emoji: '✉️', meaning: 'ظرف رسائل (Envelope)', fatha: 'ظَ', damma: 'ظُ', kasra: 'ظِ', sukun: 'ظْ', speechHint: 'حرف الظاء... ظاء... ظرف! ظَرْف' },
-    { char: 'ع', name: 'عَيْن', translit: 'Ayn', phonics: 'Aa / Ayn', word: 'عُصْفُور', wordTranslit: 'Usfoor', emoji: '🐦', meaning: 'عصفور يغرد (Bird)', fatha: 'عَ', damma: 'عُ', kasra: 'عِ', sukun: 'عْ', speechHint: 'حرف العين... عين... عصفور! عُصْفُور' },
-    { char: 'غ', name: 'غَيْن', translit: 'Ghayn', phonics: 'Gh / Gha', word: 'غَزَال', wordTranslit: 'Ghazaal', emoji: '🦌', meaning: 'غزال جميل (Gazelle)', fatha: 'غَ', damma: 'غُ', kasra: 'غِ', sukun: 'غْ', speechHint: 'حرف الغين... غين... غزال! غَزَال' },
-    { char: 'ف', name: 'فَاء', translit: 'Faa', phonics: 'F / Fa', word: 'فَرَاشَة', wordTranslit: 'Farasha', emoji: '🦋', meaning: 'فراشة بألوان زاهية (Butterfly)', fatha: 'فَ', damma: 'فُ', kasra: 'فِ', sukun: 'فْ', speechHint: 'حرف الفاء... فاء... فراشة! فَرَاشَة' },
-    { char: 'ق', name: 'قَاف', translit: 'Qaaf', phonics: 'Q / Qa', word: 'قِطَّة', wordTranslit: 'Qitta', emoji: '🐱', meaning: 'قطة مياو أليفة (Cat)', fatha: 'قَ', damma: 'قُ', kasra: 'قِ', sukun: 'قْ', speechHint: 'حرف القاف... قاف... قطة! قِطَّة' },
-    { char: 'ك', name: 'كَاف', translit: 'Kaaf', phonics: 'K / Ka', word: 'كِتَاب', wordTranslit: 'Kitaab', emoji: '📖', meaning: 'كتاب القصص المصورة (Book)', fatha: 'كَ', damma: 'كُ', kasra: 'كِ', sukun: 'كْ', speechHint: 'حرف الكاف... كاف... كتاب! كِتَاب' },
-    { char: 'ل', name: 'لَام', translit: 'Laam', phonics: 'L / La', word: 'لَيْمُون', wordTranslit: 'Laymoon', emoji: '🍋', meaning: 'ليمون أصفر منعش (Lemon)', fatha: 'لَ', damma: 'لُ', kasra: 'لِ', sukun: 'لْ', speechHint: 'حرف اللام... لام... ليمون! لَيْمُون' },
-    { char: 'م', name: 'مِيم', translit: 'Meem', phonics: 'M / Ma', word: 'مَوْزَة', wordTranslit: 'Mawza', emoji: '🍌', meaning: 'موزة صفراء حلوة (Banana)', fatha: 'مَ', damma: 'مُ', kasra: 'مِ', sukun: 'مْ', speechHint: 'حرف الميم... ميم... موزة! مَوْزَة' },
-    { char: 'ن', name: 'نُون', translit: 'Noon', phonics: 'N / Na', word: 'نَجْمَة', wordTranslit: 'Najma', emoji: '⭐', meaning: 'نجمة تلمع في السماء (Star)', fatha: 'نَ', damma: 'نُ', kasra: 'نِ', sukun: 'نْ', speechHint: 'حرف النون... نون... نجمة! نَجْمَة' },
-    { char: 'هـ', name: 'هَاء', translit: 'Haa', phonics: 'H / Ha', word: 'هِلَال', wordTranslit: 'Hilaal', emoji: '🌙', meaning: 'هلال مضيء (Crescent Moon)', fatha: 'هَ', damma: 'هُ', kasra: 'هِ', sukun: 'هْ', speechHint: 'حرف الهاء... هاء... هلال! هِلَال' },
-    { char: 'و', name: 'وَاو', translit: 'Waaw', phonics: 'W / Wa', word: 'وَرْدَة', wordTranslit: 'Warda', emoji: '🌸', meaning: 'وردة عطرة جميلة (Flower)', fatha: 'وَ', damma: 'وُ', kasra: 'وِ', sukun: 'وْ', speechHint: 'حرف الواو... واو... وردة! وَرْدَة' },
-    { char: 'ي', name: 'يَاء', translit: 'Yaa', phonics: 'Y / Ya', word: 'يَد', wordTranslit: 'Yad', emoji: '✋', meaning: 'يد صغيرة تلوح (Hand)', fatha: 'يَ', damma: 'يُ', kasra: 'يِ', sukun: 'يْ', speechHint: 'حرف الياء... ياء... يد! يَد' }
-  ];
+  // Letters, words and spoken phrases live in content.js, which is shared with
+  // generate_studio_audio.py and tools/validate_content.py so they cannot drift apart.
+  const ENGLISH_ALPHABET = window.ALPHABET_CONTENT.en;
+  const ARABIC_ALPHABET = window.ALPHABET_CONTENT.ar;
 
   const STICKERS_LIST = [
     { id: 's1', emoji: '🦁', title: 'Leo the Lion', cost: 0 },
@@ -88,28 +33,80 @@
   // APP STATE
   // ==========================================================================
 
+  // localStorage can throw (private mode, blocked storage) or hold corrupted values;
+  // a toddler app must never fail to start because of either.
+  const store = {
+    get(key, fallback) {
+      try {
+        const v = localStorage.getItem(key);
+        return v === null ? fallback : v;
+      } catch (e) {
+        return fallback;
+      }
+    },
+    getJSON(key, fallback) {
+      try {
+        const v = JSON.parse(this.get(key, 'null'));
+        return v === null ? fallback : v;
+      } catch (e) {
+        return fallback;
+      }
+    },
+    set(key, value) {
+      try {
+        localStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value));
+      } catch (e) {}
+    }
+  };
+
+  const savedSettings = store.getJSON('alpha_settings', {});
+  const savedStickers = store.getJSON('alpha_stickers', ['s1']);
+
   const state = {
-    lang: 'en', // 'en' or 'ar'
-    gender: localStorage.getItem('alpha_gender') || 'boy', // 'boy' or 'girl'
-    childName: localStorage.getItem('alpha_child_name') || '',
-    avatar: localStorage.getItem('alpha_avatar') || '👦',
+    lang: store.get('alpha_lang', 'en') === 'ar' ? 'ar' : 'en',
+    gender: store.get('alpha_gender', 'boy') === 'girl' ? 'girl' : 'boy',
+    childName: store.get('alpha_child_name', '').slice(0, 18),
+    avatar: store.get('alpha_avatar', '👦'),
     mode: 'explore', // 'explore', 'trace', 'balloon', 'match', 'memory', 'stickers'
     currentIndex: 0,
     caseMode: 'both', // 'both', 'upper'
-    soundEnabled: true,
-    voiceSpeed: 0.82, // Toddler friendly pace
-    showHarakat: true,
-    showTranslit: true,
-    stars: parseInt(localStorage.getItem('alpha_stars') || '0', 10),
-    unlockedStickers: JSON.parse(localStorage.getItem('alpha_stickers') || '["s1"]'),
+    soundEnabled: savedSettings.soundEnabled !== false,
+    voiceSpeed: typeof savedSettings.voiceSpeed === 'number' ? savedSettings.voiceSpeed : 0.95,
+    showHarakat: savedSettings.showHarakat !== false,
+    showTranslit: savedSettings.showTranslit !== false,
+    stars: Math.max(0, parseInt(store.get('alpha_stars', '0'), 10) || 0),
+    unlockedStickers: Array.isArray(savedStickers) ? savedStickers : ['s1'],
     jukeboxPlaying: false,
     jukeboxTimer: null,
     deferredPrompt: null // For PWA install
   };
 
+  function saveSettings() {
+    store.set('alpha_settings', {
+      soundEnabled: state.soundEnabled,
+      voiceSpeed: state.voiceSpeed,
+      showHarakat: state.showHarakat,
+      showTranslit: state.showTranslit
+    });
+  }
+
+  // Pick the boy/girl variant of a phrase for the active child profile.
+  function g(boyText, girlText) {
+    return state.gender === 'girl' ? girlText : boyText;
+  }
+
   // Helper getters
   function getActiveAlphabet() {
     return state.lang === 'en' ? ENGLISH_ALPHABET : ARABIC_ALPHABET;
+  }
+
+  // Fisher-Yates; `array.sort(() => Math.random() - 0.5)` is noticeably biased.
+  function shuffleInPlace(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
   }
 
   function getCurrentItem() {
@@ -251,8 +248,30 @@
     } catch (e) {}
   }
 
+  // Soft two-note bell used for profile and avatar choices.
+  function playChimeSound() {
+    if (!state.soundEnabled) return;
+    initAudioContext();
+    if (!audioCtx) return;
+
+    try {
+      [[880.0, 0], [1318.51, 0.09]].forEach(([freq, t]) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime + t);
+        gain.gain.setValueAtTime(0.25, audioCtx.currentTime + t);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + t + 0.5);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(audioCtx.currentTime + t);
+        osc.stop(audioCtx.currentTime + t + 0.55);
+      });
+    } catch (e) {}
+  }
+
   // ==========================================================================
-  // SPEECH SYNTHESIS ENGINE (Natural bilingual voice)
+  // SPEECH SYNTHESIS & NATURAL AUDIO ENGINE
   // ==========================================================================
 
   let voices = [];
@@ -266,78 +285,13 @@
     window.speechSynthesis.onvoiceschanged = populateVoices;
   }
 
-  
-  // ==========================================================================
-  // NATURAL SPOKEN LANGUAGE & GENDER-AWARE SPEECH LIBRARY
-  // ==========================================================================
-
-  const NATURAL_PHONICS_EN = {
-    'A': 'A is for Apple! Ah, ah, apple! Crunch, crunch, sweet and juicy red apple!',
-    'B': 'B is for Bear! Buh, buh, bear! Big fuzzy teddy bear giving you a warm happy hug!',
-    'C': 'C is for Cat! Cuh, cuh, cat! Playful little kitten playing with yarn, meow meow!',
-    'D': 'D is for Duck! Duh, duh, duck! Yellow duck swimming happily in the pond, quack quack!',
-    'E': 'E is for Elephant! Eh, eh, elephant! Big gentle elephant waving his long swinging trunk!',
-    'F': 'F is for Frog! Fuh, fuh, frog! Little green frog hopping on a lily pad, ribbit ribbit!',
-    'G': 'G is for Giraffe! Juh, juh, giraffe! Tall friendly giraffe reaching high into the trees!',
-    'H': 'H is for Horse! Huh, huh, horse! Galloping horse running freely in the meadow, neigh neigh!',
-    'I': 'I is for Ice Cream! I, i, ice cream! Cold, sweet, yummy rainbow ice cream!',
-    'J': 'J is for Jellyfish! Juh, juh, jellyfish! Floating gently like magic in the sparkling ocean!',
-    'K': 'K is for Kangaroo! Kuh, kuh, kangaroo! Bouncing high through the sunny safari, boing boing!',
-    'L': 'L is for Lion! Luh, luh, lion! Brave little lion cub giving a cheerful roar, rawr!',
-    'M': 'M is for Monkey! Muh, muh, monkey! Silly little monkey swinging from the trees eating a banana!',
-    'N': 'N is for Nest! Nuh, nuh, nest! Cozy little bird nest with warm eggs high in the tree!',
-    'O': 'O is for Owl! Ah, ah, owl! Wise night owl sitting under the stars, hoot hoot!',
-    'P': 'P is for Penguin! Puh, puh, penguin! Cute little penguin waddling happily on the cold white ice!',
-    'Q': 'Q is for Queen! Kwuh, kwuh, queen! Beautiful royal queen wearing a sparkling golden crown!',
-    'R': 'R is for Rainbow! Ruh, ruh, rainbow! Magic colorful rainbow smiling across the blue sky!',
-    'S': 'S is for Sun! Suh, suh, sun! Big warm golden sun shining down with a warm bright smile!',
-    'T': 'T is for Tiger! Tuh, tuh, tiger! Friendly little tiger cub with bright orange and black stripes!',
-    'U': 'U is for Umbrella! Uh, uh, umbrella! Bright colorful umbrella keeping us cozy and dry in the rain!',
-    'V': 'V is for Violin! Vuh, vuh, violin! Playing sweet, gentle musical melodies!',
-    'W': 'W is for Whale! Wuh, wuh, whale! Giant gentle blue whale making big water splashes in the sea!',
-    'X': 'X is for Xylophone! Zz, zz, xylophone! Making joyful ding dong music notes!',
-    'Y': 'Y is for Yacht! Yuh, yuh, yacht! Sailing smoothly across the calm blue waves!',
-    'Z': 'Z is for Zebra! Zz, zz, zebra! Beautiful zebra running freely in the sunny safari!'
-  };
-
-  const NATURAL_PHONICS_AR = {
-    'أ': { boy: 'حَرْفُ الأَلِفِ.. أَرْنَب! أ، أ، أَرْنَبٌ لَطِيفٌ يَقْفِزُ فَرَحًا يَا بَطَلِي!', girl: 'حَرْفُ الأَلِفِ.. أَرْنَب! أ، أ، أَرْنَبٌ لَطِيفٌ يَقْفِزُ فَرَحًا يَا أَمِيرَتِي!' },
-    'ب': { boy: 'حَرْفُ البَاءِ.. بَطَّة! ب، ب، بَطَّةٌ جَمِيلَةٌ تَعُومُ فِي المَاءِ وَتَقُولُ وَاقْ وَاقْ!', girl: 'حَرْفُ البَاءِ.. بَطَّة! ب، ب، بَطَّةٌ جَمِيلَةٌ تَعُومُ فِي المَاءِ وَتَقُولُ وَاقْ وَاقْ!' },
-    'ت': { boy: 'حَرْفُ التَّاءِ.. تُفَّاحَة! تَ، تَ، تُفَّاحَةٌ حَمْرَاءُ لَذِيذَةٌ وَمُفِيدَة!', girl: 'حَرْفُ التَّاءِ.. تُفَّاحَة! تَ، تَ، تُفَّاحَةٌ حَمْرَاءُ حُلْوَةٌ مِثْلَكِ!' },
-    'ث': { boy: 'حَرْفُ الثَّاءِ.. ثَعْلَب! ثَ، ثَ، ثَعْلَبٌ ذَكِيٌّ وَسَرِيعٌ فِي الغَابَة!', girl: 'حَرْفُ الثَّاءِ.. ثَعْلَب! ثَ، ثَ، ثَعْلَبٌ ذَكِيٌّ وَسَرِيعٌ فِي الغَابَة!' },
-    'ج': { boy: 'حَرْفُ الجِيمِ.. جَمَل! جَ، جَ، جَمَلٌ صَبُورٌ فِي الصَّحْرَاءِ الذَّهَبِيَّة!', girl: 'حَرْفُ الجِيمِ.. جَمَل! جَ، جَ، جَمَلٌ صَبُورٌ فِي الصَّحْرَاءِ الذَّهَبِيَّة!' },
-    'ح': { boy: 'حَرْفُ الحَاءِ.. حِصَان! حَ، حَ، حِصَانٌ أَصِيلٌ يَرْكُضُ بِسُرْعَةٍ يَا بَطَل!', girl: 'حَرْفُ الحَاءِ.. حِصَان! حَ، حَ، حِصَانٌ أَصِيلٌ يَرْكُضُ بِسُرْعَةٍ يَا أَمِيرَة!' },
-    'خ': { boy: 'حَرْفُ الخَاءِ.. خَرُوف! خَ، خَ، خَرُوفٌ لَطِيفٌ صُوفُهُ أَبْيَضُ نَاعِم!', girl: 'حَرْفُ الخَاءِ.. خَرُوف! خَ، خَ، خَرُوفٌ لَطِيفٌ صُوفُهُ أَبْيَضُ نَاعِم!' },
-    'د': { boy: 'حَرْفُ الدَّالِ.. دَلْفِين! دَ، دَ، دَلْفِينٌ مَرِحٌ يَقْفِزُ فِي أَمْوَاجِ البَحْر!', girl: 'حَرْفُ الدَّالِ.. دَلْفِين! دَ، دَ، دَلْفِينٌ مَرِحٌ يَقْفِزُ فِي أَمْوَاجِ البَحْر!' },
-    'ذ': { boy: 'حَرْفُ الذَّالِ.. ذُرَة! ذَ، ذَ، ذُرَةٌ صَفْرَاءُ حُلْوَةٌ وَشَهِيَّة!', girl: 'حَرْفُ الذَّالِ.. ذُرَة! ذَ، ذَ، ذُرَةٌ صَفْرَاءُ حُلْوَةٌ وَشَهِيَّة!' },
-    'ر': { boy: 'حَرْفُ الرَّاءِ.. رُمَّان! رَ، رَ، رُمَّانٌ أَحْمَرُ طَيِّبُ المَذَاق!', girl: 'حَرْفُ الرَّاءِ.. رُمَّان! رَ، رَ، رُمَّانٌ أَحْمَرُ طَيِّبُ المَذَاق!' },
-    'ز': { boy: 'حَرْفُ الزَّاي.. زَرَافَة! زَ، زَ، زَرَافَةٌ طَوِيلَةٌ لَطِيفَةٌ عُنُقُهَا جَمِيل!', girl: 'حَرْفُ الزَّاي.. زَرَافَة! زَ، زَ، زَرَافَةٌ طَوِيلَةٌ لَطِيفَةٌ عُنُقُهَا جَمِيل!' },
-    'س': { boy: 'حَرْفُ السِّين.. سَمَكَة! سَ، سَ، سَمَكَةٌ مُلَوَّنَةٌ تَلْمَعُ تَحْتَ المَاء!', girl: 'حَرْفُ السِّين.. سَمَكَة! سَ، سَ، سَمَكَةٌ مُلَوَّنَةٌ تَلْمَعُ تَحْتَ المَاء!' },
-    'ش': { boy: 'حَرْفُ الشِّين.. شَمْس! شَ، شَ، شَمْسٌ مُشْرِقَةٌ تَمْلأُ الدُّنْيَا دِفْئًا وَنُورًا!', girl: 'حَرْفُ الشِّين.. شَمْس! شَ، شَ، شَمْسٌ مُشْرِقَةٌ تَمْلأُ الدُّنْيَا دِفْئًا وَنُورًا!' },
-    'ص': { boy: 'حَرْفُ الصَّاد.. صَقْر! صَ، صَ، صَقْرٌ قَوِيٌّ شُجَاعٌ يُحَلِّقُ عَالِيًا!', girl: 'حَرْفُ الصَّاد.. صَقْر! صَ، صَ، صَقْرٌ قَوِيٌّ جَمِيلٌ يُحَلِّقُ عَالِيًا!' },
-    'ض': { boy: 'حَرْفُ الضَّاد.. ضِفْدَع! ضَ، ضَ، ضِفْدَعٌ أَخْضَرُ صَغِيرٌ يَقْفِزُ فِي البِرْكَة!', girl: 'حَرْفُ الضَّاد.. ضِفْدَع! ضَ، ضَ، ضِفْدَعٌ أَخْضَرُ صَغِيرٌ يَقْفِزُ فِي البِرْكَة!' },
-    'ط': { boy: 'حَرْفُ الطَّاءِ.. طَائِرَة! طَ، طَ، طَائِرَةٌ بَيْضَاءُ تُسَافِرُ بَيْنَ الغُيُوم!', girl: 'حَرْفُ الطَّاءِ.. طَائِرَة! طَ، طَ، طَائِرَةٌ بَيْضَاءُ تُسَافِرُ بَيْنَ الغُيُوم!' },
-    'ظ': { boy: 'حَرْفُ الظَّاءِ.. ظَبْي! ظَ، ظَ، ظَبْيٌ رَشِيقٌ فِي البَرَارِي!', girl: 'حَرْفُ الظَّاءِ.. ظَبْي! ظَ، ظَ، ظَبْيٌ رَشِيقٌ جَمِيلٌ فِي البَرَارِي!' },
-    'ع': { boy: 'حَرْفُ العَيْن.. عُصْفُور! عَ، عَ، عُصْفُورٌ صَغِيرٌ يُغَرِّدُ بِأَجْمَلِ الأَلْحَان!', girl: 'حَرْفُ العَيْن.. عُصْفُور! عَ، عَ، عُصْفُورٌ صَغِيرٌ يُغَرِّدُ بِأَجْمَلِ الأَلْحَان!' },
-    'غ': { boy: 'حَرْفُ الغَيْن.. غَزَال! غَ، غَ، غَزَالٌ رَقِيقٌ فِي المَرَاعِي الخَضْرَاء!', girl: 'حَرْفُ الغَيْن.. غَزَال! غَ، غَ، غَزَالٌ رَقِيقٌ فِي المَرَاعِي الخَضْرَاء!' },
-    'ف': { boy: 'حَرْفُ الفَاءِ.. فَرَاشَة! فَ، فَ، فَرَاشَةٌ بَدِيعَةٌ تَرْقُصُ بَيْنَ الأَزْهَار!', girl: 'حَرْفُ الفَاءِ.. فَرَاشَة! فَ، فَ، فَرَاشَةٌ بَدِيعَةٌ تَرْقُصُ بَيْنَ الأَزْهَار!' },
-    'ق': { boy: 'حَرْفُ القَاف.. قِطَّة! قَ، قَ، قِطَّةٌ أَلِيفَةٌ تُحِبُّ اللَّعِبَ وَتَقُولُ مِيَاو!', girl: 'حَرْفُ القَاف.. قِطَّة! قَ، قَ، قِطَّةٌ أَلِيفَةٌ تُحِبُّ اللَّعِبَ وَتَقُولُ مِيَاو!' },
-    'ك': { boy: 'حَرْفُ الكَاف.. كِتَاب! كَ، كَ، كِتَابٌ مُفِيدٌ يَحْمِلُ أَحْلَى القِصَص!', girl: 'حَرْفُ الكَاف.. كِتَاب! كَ، كَ، كِتَابٌ مُفِيدٌ يَحْمِلُ أَحْلَى القِصَص!' },
-    'ل': { boy: 'حَرْفُ اللَّام.. لَيْمُون! لَ، لَ، لَيْمُونٌ أَصْفَرُ مُنْعِشٌ وَلَذِيذ!', girl: 'حَرْفُ اللَّام.. لَيْمُون! لَ، لَ، لَيْمُونٌ أَصْفَرُ مُنْعِشٌ وَلَذِيذ!' },
-    'م': { boy: 'حَرْفُ المِيم.. مَوْزَة! مَ، مَ، مَوْزَةٌ صَفْرَاءُ حُلْوَةٌ يُحِبُّهَا الأَطْفَال!', girl: 'حَرْفُ المِيم.. مَوْزَة! مَ، مَ، مَوْزَةٌ صَفْرَاءُ حُلْوَةٌ يُحِبُّهَا الأَطْفَال!' },
-    'ن': { boy: 'حَرْفُ النُّون.. نَجْمَة! نَ، نَ، نَجْمَةٌ سَاطِعَةٌ تَلْمَعُ لَيْلًا فِي السَّمَاء!', girl: 'حَرْفُ النُّون.. نَجْمَة! نَ، نَ، نَجْمَةٌ سَاطِعَةٌ تَلْمَعُ لَيْلًا فِي السَّمَاء!' },
-    'هـ': { boy: 'حَرْفُ الهَاءِ.. هِلَال! هَ، هَ، هِلَالٌ فِضِّيٌّ جَمِيلٌ يُضِيءُ لَيَالِينَا!', girl: 'حَرْفُ الهَاءِ.. هِلَال! هَ، هَ، هِلَالٌ فِضِّيٌّ جَمِيلٌ يُضِيءُ لَيَالِينَا!' },
-    'و': { boy: 'حَرْفُ الوَاو.. وَرْدَة! وَ، وَ، وَرْدَةٌ حَمْرَاءُ جَمِيلَةٌ رَائِحَتُهَا عَطِرَة!', girl: 'حَرْفُ الوَاو.. وَرْدَة! وَ، وَ، وَرْدَةٌ حَمْرَاءُ جَمِيلَةٌ رَائِحَتُهَا عَطِرَة!' },
-    'ي': { boy: 'حَرْفُ اليَاءِ.. يَد! يَ، يَ، يَدٌ صَغِيرَةٌ نَظِيفَةٌ تُلَوِّحُ بِمَحَبَّة!', girl: 'حَرْفُ اليَاءِ.. يَد! يَ، يَ، يَدٌ صَغِيرَةٌ نَظِيفَةٌ تُلَوِّحُ بِمَحَبَّة!' }
-  };
-
+  // Callers add the Arabic vocative particle themselves (`يَا ${voc}`), so it is not included here.
   function getChildVocative() {
     if (state.childName) return state.childName;
     if (state.lang === 'en') {
-      return state.gender === 'boy' ? 'little hero' : 'little princess';
-    } else {
-      return state.gender === 'boy' ? 'يا بطلي الصغير' : 'يا أميرتي الصغيرة';
+      return g('little hero', 'little princess');
     }
+    return g('بَطَلِي الصَّغِير', 'أَمِيرَتِي الصَّغِيرَة');
   }
 
   function getNaturalPraise() {
@@ -376,21 +330,31 @@
   }
 
   function getNaturalLetterSentence(item) {
-    if (state.lang === 'en') {
-      return NATURAL_PHONICS_EN[item.char] || `${item.name} is for ${item.word}! ${item.speechHint}`;
-    } else {
-      const entry = NATURAL_PHONICS_AR[item.char];
-      if (entry) {
-        return state.gender === 'boy' ? entry.boy : entry.girl;
-      }
-      return `${item.name}... ${item.word}! ${item.speechHint}`;
-    }
+    if (state.lang === 'en') return item.phrase;
+    return g(item.phrase.boy, item.phrase.girl);
+  }
+
+  // Bilingual helper for the celebration card, which shows text in the active language.
+  function tr(en, ar) {
+    return state.lang === 'en' ? en : ar;
   }
 
 
   // ==========================================================================
   // GENDER CONFIGURATION & COMPANION CONTROLLER
   // ==========================================================================
+
+  // Builds <span class="eng-text">…</span><span class="ar-text">…</span> without innerHTML,
+  // because the text can include the child's typed name.
+  function setBilingualText(el, en, ar) {
+    const enSpan = document.createElement('span');
+    enSpan.className = 'eng-text';
+    enSpan.textContent = en;
+    const arSpan = document.createElement('span');
+    arSpan.className = 'ar-text';
+    arSpan.textContent = ar;
+    el.replaceChildren(enSpan, arSpan);
+  }
 
   function applyGenderUI() {
     document.body.setAttribute('data-gender', state.gender);
@@ -408,21 +372,18 @@
     if (avatarBadge) avatarBadge.textContent = activeAvatar;
     if (pillTag) pillTag.textContent = isBoy ? 'Boy' : 'Girl';
 
+    const name = state.childName;
     if (badgeTitle) {
-      if (isBoy) {
-        badgeTitle.innerHTML = '<span class="eng-text">' + (state.childName ? state.childName + ' • Boy' : 'Little Boy') + '</span><span class="ar-text">' + (state.childName ? state.childName + ' • بطل' : 'البطل الصغير') + '</span>';
-      } else {
-        badgeTitle.innerHTML = '<span class="eng-text">' + (state.childName ? state.childName + ' • Girl' : 'Little Girl') + '</span><span class="ar-text">' + (state.childName ? state.childName + ' • أميرة' : 'الأميرة الصغيرة') + '</span>';
-      }
+      const titleEn = name ? `${name} • ${g('Boy', 'Girl')}` : g('Little Boy', 'Little Girl');
+      const titleAr = name ? `${name} • ${g('بطل', 'أميرة')}` : g('البطل الصغير', 'الأميرة الصغيرة');
+      setBilingualText(badgeTitle, titleEn, titleAr);
     }
 
     if (compAvatar) compAvatar.textContent = activeAvatar;
     if (compNameTag) {
-      const defaultNameEn = isBoy ? 'Leo • Hero' : 'Noor • Star';
-      const defaultNameAr = isBoy ? 'زيد • البطل' : 'نور • الأميرة';
-      const displayEn = state.childName ? state.childName + ' • ' + (isBoy ? 'Hero' : 'Star') : defaultNameEn;
-      const displayAr = state.childName ? state.childName + ' • ' + (isBoy ? 'البطل' : 'الأميرة') : defaultNameAr;
-      compNameTag.innerHTML = '<span class="eng-text">' + displayEn + '</span><span class="ar-text">' + displayAr + '</span>';
+      const displayEn = name ? `${name} • ${g('Hero', 'Star')}` : g('Leo • Hero', 'Noor • Star');
+      const displayAr = name ? `${name} • ${g('البطل', 'الأميرة')}` : g('زيد • البطل', 'نور • الأميرة');
+      setBilingualText(compNameTag, displayEn, displayAr);
     }
 
     // Modal selection highlight
@@ -442,11 +403,11 @@
   function setGender(newGender, avatar, name) {
     state.gender = newGender;
     if (avatar) state.avatar = avatar;
-    if (name !== undefined) state.childName = name.trim();
+    if (name !== undefined) state.childName = name.trim().slice(0, 18);
 
-    localStorage.setItem('alpha_gender', state.gender);
-    localStorage.setItem('alpha_avatar', state.avatar);
-    localStorage.setItem('alpha_child_name', state.childName);
+    store.set('alpha_gender', state.gender);
+    store.set('alpha_avatar', state.avatar);
+    store.set('alpha_child_name', state.childName);
 
     applyGenderUI();
     playChimeSound();
@@ -484,87 +445,255 @@
     }
   }
 
-  function openGenderModal() {
-    const modal = document.getElementById('modal-gender');
-    if (modal) {
-      applyGenderUI();
-      modal.classList.add('open');
-      modal.setAttribute('aria-hidden', 'false');
-      playSparkleSound();
-    }
+  function openModal(id) {
+    const modal = document.getElementById(id);
+    if (!modal) return;
+    modal.classList.add('open');
+    modal.setAttribute('aria-hidden', 'false');
+    const focusTarget = modal.querySelector('.modal-close-btn, button');
+    if (focusTarget) focusTarget.focus({ preventScroll: true });
   }
 
-function speakText(text, langOverride, customPitch, customRate) {
-    if (!state.soundEnabled) return;
-    if (!('speechSynthesis' in window)) return;
+  function closeModal(id) {
+    const modal = document.getElementById(id);
+    if (!modal) return;
+    modal.classList.remove('open');
+    modal.setAttribute('aria-hidden', 'true');
+  }
 
-    window.speechSynthesis.cancel(); // Stop ongoing speech
+  function closeAllModals() {
+    document.querySelectorAll('.modal-overlay.open').forEach(modal => closeModal(modal.id));
+  }
 
-    const utter = new SpeechSynthesisUtterance(text);
-    const targetLang = langOverride || (state.lang === 'en' ? 'en-US' : 'ar-SA');
-    utter.lang = targetLang;
-    utter.rate = customRate || state.voiceSpeed;
+  function openGenderModal() {
+    applyGenderUI();
+    openModal('modal-gender');
+    playSparkleSound();
+  }
 
-    // Pitch tailored to gender for warm, enthusiastic preschool sound
-    if (customPitch) {
-      utter.pitch = customPitch;
-    } else if (state.gender === 'boy') {
-      utter.pitch = (targetLang.startsWith('en')) ? 1.12 : 1.05;
-    } else {
-      utter.pitch = (targetLang.startsWith('en')) ? 1.30 : 1.25;
+  function speakCompanionGreeting() {
+    bounceCompanion();
+    playSparkleSound();
+    const voc = getChildVocative();
+    const phrase = state.lang === 'en'
+      ? g(`Hi ${voc}! I'm Leo, your safari buddy! Tap any letter to hear its story!`,
+          `Hello ${voc}! I'm Noor, your safari buddy! Tap any letter to hear its magical story!`)
+      : g(`مَرْحَبًا يَا ${voc}! أَنَا صَدِيقُكَ اللَّطِيف، اِضْغَطْ عَلَى أَيِّ حَرْفٍ لِنَسْتَمِعَ إِلَى قِصَّتِهِ الرَّائِعَة!`,
+          `مَرْحَبًا يَا ${voc}! أَنَا صَدِيقَتُكِ اللَّطِيفَة، اِضْغَطِي عَلَى أَيِّ حَرْفٍ لِنَسْتَمِعَ إِلَى قِصَّتِهِ السَّاحِرَة!`);
+    updateCompanionBubble(phrase);
+    speakText(phrase);
+  }
+
+  // Every speech call returns a Promise that settles with how it finished:
+  // 'ended' | 'failed' | 'stopped' | 'muted'. Only one clip or utterance plays at a time;
+  // starting a new one settles the previous one as 'stopped'.
+  let activeAudio = null;
+  let activeDone = null;
+  let nativeUtteranceSeq = 0;
+  const nativePending = {};
+
+  function settleActive(result) {
+    const done = activeDone;
+    activeDone = null;
+    activeAudio = null;
+    if (done) done(result);
+  }
+
+  function hasNativeTTS() {
+    return !!(window.AndroidBridge && typeof window.AndroidBridge.speak === 'function');
+  }
+
+  // Called by MainActivity (Android) when a native TextToSpeech utterance finishes.
+  window.AlphabetSafariSpeechDone = function (id, ok) {
+    const resolve = nativePending[id];
+    if (resolve) {
+      delete nativePending[id];
+      resolve(ok === false ? 'failed' : 'ended');
     }
+  };
 
-    // Select the most natural human voice available on the device
-    if (voices.length > 0) {
-      const isArabic = targetLang.startsWith('ar');
-      const isEnglish = targetLang.startsWith('en');
+  function stopAllSpeechAndAudio() {
+    if (activeAudio) {
+      try {
+        activeAudio.pause();
+      } catch (e) {}
+    }
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
+    if (hasNativeTTS() && typeof window.AndroidBridge.stopSpeaking === 'function') {
+      try {
+        window.AndroidBridge.stopSpeaking();
+      } catch (e) {}
+    }
+    Object.keys(nativePending).forEach(id => window.AlphabetSafariSpeechDone(id, true));
+    settleActive('stopped');
+  }
 
-      let candidate = null;
+  // Studio clips were recorded at a natural pace; scale them relative to the "Natural" setting.
+  function clipPlaybackRate() {
+    return Math.min(1.25, Math.max(0.7, state.voiceSpeed / 0.95));
+  }
+
+  function playAudioUrl(url) {
+    if (!state.soundEnabled) return Promise.resolve('muted');
+    stopAllSpeechAndAudio();
+
+    return new Promise((resolve) => {
+      const audio = new Audio(url);
+      audio.playbackRate = clipPlaybackRate();
+      activeAudio = audio;
+      activeDone = resolve;
+      const finish = (result) => {
+        if (activeAudio === audio) settleActive(result);
+      };
+      audio.onended = () => finish('ended');
+      audio.onerror = () => finish('failed');
+      const playPromise = audio.play();
+      if (playPromise && playPromise.catch) {
+        playPromise.catch(() => finish('failed'));
+      }
+    });
+  }
+
+  // The Windows desktop app serves neural TTS at api/tts. Probe once instead of
+  // requesting it (and getting a 404) on every phrase when hosted elsewhere.
+  let ttsServerProbe = null;
+  function hasTtsServer() {
+    if (!window.location.protocol.startsWith('http')) return Promise.resolve(false);
+    if (!ttsServerProbe) {
+      ttsServerProbe = fetch('api/health', { cache: 'no-store' })
+        .then(res => (res.ok ? res.json() : null))
+        .then(info => !!(info && info.tts))
+        .catch(() => false);
+    }
+    return ttsServerProbe;
+  }
+
+  function getBestVoice(targetLang, gender) {
+    if (!voices || voices.length === 0) return null;
+
+    const isArabic = targetLang.startsWith('ar');
+    const isEnglish = targetLang.startsWith('en');
+    const isBoy = gender === 'boy';
+
+    const langVoices = voices.filter(v => {
+      if (isArabic) return v.lang.toLowerCase().startsWith('ar');
+      if (isEnglish) return v.lang.toLowerCase().startsWith('en');
+      return true;
+    });
+    if (langVoices.length === 0) return null;
+
+    // Prioritize natural neural voices, penalize robotic legacy SAPI voices
+    const scored = langVoices.map(v => {
+      let score = 0;
+      const name = v.name.toLowerCase();
+
+      if (name.includes('natural')) score += 100;
+      if (name.includes('online')) score += 80;
+      if (name.includes('neural')) score += 80;
+      if (name.includes('google')) score += 70;
+      if (name.includes('siri') || name.includes('premium')) score += 70;
+
       if (isEnglish) {
-        if (state.gender === 'boy') {
-          // Look for warm natural male/boy voices
-          candidate = voices.find(v => v.lang.startsWith('en') && (v.name.includes('Guy') || v.name.includes('David') || v.name.includes('George') || v.name.includes('Male')));
-          if (!candidate) candidate = voices.find(v => v.lang.startsWith('en') && v.name.includes('Natural'));
+        if (isBoy) {
+          if (name.includes('ana')) score += 60;
+          if (name.includes('guy') || name.includes('christopher') || name.includes('eric')) score += 40;
+          if (name.includes('male') || name.includes('boy')) score += 20;
         } else {
-          // Look for sweet natural female/girl voices
-          candidate = voices.find(v => v.lang.startsWith('en') && (v.name.includes('Jenny') || v.name.includes('Zira') || v.name.includes('Aria') || v.name.includes('Female')));
-          if (!candidate) candidate = voices.find(v => v.lang.startsWith('en') && v.name.includes('Natural'));
+          if (name.includes('jenny')) score += 60;
+          if (name.includes('aria') || name.includes('samantha')) score += 40;
+          if (name.includes('female') || name.includes('girl')) score += 20;
         }
-        if (!candidate) candidate = voices.find(v => v.lang.startsWith('en'));
       } else if (isArabic) {
-        if (state.gender === 'boy') {
-          candidate = voices.find(v => v.lang.startsWith('ar') && (v.name.includes('Naayf') || v.name.includes('Maged') || v.name.includes('Tarik') || v.name.includes('Male')));
+        if (isBoy) {
+          if (name.includes('hamed') || name.includes('shakir') || name.includes('maged')) score += 60;
+          if (name.includes('male')) score += 20;
         } else {
-          candidate = voices.find(v => v.lang.startsWith('ar') && (v.name.includes('Salma') || v.name.includes('Hoda') || v.name.includes('Zeina') || v.name.includes('Laila') || v.name.includes('Female')));
+          if (name.includes('zariyah') || name.includes('salma')) score += 60;
+          if (name.includes('female') || name.includes('hoda') || name.includes('zeina')) score += 40;
         }
-        if (!candidate) candidate = voices.find(v => v.lang.startsWith('ar'));
       }
 
-      if (candidate) utter.voice = candidate;
+      // Penalize legacy robotic Windows desktop voices
+      if (name.includes('david')) score -= 80;
+      if (name.includes('zira')) score -= 80;
+      if (name.includes('mark')) score -= 80;
+      if (name.includes('desktop')) score -= 60;
+
+      return { voice: v, score };
+    });
+
+    scored.sort((a, b) => b.score - a.score);
+    return scored[0]?.voice || langVoices[0];
+  }
+
+  async function speakText(text, langOverride, genderOverride) {
+    if (!state.soundEnabled) return 'muted';
+    if (!text || !text.trim()) return 'failed';
+
+    const targetLang = langOverride || (state.lang === 'en' ? 'en-US' : 'ar-SA');
+    const gender = genderOverride || state.gender;
+
+    if (hasNativeTTS()) {
+      return speakNative(text, targetLang);
     }
 
-    window.speechSynthesis.speak(utter);
+    if (await hasTtsServer()) {
+      const ttsUrl = `api/tts?text=${encodeURIComponent(text)}&lang=${targetLang}&gender=${gender}`;
+      const result = await playAudioUrl(ttsUrl);
+      if (result !== 'failed') return result;
+    }
+
+    return speakWithBrowser(text, targetLang, gender);
+  }
+
+  function speakNative(text, targetLang) {
+    stopAllSpeechAndAudio();
+    const id = `u${++nativeUtteranceSeq}`;
+    return new Promise((resolve) => {
+      nativePending[id] = resolve;
+      try {
+        window.AndroidBridge.speak(text, targetLang, state.voiceSpeed, id);
+      } catch (e) {
+        window.AlphabetSafariSpeechDone(id, false);
+      }
+    });
+  }
+
+  function speakWithBrowser(text, targetLang, gender) {
+    if (!('speechSynthesis' in window)) return Promise.resolve('failed');
+    stopAllSpeechAndAudio();
+
+    return new Promise((resolve) => {
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.lang = targetLang;
+      utter.rate = state.voiceSpeed;
+      // Natural pitch: shifting browser voices introduces a metallic, robotic ring.
+      utter.pitch = 1.0;
+
+      const bestVoice = getBestVoice(targetLang, gender);
+      if (bestVoice) utter.voice = bestVoice;
+
+      activeDone = resolve;
+      const finish = (result) => {
+        if (activeDone === resolve) settleActive(result);
+      };
+      utter.onend = () => finish('ended');
+      utter.onerror = () => finish('failed');
+      window.speechSynthesis.speak(utter);
+    });
   }
 
   function speakCurrentLetter() {
     const item = getCurrentItem();
-    // Warm natural child-friendly sentence
     const sentence = getNaturalLetterSentence(item);
-    speakText(sentence);
-    playMarimbaTone(state.currentIndex);
 
-    // Update companion speech bubble with current sentence
     updateCompanionBubble(sentence);
     bounceCompanion();
-  }
 
-  function speakCurrentPhonicsPhrase() {
-    const item = getCurrentItem();
-    const sentence = getNaturalLetterSentence(item);
-    speakText(sentence);
-    playMarimbaTone(state.currentIndex);
-    updateCompanionBubble(sentence);
-    bounceCompanion();
+    const clip = `assets/audio/${state.lang}/${state.gender}/${item.audio}.mp3`;
+    return playAudioUrl(clip).then(result => (result === 'failed' ? speakText(sentence) : result));
   }
 
   function speakArabicVowel(vowelType) {
@@ -572,15 +701,15 @@ function speakText(text, langOverride, customPitch, customRate) {
     if (state.lang !== 'ar') return;
 
     const charWithVowel = item[vowelType] || item.char;
-    let label = '';
+    let label;
     if (vowelType === 'fatha') label = `${charWithVowel}... فَتحَة`;
     else if (vowelType === 'damma') label = `${charWithVowel}... ضَمَّة`;
     else if (vowelType === 'kasra') label = `${charWithVowel}... كَسرَة`;
     else label = `${charWithVowel}... سُكون`;
 
     speakText(label, 'ar-SA');
-    playMarimbaTone(state.currentIndex + 2);
   }
+
 
   // ==========================================================================
   // CELEBRATION CONFETTI
@@ -602,6 +731,7 @@ function speakText(text, langOverride, customPitch, customRate) {
   function triggerConfetti() {
     playFanfareSound();
     if (!confettiCanvas || !confettiCtx) return;
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
     confettiParticles = [];
     const colors = ['#FF4757', '#FFA502', '#2ED573', '#1E90FF', '#7158E2', '#FF6B8B', '#FFD32A'];
@@ -661,19 +791,23 @@ function speakText(text, langOverride, customPitch, customRate) {
   // REWARDS: STARS & STICKERS
   // ==========================================================================
 
-  function addStars(num, reason) {
+  function addStars(num) {
     state.stars += num;
-    localStorage.setItem('alpha_stars', state.stars.toString());
-    updateStarUI();
+    store.set('alpha_stars', state.stars.toString());
 
-    // Check sticker unlock
-    STICKERS_LIST.forEach(stk => {
-      if (state.stars >= stk.cost && !state.unlockedStickers.includes(stk.id)) {
-        state.unlockedStickers.push(stk.id);
-        localStorage.setItem('alpha_stickers', JSON.stringify(state.unlockedStickers));
-        showCelebrateModal(`You unlocked the ${stk.emoji} ${stk.title}!`);
-      }
-    });
+    const newlyUnlocked = STICKERS_LIST.filter(stk =>
+      state.stars >= stk.cost && !state.unlockedStickers.includes(stk.id));
+    if (newlyUnlocked.length) {
+      newlyUnlocked.forEach(stk => state.unlockedStickers.push(stk.id));
+      store.set('alpha_stickers', state.unlockedStickers);
+      // One celebration even if a big reward unlocks several stickers at once.
+      const emojis = newlyUnlocked.map(stk => stk.emoji).join(' ');
+      showCelebrateModal(tr(
+        `You unlocked a new sticker: ${emojis}!`,
+        `${g('فَتَحْتَ', 'فَتَحْتِ')} مُلْصَقًا جَدِيدًا: ${emojis}!`
+      ));
+    }
+    updateStarUI();
   }
 
   function updateStarUI() {
@@ -684,13 +818,11 @@ function speakText(text, langOverride, customPitch, customRate) {
 
   function showCelebrateModal(msg) {
     triggerConfetti();
-    playFanfareSound();
     bounceCompanion();
-    const modal = document.getElementById('modal-celebrate');
     const msgEl = document.getElementById('celebrate-text');
     const naturalPraise = getNaturalPraise();
     if (msgEl) msgEl.textContent = msg ? (msg + ' ' + naturalPraise) : naturalPraise;
-    if (modal) modal.classList.add('open');
+    openModal('modal-celebrate');
 
     // Natural celebratory speech with short delay after fanfare
     setTimeout(() => {
@@ -718,7 +850,7 @@ function speakText(text, langOverride, customPitch, customRate) {
 
     // Phonics tag
     const phonicsEl = document.getElementById('spotlight-phonics');
-    if (phonicsEl) phonicsEl.textContent = `Sound: ${item.phonics}`;
+    if (phonicsEl) phonicsEl.textContent = `${tr('Sound', 'الصوت')}: ${item.phonics}`;
 
     // Translit tag
     const translitEl = document.getElementById('spotlight-translit');
@@ -817,9 +949,9 @@ function speakText(text, langOverride, customPitch, customRate) {
       textEl.textContent = cheers[state.currentIndex % cheers.length];
     } else {
       const cheers = [
-        `انظر يا بطل، هذا حرف "${item.char}"! مثل ${item.word} ${item.emoji}!`,
-        `أحسنت! اضغط على الحرف "${item.char}" لتسمع صوته الجميل!`,
-        `ما شاء الله! هل تحب ${item.word}؟ لنقل معاً: ${item.char}!`
+        `${g('انظر يا بطل', 'انظري يا أميرة')}، هذا حرف "${item.char}"! مثل ${item.word} ${item.emoji}!`,
+        `${g('أحسنت! اضغط', 'أحسنتِ! اضغطي')} على الحرف "${item.char}" ${g('لتسمع', 'لتسمعي')} صوته الجميل!`,
+        `ما شاء الله! هل ${g('تحب', 'تحبين')} ${item.word}؟ لنقل معاً: ${item.char}!`
       ];
       textEl.textContent = cheers[state.currentIndex % cheers.length];
     }
@@ -832,17 +964,30 @@ function speakText(text, langOverride, customPitch, customRate) {
   let isTracing = false;
   let traceBrushColor = 'rainbow';
   let rainbowHue = 0;
-  let userStrokesCount = 0;
+  let moveCount = 0;
+  let traceAwarded = false; // one reward per letter attempt
+  let traceSamples = null;  // sample points used to score how well the letter was traced
+
+  const TRACE_BRUSH_WIDTH = 26;
+  const TRACE_SAMPLE_STEP = 8;
+  const TRACE_PASS_COVERAGE = 0.6;  // share of the letter's body the child painted over
+  const TRACE_PASS_PRECISION = 0.55; // share of the child's paint that stayed near the letter
 
   const guideCanvas = document.getElementById('trace-guide-canvas');
   const userCanvas = document.getElementById('trace-user-canvas');
   const guideCtx = guideCanvas ? guideCanvas.getContext('2d') : null;
-  const userCtx = userCanvas ? userCanvas.getContext('2d') : null;
+  const userCtx = userCanvas ? userCanvas.getContext('2d', { willReadFrequently: true }) : null;
 
   function initTracingMode() {
     renderTraceLetterRibbon();
     setupCanvas();
     drawGuideLetter();
+    // The guide uses web fonts; redraw once they are ready so the outline matches the real glyph.
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(() => {
+        if (state.mode === 'trace') drawGuideLetter();
+      });
+    }
   }
 
   function setupCanvas() {
@@ -860,11 +1005,30 @@ function speakText(text, langOverride, customPitch, customRate) {
     clearUserDrawing();
   }
 
+  let traceResizeTimer = null;
+  window.addEventListener('resize', () => {
+    clearTimeout(traceResizeTimer);
+    traceResizeTimer = setTimeout(() => {
+      if (state.mode !== 'trace') return;
+      setupCanvas();
+      drawGuideLetter();
+    }, 150);
+  });
+
   function clearUserDrawing() {
     if (userCtx && userCanvas) {
       userCtx.clearRect(0, 0, userCanvas.width, userCanvas.height);
-      userStrokesCount = 0;
     }
+    moveCount = 0;
+    traceAwarded = false;
+  }
+
+  function letterFont() {
+    return state.lang === 'en' ? '800 240px Fredoka, sans-serif' : '800 280px "Baloo 2", sans-serif';
+  }
+
+  function letterOrigin(canvas) {
+    return { x: canvas.width / 2, y: canvas.height / 2 + 30 };
   }
 
   function drawGuideLetter() {
@@ -875,14 +1039,13 @@ function speakText(text, langOverride, customPitch, customRate) {
     const charEl = document.getElementById('trace-current-char');
     if (charEl) charEl.textContent = item.char;
 
-    const centerX = guideCanvas.width / 2;
-    const centerY = guideCanvas.height / 2 + 30;
+    const { x: centerX, y: centerY } = letterOrigin(guideCanvas);
 
     // Draw Large Dashed Outline Letter
     guideCtx.save();
     guideCtx.textAlign = 'center';
     guideCtx.textBaseline = 'middle';
-    guideCtx.font = state.lang === 'en' ? '800 240px Fredoka, sans-serif' : '800 280px "Baloo 2", sans-serif';
+    guideCtx.font = letterFont();
 
     // Soft background fill
     guideCtx.fillStyle = 'rgba(224, 231, 255, 0.5)';
@@ -895,14 +1058,92 @@ function speakText(text, langOverride, customPitch, customRate) {
     guideCtx.lineCap = 'round';
     guideCtx.lineJoin = 'round';
     guideCtx.strokeText(item.char, centerX, centerY);
-
-    // Cute start guiding dot
-    guideCtx.beginPath();
-    guideCtx.arc(centerX - 60, centerY - 80, 10, 0, Math.PI * 2);
-    guideCtx.fillStyle = '#10B981';
-    guideCtx.fill();
-
     guideCtx.restore();
+
+    traceSamples = buildTraceSamples(item.char);
+  }
+
+  // Render the letter off-screen twice: its solid body (what should be painted) and a
+  // brush-widened halo (where paint still counts as "on the letter"), then keep a grid
+  // of sample points so each check is a cheap lookup.
+  function buildTraceSamples(char) {
+    if (!guideCanvas) return null;
+    const w = guideCanvas.width;
+    const h = guideCanvas.height;
+    const off = document.createElement('canvas');
+    off.width = w;
+    off.height = h;
+    const ctx = off.getContext('2d', { willReadFrequently: true });
+    const { x, y } = letterOrigin(off);
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.font = letterFont();
+
+    ctx.fillText(char, x, y);
+    const body = ctx.getImageData(0, 0, w, h).data;
+
+    ctx.lineWidth = TRACE_BRUSH_WIDTH * 2;
+    ctx.lineJoin = 'round';
+    ctx.strokeText(char, x, y);
+    const halo = ctx.getImageData(0, 0, w, h).data;
+
+    const points = [];
+    for (let py = 0; py < h; py += TRACE_SAMPLE_STEP) {
+      for (let px = 0; px < w; px += TRACE_SAMPLE_STEP) {
+        const a = (py * w + px) * 4 + 3;
+        points.push({ a, inBody: body[a] > 128, nearLetter: halo[a] > 0 });
+      }
+    }
+    return { w, h, points };
+  }
+
+  function scoreTracing() {
+    if (!userCtx || !traceSamples || traceSamples.w !== userCanvas.width) return { coverage: 0, precision: 0 };
+    const painted = userCtx.getImageData(0, 0, traceSamples.w, traceSamples.h).data;
+    let body = 0, bodyPainted = 0, paint = 0, paintNear = 0;
+    traceSamples.points.forEach(p => {
+      const isPainted = painted[p.a] > 0;
+      if (p.inBody) {
+        body++;
+        if (isPainted) bodyPainted++;
+      }
+      if (isPainted) {
+        paint++;
+        if (p.nearLetter) paintNear++;
+      }
+    });
+    return {
+      coverage: body ? bodyPainted / body : 0,
+      precision: paint ? paintNear / paint : 0
+    };
+  }
+
+  function tracingPassed() {
+    const { coverage, precision } = scoreTracing();
+    return coverage >= TRACE_PASS_COVERAGE && precision >= TRACE_PASS_PRECISION;
+  }
+
+  function celebrateTracing() {
+    traceAwarded = true;
+    addStars(2);
+    triggerConfetti();
+    speakText(state.lang === 'en'
+      ? 'Super job! You traced the letter!'
+      : g('أَحْسَنْتَ يَا بَطَل! رَسْمٌ رَائِعٌ لِلْحَرْف!', 'أَحْسَنْتِ يَا أَمِيرَة! رَسْمٌ رَائِعٌ لِلْحَرْف!'));
+  }
+
+  function checkTracing() {
+    if (traceAwarded) {
+      celebrateTracing();
+      return;
+    }
+    if (tracingPassed()) {
+      celebrateTracing();
+    } else {
+      speakText(state.lang === 'en'
+        ? 'Almost there! Keep following the dotted letter!'
+        : g('اِقْتَرَبْتَ! تَابِعِ الرَّسْمَ عَلَى الخُطُوطِ المُنَقَّطَة!', 'اِقْتَرَبْتِ! تَابِعِي الرَّسْمَ عَلَى الخُطُوطِ المُنَقَّطَة!'));
+    }
   }
 
   function renderTraceLetterRibbon() {
@@ -926,19 +1167,20 @@ function speakText(text, langOverride, customPitch, customRate) {
     });
   }
 
-  // Pointer & Touch Tracing Events
+  // Pointer events cover mouse, touch and stylus (Windows touch screens and Android alike).
   function handleTraceStart(e) {
+    if (!userCtx) return;
     e.preventDefault();
     initAudioContext();
     isTracing = true;
-    userStrokesCount++;
+    try {
+      userCanvas.setPointerCapture(e.pointerId);
+    } catch (err) {}
 
     const promptOverlay = document.getElementById('trace-prompt-overlay');
     if (promptOverlay) promptOverlay.style.display = 'none';
 
     const pos = getCanvasPos(e);
-    if (!userCtx) return;
-
     userCtx.beginPath();
     userCtx.moveTo(pos.x, pos.y);
     drawTraceSparkle(pos.x, pos.y);
@@ -951,44 +1193,38 @@ function speakText(text, langOverride, customPitch, customRate) {
     const pos = getCanvasPos(e);
     rainbowHue = (rainbowHue + 4) % 360;
 
-    userCtx.lineWidth = 26;
+    userCtx.lineWidth = TRACE_BRUSH_WIDTH;
     userCtx.lineCap = 'round';
     userCtx.lineJoin = 'round';
+    userCtx.strokeStyle = traceBrushColor === 'rainbow' ? `hsl(${rainbowHue}, 90%, 55%)` : traceBrushColor;
 
-    if (traceBrushColor === 'rainbow') {
-      userCtx.strokeStyle = `hsl(${rainbowHue}, 90%, 55%)`;
-    } else {
-      userCtx.strokeStyle = traceBrushColor;
-    }
-
+    // Stroke each segment separately so the rainbow hue changes along the line.
     userCtx.lineTo(pos.x, pos.y);
     userCtx.stroke();
+    userCtx.beginPath();
+    userCtx.moveTo(pos.x, pos.y);
 
     drawTraceSparkle(pos.x, pos.y);
-    userStrokesCount++;
-
-    if (userStrokesCount % 15 === 0) {
+    moveCount++;
+    if (moveCount % 15 === 0) {
       playSparkleSound();
     }
   }
 
   function handleTraceEnd() {
+    if (!isTracing) return;
     isTracing = false;
-    if (userStrokesCount > 55) {
-      // Auto check after toddler traced enough!
-      addStars(1, 'traced letter');
-      triggerConfetti();
-      userStrokesCount = 0;
+    // Reward automatically as soon as the letter is well covered, once per attempt.
+    if (!traceAwarded && tracingPassed()) {
+      celebrateTracing();
     }
   }
 
   function getCanvasPos(e) {
     const rect = userCanvas.getBoundingClientRect();
-    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
     return {
-      x: (clientX - rect.left) * (userCanvas.width / rect.width),
-      y: (clientY - rect.top) * (userCanvas.height / rect.height)
+      x: (e.clientX - rect.left) * (userCanvas.width / rect.width),
+      y: (e.clientY - rect.top) * (userCanvas.height / rect.height)
     };
   }
 
@@ -1003,13 +1239,11 @@ function speakText(text, langOverride, customPitch, customRate) {
   }
 
   if (userCanvas) {
-    userCanvas.addEventListener('mousedown', handleTraceStart);
-    userCanvas.addEventListener('mousemove', handleTraceMove);
-    window.addEventListener('mouseup', handleTraceEnd);
-
-    userCanvas.addEventListener('touchstart', handleTraceStart, { passive: false });
-    userCanvas.addEventListener('touchmove', handleTraceMove, { passive: false });
-    window.addEventListener('touchend', handleTraceEnd);
+    userCanvas.style.touchAction = 'none';
+    userCanvas.addEventListener('pointerdown', handleTraceStart);
+    userCanvas.addEventListener('pointermove', handleTraceMove);
+    userCanvas.addEventListener('pointerup', handleTraceEnd);
+    userCanvas.addEventListener('pointercancel', handleTraceEnd);
   }
 
   // ==========================================================================
@@ -1019,14 +1253,25 @@ function speakText(text, langOverride, customPitch, customRate) {
   let balloonTarget = null;
   let balloonScore = 0;
   let balloonStreak = 0;
-  let balloonSpawnTimer = null;
+  let balloonRoundLocked = false; // ignore taps while a correct pop is being celebrated
+
+  const BALLOON_COLORS = [
+    'linear-gradient(135deg, #FF4757, #FF6B8B)',
+    'linear-gradient(135deg, #1E90FF, #70A1FF)',
+    'linear-gradient(135deg, #2ED573, #7BED9F)',
+    'linear-gradient(135deg, #FFA502, #ECCC68)',
+    'linear-gradient(135deg, #7158E2, #9B59B6)'
+  ];
+  const BALLOON_MIN_TARGETS = 2; // of 5 balloons, so every round is winnable
 
   function initBalloonGame() {
     balloonScore = 0;
     balloonStreak = 0;
+    balloonRoundLocked = false;
     updateBalloonStats();
-    pickNewBalloonTarget();
+    chooseBalloonTarget();
     startBalloonSpawner();
+    speakBalloonPrompt();
   }
 
   function updateBalloonStats() {
@@ -1036,14 +1281,16 @@ function speakText(text, langOverride, customPitch, customRate) {
     if (st) st.textContent = balloonStreak;
   }
 
-  function pickNewBalloonTarget() {
+  function chooseBalloonTarget() {
     const list = getActiveAlphabet();
-    balloonTarget = list[Math.floor(Math.random() * list.length)];
+    let next;
+    do {
+      next = randomItem(list);
+    } while (balloonTarget && next.char === balloonTarget.char && list.length > 1);
+    balloonTarget = next;
 
     const letterEl = document.getElementById('balloon-target-letter');
     if (letterEl) letterEl.textContent = balloonTarget.char;
-
-    speakBalloonPrompt();
   }
 
   function speakBalloonPrompt() {
@@ -1055,82 +1302,91 @@ function speakText(text, langOverride, customPitch, customRate) {
     }
   }
 
+  function randomItem(list) {
+    return list[Math.floor(Math.random() * list.length)];
+  }
+
+  function randomDistractor() {
+    const list = getActiveAlphabet().filter(item => item.char !== balloonTarget.char);
+    return randomItem(list);
+  }
+
+  // Give every balloon a letter for the current target, guaranteeing some targets.
+  function letterAllBalloons() {
+    const balloons = Array.from(document.querySelectorAll('#balloon-sky .flying-balloon'));
+    const targetSlots = new Set();
+    while (targetSlots.size < Math.min(BALLOON_MIN_TARGETS, balloons.length)) {
+      targetSlots.add(Math.floor(Math.random() * balloons.length));
+    }
+    balloons.forEach((balloon, idx) => {
+      const isTarget = targetSlots.has(idx) || Math.random() < 0.2;
+      setBalloonLetter(balloon, isTarget ? balloonTarget : randomDistractor());
+    });
+  }
+
+  function setBalloonLetter(balloon, item) {
+    balloon.dataset.char = item.char;
+    balloon.textContent = item.char;
+    balloon.style.background = randomItem(BALLOON_COLORS);
+  }
+
   function startBalloonSpawner() {
-    clearInterval(balloonSpawnTimer);
     const sky = document.getElementById('balloon-sky');
     if (!sky) return;
     sky.innerHTML = '';
 
-    // Create 5 persistent floating balloons with staggered negative delays
+    // 5 persistent floating balloons with staggered negative delays, spread across the width
     const delays = [0, -1.8, -3.6, -5.4, -7.2];
-    const xOffsets = [15, 32, 50, 68, 85]; // distributed percentages across width
+    const xOffsets = [15, 32, 50, 68, 85];
 
     delays.forEach((delay, idx) => {
       createBalloon(sky, delay, xOffsets[idx]);
     });
+    letterAllBalloons();
   }
 
   function createBalloon(sky, delaySec, xPercent) {
-    if (!balloonTarget) return;
-
-    const list = getActiveAlphabet();
-    // 50% chance of target letter
-    const isTarget = Math.random() < 0.5;
-    const item = isTarget ? balloonTarget : list[Math.floor(Math.random() * list.length)];
-
     const balloon = document.createElement('div');
     balloon.className = 'flying-balloon';
-    balloon.textContent = item.char;
-
-    const colors = [
-      'linear-gradient(135deg, #FF4757, #FF6B8B)',
-      'linear-gradient(135deg, #1E90FF, #70A1FF)',
-      'linear-gradient(135deg, #2ED573, #7BED9F)',
-      'linear-gradient(135deg, #FFA502, #ECCC68)',
-      'linear-gradient(135deg, #7158E2, #9B59B6)'
-    ];
-    balloon.style.background = colors[Math.floor(Math.random() * colors.length)];
-
-    // Position across width
     balloon.style.left = `${xPercent}%`;
     balloon.style.animationDelay = `${delaySec}s, ${Math.random() * 1.5}s`;
-
     sky.appendChild(balloon);
 
-    // Click handler for pop
     balloon.addEventListener('click', (e) => {
       e.stopPropagation();
+      if (balloonRoundLocked || !balloonTarget) return;
       playPopSound();
 
+      // Read the letter the balloon shows right now; balloons are re-lettered every round.
+      const item = getActiveAlphabet().find(it => it.char === balloon.dataset.char);
+      if (!item) return;
+
       if (item.char === balloonTarget.char) {
-        // Correct pop!
+        balloonRoundLocked = true;
         balloonScore++;
         balloonStreak++;
-        addStars(1, 'popped balloon');
+        addStars(1);
         triggerConfetti();
-
         balloon.classList.add('popped');
 
-        if (state.lang === 'en') {
-          speakText(`Yay! You popped ${balloonTarget.name}!`);
-        } else {
-          speakText(`رائع! حرف ${balloonTarget.name}!`);
-        }
+        speakText(state.lang === 'en'
+          ? `Yay! You popped ${balloonTarget.name}!`
+          : `رائع! حرف ${balloonTarget.name}!`);
 
         setTimeout(() => {
-          pickNewBalloonTarget();
-          respawnBalloon(balloon, sky, xPercent);
-        }, 1200);
-
+          if (state.mode !== 'balloon') return;
+          balloon.classList.remove('popped');
+          chooseBalloonTarget();
+          letterAllBalloons();
+          balloonRoundLocked = false;
+          speakBalloonPrompt();
+        }, 1400);
       } else {
-        // Wrong letter
         balloonStreak = 0;
         balloon.style.transform = 'scale(0.85) rotate(-15deg)';
-        if (state.lang === 'en') {
-          speakText(`That's ${item.name}! Find ${balloonTarget.name}!`);
-        } else {
-          speakText(`هذا حرف ${item.name}! ابحث عن ${balloonTarget.name}!`);
-        }
+        speakText(state.lang === 'en'
+          ? `That's ${item.name}! Find ${balloonTarget.name}!`
+          : `هذا حرف ${item.name}! ${g('ابحث', 'ابحثي')} عن ${balloonTarget.name}!`);
         setTimeout(() => {
           balloon.style.transform = '';
         }, 600);
@@ -1139,19 +1395,12 @@ function speakText(text, langOverride, customPitch, customRate) {
     });
   }
 
-  function respawnBalloon(balloon, sky, xPercent) {
-    balloon.classList.remove('popped');
-    const list = getActiveAlphabet();
-    const isTarget = Math.random() < 0.55;
-    const item = isTarget ? balloonTarget : list[Math.floor(Math.random() * list.length)];
-    balloon.textContent = item.char;
-  }
-
   // ==========================================================================
   // MODE 4: FIND LETTER / PICTURE MATCH
   // ==========================================================================
 
   let matchTarget = null;
+  let matchSolved = false; // stops a double tap on the right answer from scoring twice
 
   function initMatchGame() {
     pickNewMatchQuest();
@@ -1160,6 +1409,7 @@ function speakText(text, langOverride, customPitch, customRate) {
   function pickNewMatchQuest() {
     const list = getActiveAlphabet();
     matchTarget = list[Math.floor(Math.random() * list.length)];
+    matchSolved = false;
 
     const iconEl = document.getElementById('match-quest-icon');
     const wordEl = document.getElementById('match-quest-word');
@@ -1174,7 +1424,7 @@ function speakText(text, langOverride, customPitch, customRate) {
         : `"${matchTarget.char}... ${matchTarget.word}!"`;
     }
     if (feedbackEl) {
-      feedbackEl.textContent = state.lang === 'en' ? 'Tap the letter that starts the word!' : 'المس الحرف الأول من الكلمة!';
+      feedbackEl.textContent = state.lang === 'en' ? 'Tap the letter that starts the word!' : g('المس الحرف الأول من الكلمة!', 'المسي الحرف الأول من الكلمة!');
     }
 
     // Build 3 options (1 correct, 2 random)
@@ -1186,7 +1436,7 @@ function speakText(text, langOverride, customPitch, customRate) {
       }
     }
     // Shuffle options
-    options.sort(() => Math.random() - 0.5);
+    shuffleInPlace(options);
 
     renderMatchOptions(options);
     speakMatchPrompt();
@@ -1212,11 +1462,13 @@ function speakText(text, langOverride, customPitch, customRate) {
       btn.textContent = opt.char;
 
       btn.addEventListener('click', () => {
+        if (matchSolved) return;
         if (opt.char === matchTarget.char) {
+          matchSolved = true;
           // Success!
           btn.classList.add('correct');
           playFanfareSound();
-          addStars(2, 'matched letter');
+          addStars(2);
           triggerConfetti();
 
           const feedbackEl = document.getElementById('match-feedback-text');
@@ -1227,10 +1479,12 @@ function speakText(text, langOverride, customPitch, customRate) {
           if (state.lang === 'en') {
             speakText(`Yes! ${matchTarget.char} is for ${matchTarget.word}!`);
           } else {
-            speakText(`نعم! ${matchTarget.char} مثل ${matchTarget.word}! أحسنت!`);
+            speakText(`نعم! ${matchTarget.char} مثل ${matchTarget.word}! ${g('أحسنت', 'أحسنتِ')}!`);
           }
 
-          setTimeout(() => pickNewMatchQuest(), 1800);
+          setTimeout(() => {
+            if (state.mode === 'match') pickNewMatchQuest();
+          }, 1800);
         } else {
           // Wrong
           btn.classList.add('wrong');
@@ -1238,7 +1492,7 @@ function speakText(text, langOverride, customPitch, customRate) {
           if (state.lang === 'en') {
             speakText(`That is ${opt.name}! Try again!`);
           } else {
-            speakText(`هذا حرف ${opt.name}! حاول مرة أخرى!`);
+            speakText(`هذا حرف ${opt.name}! ${g('حاول', 'حاولي')} مرة أخرى!`);
           }
           setTimeout(() => btn.classList.remove('wrong'), 800);
         }
@@ -1256,14 +1510,16 @@ function speakText(text, langOverride, customPitch, customRate) {
   let flippedCards = [];
   let matchedPairsCount = 0;
   let memoryPairsCount = 3; // 6 cards easy mode for toddlers
+  let memoryRound = 0; // timers from an abandoned round must not touch the new one
 
   function initMemoryGame() {
+    memoryRound++;
     flippedCards = [];
     matchedPairsCount = 0;
     const list = getActiveAlphabet();
 
     // Pick random items
-    const shuffled = [...list].sort(() => Math.random() - 0.5).slice(0, memoryPairsCount);
+    const shuffled = shuffleInPlace([...list]).slice(0, memoryPairsCount);
     const deck = [];
 
     shuffled.forEach((item, id) => {
@@ -1271,7 +1527,7 @@ function speakText(text, langOverride, customPitch, customRate) {
       deck.push({ id: `pic-${id}`, pairId: id, type: 'pic', val: item.emoji, item });
     });
 
-    deck.sort(() => Math.random() - 0.5);
+    shuffleInPlace(deck);
     memoryCards = deck;
 
     renderMemoryGrid();
@@ -1314,26 +1570,28 @@ function speakText(text, langOverride, customPitch, customRate) {
     flippedCards.push({ card, cardEl });
 
     if (card.type === 'letter') {
-      speakText(card.card ? card.card.item.name : card.item.name);
+      speakText(card.item.name);
     } else {
       speakText(card.item.word);
     }
 
     if (flippedCards.length === 2) {
       const [c1, c2] = flippedCards;
+      const round = memoryRound;
       if (c1.card.pairId === c2.card.pairId) {
         // MATCH!
         setTimeout(() => {
+          if (round !== memoryRound) return;
           c1.cardEl.classList.add('matched');
           c2.cardEl.classList.add('matched');
           playSparkleSound();
-          addStars(2, 'memory pair');
+          addStars(2);
           matchedPairsCount++;
 
           if (matchedPairsCount === memoryPairsCount) {
             setTimeout(() => {
-              triggerConfetti();
-              showCelebrateModal('You found all the matching cards! Fantastic!');
+              if (round !== memoryRound) return;
+              showCelebrateModal(tr('You found all the matching cards!', g('وَجَدْتَ كُلَّ البِطَاقَاتِ المُتَشَابِهَة!', 'وَجَدْتِ كُلَّ البِطَاقَاتِ المُتَشَابِهَة!')));
             }, 600);
           }
           flippedCards = [];
@@ -1341,6 +1599,7 @@ function speakText(text, langOverride, customPitch, customRate) {
       } else {
         // NO MATCH
         setTimeout(() => {
+          if (round !== memoryRound) return;
           c1.cardEl.classList.remove('flipped');
           c2.cardEl.classList.remove('flipped');
           flippedCards = [];
@@ -1363,11 +1622,10 @@ function speakText(text, langOverride, customPitch, customRate) {
       const item = document.createElement('div');
       item.className = `sticker-item ${isUnlocked ? '' : 'locked'}`;
       item.textContent = stk.emoji;
-      item.title = isUnlocked ? stk.title : `Needs ${stk.cost} stars to unlock`;
+      item.title = isUnlocked ? stk.title : tr(`Needs ${stk.cost} stars to unlock`, `يحتاج ${stk.cost} نجوم`);
 
       if (isUnlocked) {
-        item.draggable = true;
-        item.addEventListener('click', (e) => {
+        item.addEventListener('click', () => {
           placeStickerOnPlayground(stk.emoji);
         });
       }
@@ -1400,43 +1658,37 @@ function speakText(text, langOverride, customPitch, customRate) {
     playPopSound();
   }
 
+  // Pointer capture keeps the drag on this sticker without global listeners,
+  // so placing many stickers does not pile up window handlers.
   function makeDraggable(el) {
-    let isDragging = false;
     let startX = 0, startY = 0, origX = 0, origY = 0;
+    let dragging = false;
 
-    function onPointerDown(e) {
-      isDragging = true;
-      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-      startX = clientX;
-      startY = clientY;
+    el.style.touchAction = 'none';
+    el.addEventListener('pointerdown', (e) => {
+      dragging = true;
+      startX = e.clientX;
+      startY = e.clientY;
       origX = el.offsetLeft;
       origY = el.offsetTop;
       el.style.zIndex = '99';
-    }
+      try {
+        el.setPointerCapture(e.pointerId);
+      } catch (err) {}
+    });
 
-    function onPointerMove(e) {
-      if (!isDragging) return;
-      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-      const dx = clientX - startX;
-      const dy = clientY - startY;
-      el.style.left = `${origX + dx}px`;
-      el.style.top = `${origY + dy}px`;
-    }
+    el.addEventListener('pointermove', (e) => {
+      if (!dragging) return;
+      el.style.left = `${origX + e.clientX - startX}px`;
+      el.style.top = `${origY + e.clientY - startY}px`;
+    });
 
-    function onPointerUp() {
-      isDragging = false;
+    const endDrag = () => {
+      dragging = false;
       el.style.zIndex = '1';
-    }
-
-    el.addEventListener('mousedown', onPointerDown);
-    window.addEventListener('mousemove', onPointerMove);
-    window.addEventListener('mouseup', onPointerUp);
-
-    el.addEventListener('touchstart', onPointerDown, { passive: true });
-    window.addEventListener('touchmove', onPointerMove, { passive: true });
-    window.addEventListener('touchend', onPointerUp);
+    };
+    el.addEventListener('pointerup', endDrag);
+    el.addEventListener('pointercancel', endDrag);
   }
 
   // ==========================================================================
@@ -1459,19 +1711,32 @@ function speakText(text, langOverride, customPitch, customRate) {
       if (textEn) textEn.textContent = 'Auto Play';
       if (textAr) textAr.textContent = 'تشغيل تلقائي';
       clearTimeout(state.jukeboxTimer);
+      jukeboxStep++;
     }
   }
 
+  const JUKEBOX_MIN_DWELL_MS = 2500; // keeps each letter on screen even when muted
+  const JUKEBOX_MAX_WAIT_MS = 15000; // safety net if a speech engine never reports "ended"
+  const JUKEBOX_GAP_MS = 1200;
+  let jukeboxStep = 0;
+
+  // Advance only after the clip finishes, so long phrases are never cut off mid-sentence.
   function playJukeboxStep() {
     if (!state.jukeboxPlaying) return;
+    const step = ++jukeboxStep;
     renderExploreView();
-    speakCurrentPhonicsPhrase();
 
-    const list = getActiveAlphabet();
-    state.jukeboxTimer = setTimeout(() => {
-      state.currentIndex = (state.currentIndex + 1) % list.length;
-      playJukeboxStep();
-    }, 4200);
+    const startedAt = Date.now();
+    const timeout = new Promise(resolve => setTimeout(resolve, JUKEBOX_MAX_WAIT_MS));
+    Promise.race([speakCurrentLetter(), timeout]).then(() => {
+      if (!state.jukeboxPlaying || step !== jukeboxStep) return;
+      const wait = Math.max(JUKEBOX_GAP_MS, JUKEBOX_MIN_DWELL_MS - (Date.now() - startedAt));
+      state.jukeboxTimer = setTimeout(() => {
+        if (!state.jukeboxPlaying || step !== jukeboxStep) return;
+        state.currentIndex = (state.currentIndex + 1) % getActiveAlphabet().length;
+        playJukeboxStep();
+      }, wait);
+    });
   }
 
   // ==========================================================================
@@ -1480,10 +1745,13 @@ function speakText(text, langOverride, customPitch, customRate) {
 
   let gateTarget = 3;
 
+  // An addition question (sums 11-18) that pre-readers can't answer by matching digits.
   function initParentGate() {
-    gateTarget = Math.floor(Math.random() * 5) + 1;
+    const a = Math.floor(Math.random() * 5) + 5;
+    const b = Math.floor(Math.random() * 5) + 5;
+    gateTarget = a + b;
     const targetEl = document.getElementById('gate-target-num');
-    if (targetEl) targetEl.textContent = gateTarget;
+    if (targetEl) targetEl.textContent = `${a} + ${b}`;
 
     const optWrap = document.getElementById('gate-options');
     if (!optWrap) return;
@@ -1491,10 +1759,10 @@ function speakText(text, langOverride, customPitch, customRate) {
 
     const nums = [gateTarget];
     while (nums.length < 3) {
-      const r = Math.floor(Math.random() * 6) + 1;
-      if (!nums.includes(r)) nums.push(r);
+      const r = gateTarget + Math.floor(Math.random() * 7) - 3;
+      if (r > 0 && !nums.includes(r)) nums.push(r);
     }
-    nums.sort(() => Math.random() - 0.5);
+    shuffleInPlace(nums);
 
     nums.forEach(n => {
       const btn = document.createElement('button');
@@ -1558,37 +1826,18 @@ function speakText(text, langOverride, customPitch, customRate) {
     // Interactive Mascot Tap to Speak
     const interactiveMascotBtn = document.getElementById('interactive-mascot');
     if (interactiveMascotBtn) {
-      interactiveMascotBtn.addEventListener('click', () => {
-        bounceCompanion();
-        playSparkleSound();
-        const voc = getChildVocative();
-        if (state.lang === 'en') {
-          const phrase = state.gender === 'boy'
-            ? `Hi ${voc}! I'm Leo, your safari buddy! Tap any letter to hear its story!`
-            : `Hello ${voc}! I'm Noor, your safari buddy! Tap any letter to hear its magical story!`;
-          speakText(phrase);
-          updateCompanionBubble(phrase);
-        } else {
-          const phraseAr = state.gender === 'boy'
-            ? `مَرْحَبًا يَا ${voc}! أَنَا صَدِيقُكَ اللَّطِيف، اِضْغَطْ عَلَى أَيِّ حَرْفٍ لِنَسْتَمِعَ إِلَى قِصَّتِهِ الرَّائِعَة!`
-            : `مَرْحَبًا يَا ${voc}! أَنَا صَدِيقَتُكِ اللَّطِيفَة، اِضْغَطِي عَلَى أَيِّ حَرْفٍ لِنَسْتَمِعَ إِلَى قِصَّتِهِ السَّاحِرَة!`;
-          speakText(phraseAr);
-          updateCompanionBubble(phraseAr);
-        }
-      });
+      interactiveMascotBtn.addEventListener('click', speakCompanionGreeting);
     }
 
     // Gender Modal Card Selections
     document.querySelectorAll('.gender-card-option').forEach(card => {
       card.addEventListener('click', (e) => {
         if (e.target.closest('.btn-voice-preview')) return;
-        const g = card.dataset.gender;
+        const chosen = card.dataset.gender;
         document.querySelectorAll('.gender-card-option').forEach(c => c.classList.remove('selected'));
         card.classList.add('selected');
-        // Auto update default avatar if user hasn't picked one
-        const defaultAv = (g === 'boy') ? '👦' : '👧';
-        state.gender = g;
-        state.avatar = defaultAv;
+        // Suggest the matching default avatar; nothing is applied until Save.
+        const defaultAv = chosen === 'boy' ? '👦' : '👧';
         document.querySelectorAll('.avatar-choice-btn').forEach(btn => {
           btn.classList.toggle('active', btn.dataset.avatar === defaultAv);
         });
@@ -1601,20 +1850,17 @@ function speakText(text, langOverride, customPitch, customRate) {
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
         const previewGender = btn.dataset.preview;
-        const tempOld = state.gender;
-        state.gender = previewGender;
         if (state.lang === 'en') {
           const sample = (previewGender === 'boy')
             ? "Hello little explorer! Let's learn the alphabet together!"
             : "Hello sweet star! Let's discover magical letters together!";
-          speakText(sample);
+          speakText(sample, null, previewGender);
         } else {
           const sampleAr = (previewGender === 'boy')
             ? "مَرْحَبًا يَا بَطَل! هَيَّا بِنَا نَتَعَلَّمُ الحُرُوفَ العَرَبِيَّةَ مَعًا!"
             : "مَرْحَبًا يَا أَمِيرَة! هَيَّا بِنَا نَكْتَشِفُ الحُرُوفَ العَرَبِيَّةَ الجَمِيلَة!";
-          speakText(sampleAr);
+          speakText(sampleAr, null, previewGender);
         }
-        state.gender = tempOld;
       });
     });
 
@@ -1623,7 +1869,6 @@ function speakText(text, langOverride, customPitch, customRate) {
       btn.addEventListener('click', () => {
         document.querySelectorAll('.avatar-choice-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-        state.avatar = btn.dataset.avatar;
         playChimeSound();
       });
     });
@@ -1633,19 +1878,14 @@ function speakText(text, langOverride, customPitch, customRate) {
     if (btnSaveGender) {
       btnSaveGender.addEventListener('click', () => {
         const selectedOption = document.querySelector('.gender-card-option.selected');
-        const g = selectedOption ? selectedOption.dataset.gender : state.gender;
+        const chosen = selectedOption ? selectedOption.dataset.gender : state.gender;
         const nameInput = document.getElementById('input-child-name');
         const name = nameInput ? nameInput.value : '';
         const activeAvBtn = document.querySelector('.avatar-choice-btn.active');
         const av = activeAvBtn ? activeAvBtn.dataset.avatar : state.avatar;
 
-        setGender(g, av, name);
-
-        const modal = document.getElementById('modal-gender');
-        if (modal) {
-          modal.classList.remove('open');
-          modal.setAttribute('aria-hidden', 'true');
-        }
+        closeModal('modal-gender');
+        setGender(chosen, av, name);
       });
     }
 
@@ -1653,33 +1893,8 @@ function speakText(text, langOverride, customPitch, customRate) {
     const btnEn = document.getElementById('btn-lang-en');
     const btnAr = document.getElementById('btn-lang-ar');
 
-    if (btnEn) {
-      btnEn.addEventListener('click', () => {
-        if (state.lang === 'en') return;
-        state.lang = 'en';
-        document.documentElement.setAttribute('dir', 'ltr');
-        document.documentElement.setAttribute('lang', 'en');
-        btnEn.classList.add('active');
-        btnAr.classList.remove('active');
-        state.currentIndex = 0;
-        switchMode(state.mode);
-        speakText('English Alphabet Safari!');
-      });
-    }
-
-    if (btnAr) {
-      btnAr.addEventListener('click', () => {
-        if (state.lang === 'ar') return;
-        state.lang = 'ar';
-        document.documentElement.setAttribute('dir', 'rtl');
-        document.documentElement.setAttribute('lang', 'ar');
-        btnAr.classList.add('active');
-        btnEn.classList.remove('active');
-        state.currentIndex = 0;
-        switchMode(state.mode);
-        speakText('مرحباً بك في سفاري الحروف العربية!');
-      });
-    }
+    if (btnEn) btnEn.addEventListener('click', () => setLanguage('en', true));
+    if (btnAr) btnAr.addEventListener('click', () => setLanguage('ar', true));
 
     // Mode Tabs
     document.querySelectorAll('.mode-tab').forEach(tab => {
@@ -1732,7 +1947,7 @@ function speakText(text, langOverride, customPitch, customRate) {
     const playAllBtn = document.getElementById('btn-play-all-sound');
     if (playAllBtn) {
       playAllBtn.addEventListener('click', () => {
-        speakCurrentPhonicsPhrase();
+        speakCurrentLetter();
       });
     }
 
@@ -1779,15 +1994,7 @@ function speakText(text, langOverride, customPitch, customRate) {
 
     const traceCheckBtn = document.getElementById('btn-trace-check');
     if (traceCheckBtn) {
-      traceCheckBtn.addEventListener('click', () => {
-        addStars(2, 'traced letter button');
-        triggerConfetti();
-        if (state.lang === 'en') {
-          speakText('Super job! You traced the letter!');
-        } else {
-          speakText('أحسنت يا بطل! رسم رائع للحرف!');
-        }
-      });
+      traceCheckBtn.addEventListener('click', checkTracing);
     }
 
     const traceNextBtn = document.getElementById('btn-trace-next');
@@ -1865,27 +2072,15 @@ function speakText(text, langOverride, customPitch, customRate) {
     // Header Tools: Sound Toggle
     const soundToggle = document.getElementById('btn-sound-toggle');
     if (soundToggle) {
-      soundToggle.addEventListener('click', () => {
-        state.soundEnabled = !state.soundEnabled;
-        const icon = document.getElementById('sound-icon');
-        if (icon) icon.textContent = state.soundEnabled ? '🔊' : '🔇';
-      });
+      soundToggle.addEventListener('click', () => setSoundEnabled(!state.soundEnabled));
     }
 
     // Voice Speed Toggle
     const speedBtn = document.getElementById('btn-voice-speed');
     if (speedBtn) {
       speedBtn.addEventListener('click', () => {
-        if (state.voiceSpeed === 0.75) {
-          state.voiceSpeed = 0.95;
-          document.getElementById('speed-icon').textContent = '🐶';
-        } else if (state.voiceSpeed === 0.95) {
-          state.voiceSpeed = 1.15;
-          document.getElementById('speed-icon').textContent = '🐆';
-        } else {
-          state.voiceSpeed = 0.75;
-          document.getElementById('speed-icon').textContent = '🐢';
-        }
+        const idx = VOICE_SPEEDS.findIndex(sp => sp.rate === state.voiceSpeed);
+        setVoiceSpeed(VOICE_SPEEDS[(idx + 1) % VOICE_SPEEDS.length].rate);
         playMarimbaTone(4);
       });
     }
@@ -1893,9 +2088,7 @@ function speakText(text, langOverride, customPitch, customRate) {
     // Android App Info Modal
     const androidBtn = document.getElementById('btn-android-app');
     if (androidBtn) {
-      androidBtn.addEventListener('click', () => {
-        document.getElementById('modal-android').classList.add('open');
-      });
+      androidBtn.addEventListener('click', () => openModal('modal-android'));
     }
 
     // Parents Modal
@@ -1905,7 +2098,7 @@ function speakText(text, langOverride, customPitch, customRate) {
         document.getElementById('parents-gate-view').style.display = 'flex';
         document.getElementById('parents-settings-view').style.display = 'none';
         initParentGate();
-        document.getElementById('modal-parents').classList.add('open');
+        openModal('modal-parents');
       });
     }
 
@@ -1925,25 +2118,20 @@ function speakText(text, langOverride, customPitch, customRate) {
 
     // Close Modals
     document.querySelectorAll('[data-close]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const id = btn.dataset.close;
-        const modal = document.getElementById(id);
-        if (modal) modal.classList.remove('open');
-      });
+      btn.addEventListener('click', () => closeModal(btn.dataset.close));
     });
 
     // Parent Settings inputs
-    const setVoiceSpeed = document.getElementById('setting-voice-speed');
-    if (setVoiceSpeed) {
-      setVoiceSpeed.addEventListener('change', (e) => {
-        state.voiceSpeed = parseFloat(e.target.value);
-      });
+    const speedSelect = document.getElementById('setting-voice-speed');
+    if (speedSelect) {
+      speedSelect.addEventListener('change', (e) => setVoiceSpeed(parseFloat(e.target.value)));
     }
 
     const setArabicVowels = document.getElementById('setting-arabic-vowels');
     if (setArabicVowels) {
       setArabicVowels.addEventListener('change', (e) => {
         state.showHarakat = e.target.checked;
+        saveSettings();
         renderExploreView();
       });
     }
@@ -1952,15 +2140,14 @@ function speakText(text, langOverride, customPitch, customRate) {
     if (setTranslit) {
       setTranslit.addEventListener('change', (e) => {
         state.showTranslit = e.target.checked;
+        saveSettings();
         renderExploreView();
       });
     }
 
     const setSound = document.getElementById('setting-sound-effects');
     if (setSound) {
-      setSound.addEventListener('change', (e) => {
-        state.soundEnabled = e.target.checked;
-      });
+      setSound.addEventListener('change', (e) => setSoundEnabled(e.target.checked));
     }
 
     const btnReset = document.getElementById('btn-reset-progress');
@@ -1969,12 +2156,71 @@ function speakText(text, langOverride, customPitch, customRate) {
         if (confirm('Reset stars and stickers progress?')) {
           state.stars = 0;
           state.unlockedStickers = ['s1'];
-          localStorage.setItem('alpha_stars', '0');
-          localStorage.setItem('alpha_stickers', '["s1"]');
+          store.set('alpha_stars', '0');
+          store.set('alpha_stickers', state.unlockedStickers);
           updateStarUI();
-          alert('Progress reset!');
         }
       });
+    }
+  }
+
+  const VOICE_SPEEDS = [
+    { rate: 0.75, icon: '🐢' },
+    { rate: 0.95, icon: '🐶' },
+    { rate: 1.15, icon: '🐆' }
+  ];
+
+  function setVoiceSpeed(rate) {
+    state.voiceSpeed = VOICE_SPEEDS.some(sp => sp.rate === rate) ? rate : 0.95;
+    saveSettings();
+    syncSettingsControls();
+  }
+
+  function setSoundEnabled(on) {
+    if (!on) stopAllSpeechAndAudio();
+    state.soundEnabled = on;
+    saveSettings();
+    syncSettingsControls();
+  }
+
+  // Header buttons and the parents' settings panel control the same values; keep both in step.
+  function syncSettingsControls() {
+    const speed = VOICE_SPEEDS.find(sp => sp.rate === state.voiceSpeed) || VOICE_SPEEDS[1];
+    const speedIcon = document.getElementById('speed-icon');
+    if (speedIcon) speedIcon.textContent = speed.icon;
+    const speedSelect = document.getElementById('setting-voice-speed');
+    if (speedSelect) speedSelect.value = String(speed.rate);
+
+    const soundIcon = document.getElementById('sound-icon');
+    if (soundIcon) soundIcon.textContent = state.soundEnabled ? '🔊' : '🔇';
+    const soundBox = document.getElementById('setting-sound-effects');
+    if (soundBox) soundBox.checked = state.soundEnabled;
+
+    const vowelsBox = document.getElementById('setting-arabic-vowels');
+    if (vowelsBox) vowelsBox.checked = state.showHarakat;
+    const translitBox = document.getElementById('setting-translit');
+    if (translitBox) translitBox.checked = state.showTranslit;
+  }
+
+  function applyLanguageChrome() {
+    const isEn = state.lang === 'en';
+    document.documentElement.setAttribute('dir', isEn ? 'ltr' : 'rtl');
+    document.documentElement.setAttribute('lang', state.lang);
+    const btnEn = document.getElementById('btn-lang-en');
+    const btnAr = document.getElementById('btn-lang-ar');
+    if (btnEn) btnEn.classList.toggle('active', isEn);
+    if (btnAr) btnAr.classList.toggle('active', !isEn);
+  }
+
+  function setLanguage(lang, announce) {
+    if (state.lang === lang) return;
+    state.lang = lang;
+    store.set('alpha_lang', lang);
+    applyLanguageChrome();
+    state.currentIndex = 0;
+    switchMode(state.mode);
+    if (announce) {
+      speakText(lang === 'en' ? 'English Alphabet Safari!' : 'مرحباً بك في سفاري الحروف العربية!');
     }
   }
 
@@ -2054,7 +2300,7 @@ function speakText(text, langOverride, customPitch, customRate) {
 
     setupHaptics() {
       document.addEventListener('pointerdown', (e) => {
-        if (e.target.closest('.letter-card, .balloon, .btn-action, .star-btn, .companion-avatar')) {
+        if (e.target.closest('.grid-letter-card, .flying-balloon, .action-btn, .match-choice-btn, .memory-card, .trace-chip, #companion-avatar')) {
           this.vibrate([20]);
         }
       }, { passive: true });
@@ -2070,12 +2316,16 @@ function speakText(text, langOverride, customPitch, customRate) {
         }
         if (e.code === 'Space' && e.target === document.body) {
           e.preventDefault();
-          const speakBtn = document.getElementById('modal-speak-btn');
-          if (speakBtn && speakBtn.offsetParent !== null) {
-            speakBtn.click();
-          } else {
-            speakCompanionGreeting();
-          }
+          if (state.mode === 'explore') speakCurrentLetter();
+          else speakCompanionGreeting();
+        }
+        // Arrow keys browse letters in Explore (direction follows the reading direction).
+        if ((e.key === 'ArrowRight' || e.key === 'ArrowLeft') && state.mode === 'explore' && e.target === document.body) {
+          const forward = (e.key === 'ArrowRight') === (state.lang === 'en');
+          const list = getActiveAlphabet();
+          state.currentIndex = (state.currentIndex + (forward ? 1 : -1) + list.length) % list.length;
+          renderExploreView();
+          speakCurrentLetter();
         }
         if (e.key === 'Escape') {
           closeAllModals();
@@ -2091,14 +2341,18 @@ function speakText(text, langOverride, customPitch, customRate) {
   // ==========================================================================
 
   function init() {
+    if (!VOICE_SPEEDS.some(sp => sp.rate === state.voiceSpeed)) state.voiceSpeed = 0.95;
     PlatformBridge.init();
+    applyLanguageChrome();
     applyGenderUI();
+    syncSettingsControls();
     updateStarUI();
     bindEvents();
     renderExploreView();
+    hasTtsServer(); // start the probe early so the first phrase isn't delayed
 
-    // Register Service Worker for offline PWA
-    if ('serviceWorker' in navigator) {
+    // Service workers only run over http(s); the Android app loads from file://.
+    if ('serviceWorker' in navigator && window.location.protocol.startsWith('http')) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('sw.js').catch(err => {
           console.log('SW registration note:', err);

@@ -2,9 +2,11 @@
 title Alphabet Safari Windows Launcher
 cd /d "%~dp0"
 echo Starting Alphabet Safari Windows Native App...
-python sync_assets.py
-python windows/alphabet_safari_app.py
-if %ERRORLEVEL% NEQ 0 (
-    echo Python launch encountered an issue. Trying with py launcher...
+where py >nul 2>&1
+if %ERRORLEVEL% EQU 0 (
+    py sync_assets.py
     py windows/alphabet_safari_app.py
+) else (
+    python sync_assets.py
+    python windows/alphabet_safari_app.py
 )

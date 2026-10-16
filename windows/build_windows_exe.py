@@ -1,7 +1,6 @@
 import os
 import sys
 import subprocess
-import shutil
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 WINDOWS_DIR = os.path.join(BASE_DIR, "windows")
@@ -19,15 +18,18 @@ def build_exe():
 
     app_script = os.path.join(WINDOWS_DIR, "alphabet_safari_app.py")
 
-    # Add core web data files to PyInstaller bundle
-    data_files = [
-        (os.path.join(BASE_DIR, "index.html"), "."),
-        (os.path.join(BASE_DIR, "styles.css"), "."),
-        (os.path.join(BASE_DIR, "script.js"), "."),
-        (os.path.join(BASE_DIR, "manifest.json"), "."),
-        (os.path.join(BASE_DIR, "sw.js"), "."),
-        (os.path.join(BASE_DIR, "assets"), "assets"),
-    ]
+    # Bundle the web app: the shared core files plus every asset except runtime caches.
+    sys.path.insert(0, BASE_DIR)
+    from sync_assets import CORE_FILES, ASSET_IGNORE
+
+    data_files = [(os.path.join(BASE_DIR, f), ".") for f in CORE_FILES]
+    assets_dir = os.path.join(BASE_DIR, "assets")
+    entries = os.listdir(assets_dir)
+    ignored = ASSET_IGNORE(assets_dir, entries)
+    for name in entries:
+        if name not in ignored:
+            src = os.path.join(assets_dir, name)
+            data_files.append((src, "assets/" + name if os.path.isdir(src) else "assets"))
 
     add_data_args = []
     for src, dst in data_files:
@@ -44,6 +46,7 @@ def build_exe():
         f"--workpath={BUILD_DIR}",
         "--clean",
         "--collect-all=webview",
+        "--collect-all=edge_tts",
         *add_data_args,
         app_script
     ]

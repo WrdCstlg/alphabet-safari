@@ -1,0 +1,63 @@
+name: Alphabet Safari CI/CD Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate-code:
+    name: Code & PWA Manifest Validation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Validate JavaScript Syntax
+        run: |
+          node -c script.js
+          node -c sw.js
+
+      - name: Validate JSON Manifest
+        run: |
+          node -e 'JSON.parse(require("fs").readFileSync("manifest.json"))'
+
+  docker-test:
+    name: Docker Web Server Live Verification
+    runs-on: ubuntu-latest
+    needs: [validate-code]
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: actions/setup-buildx-action@v3
+
+      - name: Build & Run Docker Container
+        run: |
+          docker compose build
+          docker compose up -d
+          sleep 4
+
+      - name: Verify Web Application Endpoint
+        run: |
+          curl -f http://localhost:8085/ | grep -q "Alphabet Safari"
+          curl -f http://localhost:8085/manifest.json | grep -q "Alphabet Safari"
+
+      - name: Teardown Docker Stack
+        if: always()
+        run: |
+          docker compose down

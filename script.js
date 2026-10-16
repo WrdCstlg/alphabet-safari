@@ -2016,10 +2016,82 @@ function speakText(text, langOverride, customPitch, customRate) {
   }
 
   // ==========================================================================
+  // UNIFIED PLATFORM BRIDGE (Android, Windows Desktop & Web/PWA)
+  // ==========================================================================
+  const PlatformBridge = {
+    isAndroid: !!(window.AndroidBridge || /Android/i.test(navigator.userAgent) || navigator.userAgent.includes('wv')),
+    isWindowsDesktop: !!(window.pywebview || /AlphabetSafariWin/i.test(navigator.userAgent)),
+    isPWA: window.matchMedia && window.matchMedia('(display-mode: standalone)').matches,
+
+    init() {
+      if (this.isAndroid) document.documentElement.classList.add('platform-android');
+      if (this.isWindowsDesktop) document.documentElement.classList.add('platform-windows');
+      if (this.isPWA) document.documentElement.classList.add('platform-pwa');
+
+      this.setupHaptics();
+      this.setupDesktopShortcuts();
+      console.log(`[PlatformBridge] Initialized on: ${this.getPlatformName()}`);
+    },
+
+    getPlatformName() {
+      if (this.isWindowsDesktop) return 'Windows Desktop (WebView2)';
+      if (this.isAndroid) return 'Android Native (WebView)';
+      if (this.isPWA) return 'PWA Standalone';
+      return 'Web Browser';
+    },
+
+    vibrate(pattern = [25]) {
+      try {
+        if (window.AndroidBridge && typeof window.AndroidBridge.vibrate === 'function') {
+          window.AndroidBridge.vibrate(pattern[0] || 25);
+        } else if (navigator.vibrate) {
+          navigator.vibrate(pattern);
+        }
+      } catch (e) {
+        // Haptics optional
+      }
+    },
+
+    setupHaptics() {
+      document.addEventListener('pointerdown', (e) => {
+        if (e.target.closest('.letter-card, .balloon, .btn-action, .star-btn, .companion-avatar')) {
+          this.vibrate([20]);
+        }
+      }, { passive: true });
+    },
+
+    setupDesktopShortcuts() {
+      window.addEventListener('keydown', (e) => {
+        if (e.key === 'F11' && this.isWindowsDesktop) {
+          e.preventDefault();
+          if (window.pywebview && window.pywebview.api && window.pywebview.api.toggle_fullscreen) {
+            window.pywebview.api.toggle_fullscreen();
+          }
+        }
+        if (e.code === 'Space' && e.target === document.body) {
+          e.preventDefault();
+          const speakBtn = document.getElementById('modal-speak-btn');
+          if (speakBtn && speakBtn.offsetParent !== null) {
+            speakBtn.click();
+          } else {
+            speakCompanionGreeting();
+          }
+        }
+        if (e.key === 'Escape') {
+          closeAllModals();
+        }
+      });
+    }
+  };
+
+  window.PlatformBridge = PlatformBridge;
+
+  // ==========================================================================
   // INITIALIZATION
   // ==========================================================================
 
   function init() {
+    PlatformBridge.init();
     applyGenderUI();
     updateStarUI();
     bindEvents();

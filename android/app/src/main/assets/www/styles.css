@@ -2082,3 +2082,417 @@ input:checked + .slider:before {
     font-size: 0.9rem;
   }
 }
+
+
+/* ==========================================================================
+   GENDER CONFIGURATION & INTERACTIVE COMPANION STYLES
+   ========================================================================== */
+
+/* Header Gender Badge Button */
+.gender-badge-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #38BDF8 0%, #0284C7 100%);
+  border: 2px solid #BAE6FD;
+  border-radius: var(--radius-full);
+  padding: 6px 14px;
+  cursor: pointer;
+  box-shadow: 0 5px 0 #0369A1, 0 8px 12px rgba(2, 132, 199, 0.35);
+  transition: all 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  color: #FFFFFF;
+}
+
+body[data-gender="girl"] .gender-badge-btn {
+  background: linear-gradient(135deg, #F472B6 0%, #DB2777 100%);
+  border: 2px solid #FBCFE8;
+  box-shadow: 0 5px 0 #9D174D, 0 8px 12px rgba(219, 39, 119, 0.35);
+}
+
+.gender-badge-btn:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.08);
+}
+
+.gender-badge-btn:active {
+  transform: translateY(3px);
+  box-shadow: 0 2px 0 #0369A1;
+}
+
+body[data-gender="girl"] .gender-badge-btn:active {
+  box-shadow: 0 2px 0 #9D174D;
+}
+
+.gender-avatar-emoji {
+  font-size: 22px;
+  display: inline-block;
+  animation: companion-float 2.5s ease-in-out infinite alternate;
+}
+
+.gender-badge-text {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+[dir="rtl"] .gender-badge-text {
+  text-align: right;
+}
+
+.gender-title-text {
+  font-family: var(--font-en);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.1;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+
+.gender-pill-tag {
+  background: rgba(255, 255, 255, 0.28);
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: 10px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+/* Companion Avatar in Mascot Bar */
+.companion-avatar-wrap {
+  position: relative;
+  width: 58px;
+  height: 58px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle, #FFF9E6 0%, #FFEAA7 100%);
+  border-radius: 50%;
+  border: 3px solid #FFA502;
+  box-shadow: 0 4px 10px rgba(255, 165, 2, 0.35);
+  cursor: pointer;
+}
+
+body[data-gender="boy"] .companion-avatar-wrap {
+  background: radial-gradient(circle, #E0F2FE 0%, #BAE6FD 100%);
+  border-color: #0284C7;
+  box-shadow: 0 4px 10px rgba(2, 132, 199, 0.35);
+}
+
+body[data-gender="girl"] .companion-avatar-wrap {
+  background: radial-gradient(circle, #FDF2F8 0%, #FBCFE8 100%);
+  border-color: #DB2777;
+  box-shadow: 0 4px 10px rgba(219, 39, 119, 0.35);
+}
+
+.companion-emoji {
+  font-size: 38px;
+  display: block;
+  user-select: none;
+  animation: companion-jump 2s cubic-bezier(0.28, 0.84, 0.42, 1) infinite;
+}
+
+.companion-sparkle {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  font-size: 16px;
+  animation: spin-pulse 2s infinite linear;
+}
+
+.companion-meta {
+  margin-top: 4px;
+}
+
+.companion-tag {
+  display: inline-block;
+  background: #2F3542;
+  color: #FFFFFF;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 8px;
+  white-space: nowrap;
+}
+
+body[data-gender="boy"] .companion-tag {
+  background: #0369A1;
+}
+
+body[data-gender="girl"] .companion-tag {
+  background: #9D174D;
+}
+
+/* Animations */
+@keyframes companion-jump {
+  0%, 100% { transform: translateY(0) scale(1, 1); }
+  30% { transform: translateY(-8px) scale(0.96, 1.05); }
+  60% { transform: translateY(0) scale(1.04, 0.96); }
+  75% { transform: translateY(-3px) scale(0.98, 1.02); }
+}
+
+@keyframes companion-float {
+  0% { transform: translateY(0) rotate(0deg); }
+  100% { transform: translateY(-4px) rotate(4deg); }
+}
+
+@keyframes spin-pulse {
+  0% { transform: scale(0.9) rotate(0deg); opacity: 0.8; }
+  50% { transform: scale(1.2) rotate(180deg); opacity: 1; }
+  100% { transform: scale(0.9) rotate(360deg); opacity: 0.8; }
+}
+
+/* ==========================================================================
+   GENDER MODAL STYLES
+   ========================================================================== */
+
+.modal-card-gender {
+  max-width: 580px;
+  width: 95%;
+  background: #FFFFFF;
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  box-shadow: 0 25px 60px rgba(47, 53, 66, 0.25);
+  border: 4px solid #FFEAA7;
+}
+
+.gender-modal-body {
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.modal-intro-text {
+  text-align: center;
+  font-size: 15px;
+  font-weight: 600;
+  color: #57606F;
+  line-height: 1.4;
+}
+
+/* Gender Selection Cards */
+.gender-cards-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 520px) {
+  .gender-cards-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.gender-card-option {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 20px 14px;
+  border-radius: var(--radius-lg);
+  border: 3px solid #E2E8F0;
+  background: #F8FAFC;
+  cursor: pointer;
+  box-shadow: 0 6px 0 #CBD5E1;
+  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.gender-card-option:hover {
+  transform: translateY(-4px);
+}
+
+.gender-card-option[data-gender="boy"] {
+  border-color: #BAE6FD;
+  background: #F0F9FF;
+  box-shadow: 0 6px 0 #7DD3FC;
+}
+
+.gender-card-option[data-gender="girl"] {
+  border-color: #FBCFE8;
+  background: #FDF2F8;
+  box-shadow: 0 6px 0 #F472B6;
+}
+
+.gender-card-option.selected[data-gender="boy"] {
+  border-color: #0284C7;
+  background: #E0F2FE;
+  box-shadow: 0 7px 0 #0369A1, 0 10px 20px rgba(2, 132, 199, 0.25);
+}
+
+.gender-card-option.selected[data-gender="girl"] {
+  border-color: #DB2777;
+  background: #FCE7F3;
+  box-shadow: 0 7px 0 #9D174D, 0 10px 20px rgba(219, 39, 119, 0.25);
+}
+
+.gender-card-badge {
+  font-size: 56px;
+  line-height: 1;
+  margin-bottom: 8px;
+  filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+}
+
+.gender-card-title {
+  font-size: 19px;
+  font-weight: 800;
+  color: #1E293B;
+  margin-bottom: 4px;
+}
+
+.gender-card-sub {
+  font-size: 12px;
+  color: #64748B;
+  margin-bottom: 12px;
+  line-height: 1.3;
+}
+
+.gender-voice-sample {
+  margin-top: auto;
+}
+
+.btn-voice-preview {
+  background: #FFFFFF;
+  border: 2px solid #CBD5E1;
+  border-radius: var(--radius-full);
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btn-voice-preview:hover {
+  background: #F1F5F9;
+  border-color: #94A3B8;
+  transform: scale(1.05);
+}
+
+.gender-check-icon {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #94A3B8;
+  color: #FFFFFF;
+  font-size: 14px;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.3;
+  transition: all 0.2s;
+}
+
+[dir="rtl"] .gender-check-icon {
+  right: auto;
+  left: 10px;
+}
+
+.gender-card-option.selected .gender-check-icon {
+  opacity: 1;
+}
+
+.gender-card-option.selected[data-gender="boy"] .gender-check-icon {
+  background: #0284C7;
+}
+
+.gender-card-option.selected[data-gender="girl"] .gender-check-icon {
+  background: #DB2777;
+}
+
+/* Child Name Input Row */
+.child-name-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.name-label {
+  font-size: 14px;
+  font-weight: 700;
+  color: #334155;
+}
+
+.name-input {
+  width: 100%;
+  padding: 10px 16px;
+  font-size: 16px;
+  font-family: var(--font-en);
+  font-weight: 600;
+  border: 2px solid #CBD5E1;
+  border-radius: var(--radius-md);
+  outline: none;
+  background: #F8FAFC;
+  transition: all 0.15s;
+}
+
+.name-input:focus {
+  border-color: #38BDF8;
+  background: #FFFFFF;
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.25);
+}
+
+body[data-gender="girl"] .name-input:focus {
+  border-color: #F472B6;
+  box-shadow: 0 0 0 3px rgba(244, 114, 182, 0.25);
+}
+
+/* Avatar Picker Section */
+.avatar-picker-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.avatar-picker-label {
+  font-size: 14px;
+  font-weight: 700;
+  color: #334155;
+}
+
+.avatar-icons-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
+
+.avatar-choice-btn {
+  width: 48px;
+  height: 48px;
+  font-size: 26px;
+  border-radius: 50%;
+  border: 3px solid #E2E8F0;
+  background: #FFFFFF;
+  cursor: pointer;
+  box-shadow: 0 4px 0 #CBD5E1;
+  transition: all 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.avatar-choice-btn:hover {
+  transform: translateY(-3px) scale(1.08);
+}
+
+.avatar-choice-btn.active {
+  border-color: #FFA502;
+  background: #FFF9E6;
+  box-shadow: 0 5px 0 #E18200;
+  transform: scale(1.12);
+}
+
+/* Save Button */
+.btn-save-gender {
+  width: 100%;
+  padding: 14px;
+  font-size: 18px;
+  font-weight: 800;
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+}

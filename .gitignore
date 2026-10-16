@@ -5,3 +5,10 @@ android/.gradle/
 android/app/build/
 android/build/
 *.log
+
+# Windows build artifacts
+windows/build/
+windows/dist/
+*.spec
+__pycache__/
+*.pyc

@@ -90,11 +90,14 @@
 
   const state = {
     lang: 'en', // 'en' or 'ar'
+    gender: localStorage.getItem('alpha_gender') || 'boy', // 'boy' or 'girl'
+    childName: localStorage.getItem('alpha_child_name') || '',
+    avatar: localStorage.getItem('alpha_avatar') || '👦',
     mode: 'explore', // 'explore', 'trace', 'balloon', 'match', 'memory', 'stickers'
     currentIndex: 0,
     caseMode: 'both', // 'both', 'upper'
     soundEnabled: true,
-    voiceSpeed: 0.75, // Toddler pace
+    voiceSpeed: 0.82, // Toddler friendly pace
     showHarakat: true,
     showTranslit: true,
     stars: parseInt(localStorage.getItem('alpha_stars') || '0', 10),
@@ -263,7 +266,235 @@
     window.speechSynthesis.onvoiceschanged = populateVoices;
   }
 
-  function speakText(text, langOverride) {
+  
+  // ==========================================================================
+  // NATURAL SPOKEN LANGUAGE & GENDER-AWARE SPEECH LIBRARY
+  // ==========================================================================
+
+  const NATURAL_PHONICS_EN = {
+    'A': 'A is for Apple! Ah, ah, apple! Crunch, crunch, sweet and juicy red apple!',
+    'B': 'B is for Bear! Buh, buh, bear! Big fuzzy teddy bear giving you a warm happy hug!',
+    'C': 'C is for Cat! Cuh, cuh, cat! Playful little kitten playing with yarn, meow meow!',
+    'D': 'D is for Duck! Duh, duh, duck! Yellow duck swimming happily in the pond, quack quack!',
+    'E': 'E is for Elephant! Eh, eh, elephant! Big gentle elephant waving his long swinging trunk!',
+    'F': 'F is for Frog! Fuh, fuh, frog! Little green frog hopping on a lily pad, ribbit ribbit!',
+    'G': 'G is for Giraffe! Juh, juh, giraffe! Tall friendly giraffe reaching high into the trees!',
+    'H': 'H is for Horse! Huh, huh, horse! Galloping horse running freely in the meadow, neigh neigh!',
+    'I': 'I is for Ice Cream! I, i, ice cream! Cold, sweet, yummy rainbow ice cream!',
+    'J': 'J is for Jellyfish! Juh, juh, jellyfish! Floating gently like magic in the sparkling ocean!',
+    'K': 'K is for Kangaroo! Kuh, kuh, kangaroo! Bouncing high through the sunny safari, boing boing!',
+    'L': 'L is for Lion! Luh, luh, lion! Brave little lion cub giving a cheerful roar, rawr!',
+    'M': 'M is for Monkey! Muh, muh, monkey! Silly little monkey swinging from the trees eating a banana!',
+    'N': 'N is for Nest! Nuh, nuh, nest! Cozy little bird nest with warm eggs high in the tree!',
+    'O': 'O is for Owl! Ah, ah, owl! Wise night owl sitting under the stars, hoot hoot!',
+    'P': 'P is for Penguin! Puh, puh, penguin! Cute little penguin waddling happily on the cold white ice!',
+    'Q': 'Q is for Queen! Kwuh, kwuh, queen! Beautiful royal queen wearing a sparkling golden crown!',
+    'R': 'R is for Rainbow! Ruh, ruh, rainbow! Magic colorful rainbow smiling across the blue sky!',
+    'S': 'S is for Sun! Suh, suh, sun! Big warm golden sun shining down with a warm bright smile!',
+    'T': 'T is for Tiger! Tuh, tuh, tiger! Friendly little tiger cub with bright orange and black stripes!',
+    'U': 'U is for Umbrella! Uh, uh, umbrella! Bright colorful umbrella keeping us cozy and dry in the rain!',
+    'V': 'V is for Violin! Vuh, vuh, violin! Playing sweet, gentle musical melodies!',
+    'W': 'W is for Whale! Wuh, wuh, whale! Giant gentle blue whale making big water splashes in the sea!',
+    'X': 'X is for Xylophone! Zz, zz, xylophone! Making joyful ding dong music notes!',
+    'Y': 'Y is for Yacht! Yuh, yuh, yacht! Sailing smoothly across the calm blue waves!',
+    'Z': 'Z is for Zebra! Zz, zz, zebra! Beautiful zebra running freely in the sunny safari!'
+  };
+
+  const NATURAL_PHONICS_AR = {
+    'أ': { boy: 'حَرْفُ الأَلِفِ.. أَرْنَب! أ، أ، أَرْنَبٌ لَطِيفٌ يَقْفِزُ فَرَحًا يَا بَطَلِي!', girl: 'حَرْفُ الأَلِفِ.. أَرْنَب! أ، أ، أَرْنَبٌ لَطِيفٌ يَقْفِزُ فَرَحًا يَا أَمِيرَتِي!' },
+    'ب': { boy: 'حَرْفُ البَاءِ.. بَطَّة! ب، ب، بَطَّةٌ جَمِيلَةٌ تَعُومُ فِي المَاءِ وَتَقُولُ وَاقْ وَاقْ!', girl: 'حَرْفُ البَاءِ.. بَطَّة! ب، ب، بَطَّةٌ جَمِيلَةٌ تَعُومُ فِي المَاءِ وَتَقُولُ وَاقْ وَاقْ!' },
+    'ت': { boy: 'حَرْفُ التَّاءِ.. تُفَّاحَة! تَ، تَ، تُفَّاحَةٌ حَمْرَاءُ لَذِيذَةٌ وَمُفِيدَة!', girl: 'حَرْفُ التَّاءِ.. تُفَّاحَة! تَ، تَ، تُفَّاحَةٌ حَمْرَاءُ حُلْوَةٌ مِثْلَكِ!' },
+    'ث': { boy: 'حَرْفُ الثَّاءِ.. ثَعْلَب! ثَ، ثَ، ثَعْلَبٌ ذَكِيٌّ وَسَرِيعٌ فِي الغَابَة!', girl: 'حَرْفُ الثَّاءِ.. ثَعْلَب! ثَ، ثَ، ثَعْلَبٌ ذَكِيٌّ وَسَرِيعٌ فِي الغَابَة!' },
+    'ج': { boy: 'حَرْفُ الجِيمِ.. جَمَل! جَ، جَ، جَمَلٌ صَبُورٌ فِي الصَّحْرَاءِ الذَّهَبِيَّة!', girl: 'حَرْفُ الجِيمِ.. جَمَل! جَ، جَ، جَمَلٌ صَبُورٌ فِي الصَّحْرَاءِ الذَّهَبِيَّة!' },
+    'ح': { boy: 'حَرْفُ الحَاءِ.. حِصَان! حَ، حَ، حِصَانٌ أَصِيلٌ يَرْكُضُ بِسُرْعَةٍ يَا بَطَل!', girl: 'حَرْفُ الحَاءِ.. حِصَان! حَ، حَ، حِصَانٌ أَصِيلٌ يَرْكُضُ بِسُرْعَةٍ يَا أَمِيرَة!' },
+    'خ': { boy: 'حَرْفُ الخَاءِ.. خَرُوف! خَ، خَ، خَرُوفٌ لَطِيفٌ صُوفُهُ أَبْيَضُ نَاعِم!', girl: 'حَرْفُ الخَاءِ.. خَرُوف! خَ، خَ، خَرُوفٌ لَطِيفٌ صُوفُهُ أَبْيَضُ نَاعِم!' },
+    'د': { boy: 'حَرْفُ الدَّالِ.. دَلْفِين! دَ، دَ، دَلْفِينٌ مَرِحٌ يَقْفِزُ فِي أَمْوَاجِ البَحْر!', girl: 'حَرْفُ الدَّالِ.. دَلْفِين! دَ، دَ، دَلْفِينٌ مَرِحٌ يَقْفِزُ فِي أَمْوَاجِ البَحْر!' },
+    'ذ': { boy: 'حَرْفُ الذَّالِ.. ذُرَة! ذَ، ذَ، ذُرَةٌ صَفْرَاءُ حُلْوَةٌ وَشَهِيَّة!', girl: 'حَرْفُ الذَّالِ.. ذُرَة! ذَ، ذَ، ذُرَةٌ صَفْرَاءُ حُلْوَةٌ وَشَهِيَّة!' },
+    'ر': { boy: 'حَرْفُ الرَّاءِ.. رُمَّان! رَ، رَ، رُمَّانٌ أَحْمَرُ طَيِّبُ المَذَاق!', girl: 'حَرْفُ الرَّاءِ.. رُمَّان! رَ، رَ، رُمَّانٌ أَحْمَرُ طَيِّبُ المَذَاق!' },
+    'ز': { boy: 'حَرْفُ الزَّاي.. زَرَافَة! زَ، زَ، زَرَافَةٌ طَوِيلَةٌ لَطِيفَةٌ عُنُقُهَا جَمِيل!', girl: 'حَرْفُ الزَّاي.. زَرَافَة! زَ، زَ، زَرَافَةٌ طَوِيلَةٌ لَطِيفَةٌ عُنُقُهَا جَمِيل!' },
+    'س': { boy: 'حَرْفُ السِّين.. سَمَكَة! سَ، سَ، سَمَكَةٌ مُلَوَّنَةٌ تَلْمَعُ تَحْتَ المَاء!', girl: 'حَرْفُ السِّين.. سَمَكَة! سَ، سَ، سَمَكَةٌ مُلَوَّنَةٌ تَلْمَعُ تَحْتَ المَاء!' },
+    'ش': { boy: 'حَرْفُ الشِّين.. شَمْس! شَ، شَ، شَمْسٌ مُشْرِقَةٌ تَمْلأُ الدُّنْيَا دِفْئًا وَنُورًا!', girl: 'حَرْفُ الشِّين.. شَمْس! شَ، شَ، شَمْسٌ مُشْرِقَةٌ تَمْلأُ الدُّنْيَا دِفْئًا وَنُورًا!' },
+    'ص': { boy: 'حَرْفُ الصَّاد.. صَقْر! صَ، صَ، صَقْرٌ قَوِيٌّ شُجَاعٌ يُحَلِّقُ عَالِيًا!', girl: 'حَرْفُ الصَّاد.. صَقْر! صَ، صَ، صَقْرٌ قَوِيٌّ جَمِيلٌ يُحَلِّقُ عَالِيًا!' },
+    'ض': { boy: 'حَرْفُ الضَّاد.. ضِفْدَع! ضَ، ضَ، ضِفْدَعٌ أَخْضَرُ صَغِيرٌ يَقْفِزُ فِي البِرْكَة!', girl: 'حَرْفُ الضَّاد.. ضِفْدَع! ضَ، ضَ، ضِفْدَعٌ أَخْضَرُ صَغِيرٌ يَقْفِزُ فِي البِرْكَة!' },
+    'ط': { boy: 'حَرْفُ الطَّاءِ.. طَائِرَة! طَ، طَ، طَائِرَةٌ بَيْضَاءُ تُسَافِرُ بَيْنَ الغُيُوم!', girl: 'حَرْفُ الطَّاءِ.. طَائِرَة! طَ، طَ، طَائِرَةٌ بَيْضَاءُ تُسَافِرُ بَيْنَ الغُيُوم!' },
+    'ظ': { boy: 'حَرْفُ الظَّاءِ.. ظَبْي! ظَ، ظَ، ظَبْيٌ رَشِيقٌ فِي البَرَارِي!', girl: 'حَرْفُ الظَّاءِ.. ظَبْي! ظَ، ظَ، ظَبْيٌ رَشِيقٌ جَمِيلٌ فِي البَرَارِي!' },
+    'ع': { boy: 'حَرْفُ العَيْن.. عُصْفُور! عَ، عَ، عُصْفُورٌ صَغِيرٌ يُغَرِّدُ بِأَجْمَلِ الأَلْحَان!', girl: 'حَرْفُ العَيْن.. عُصْفُور! عَ، عَ، عُصْفُورٌ صَغِيرٌ يُغَرِّدُ بِأَجْمَلِ الأَلْحَان!' },
+    'غ': { boy: 'حَرْفُ الغَيْن.. غَزَال! غَ، غَ، غَزَالٌ رَقِيقٌ فِي المَرَاعِي الخَضْرَاء!', girl: 'حَرْفُ الغَيْن.. غَزَال! غَ، غَ، غَزَالٌ رَقِيقٌ فِي المَرَاعِي الخَضْرَاء!' },
+    'ف': { boy: 'حَرْفُ الفَاءِ.. فَرَاشَة! فَ، فَ، فَرَاشَةٌ بَدِيعَةٌ تَرْقُصُ بَيْنَ الأَزْهَار!', girl: 'حَرْفُ الفَاءِ.. فَرَاشَة! فَ، فَ، فَرَاشَةٌ بَدِيعَةٌ تَرْقُصُ بَيْنَ الأَزْهَار!' },
+    'ق': { boy: 'حَرْفُ القَاف.. قِطَّة! قَ، قَ، قِطَّةٌ أَلِيفَةٌ تُحِبُّ اللَّعِبَ وَتَقُولُ مِيَاو!', girl: 'حَرْفُ القَاف.. قِطَّة! قَ، قَ، قِطَّةٌ أَلِيفَةٌ تُحِبُّ اللَّعِبَ وَتَقُولُ مِيَاو!' },
+    'ك': { boy: 'حَرْفُ الكَاف.. كِتَاب! كَ، كَ، كِتَابٌ مُفِيدٌ يَحْمِلُ أَحْلَى القِصَص!', girl: 'حَرْفُ الكَاف.. كِتَاب! كَ، كَ، كِتَابٌ مُفِيدٌ يَحْمِلُ أَحْلَى القِصَص!' },
+    'ل': { boy: 'حَرْفُ اللَّام.. لَيْمُون! لَ، لَ، لَيْمُونٌ أَصْفَرُ مُنْعِشٌ وَلَذِيذ!', girl: 'حَرْفُ اللَّام.. لَيْمُون! لَ، لَ، لَيْمُونٌ أَصْفَرُ مُنْعِشٌ وَلَذِيذ!' },
+    'م': { boy: 'حَرْفُ المِيم.. مَوْزَة! مَ، مَ، مَوْزَةٌ صَفْرَاءُ حُلْوَةٌ يُحِبُّهَا الأَطْفَال!', girl: 'حَرْفُ المِيم.. مَوْزَة! مَ، مَ، مَوْزَةٌ صَفْرَاءُ حُلْوَةٌ يُحِبُّهَا الأَطْفَال!' },
+    'ن': { boy: 'حَرْفُ النُّون.. نَجْمَة! نَ، نَ، نَجْمَةٌ سَاطِعَةٌ تَلْمَعُ لَيْلًا فِي السَّمَاء!', girl: 'حَرْفُ النُّون.. نَجْمَة! نَ، نَ، نَجْمَةٌ سَاطِعَةٌ تَلْمَعُ لَيْلًا فِي السَّمَاء!' },
+    'هـ': { boy: 'حَرْفُ الهَاءِ.. هِلَال! هَ، هَ، هِلَالٌ فِضِّيٌّ جَمِيلٌ يُضِيءُ لَيَالِينَا!', girl: 'حَرْفُ الهَاءِ.. هِلَال! هَ، هَ، هِلَالٌ فِضِّيٌّ جَمِيلٌ يُضِيءُ لَيَالِينَا!' },
+    'و': { boy: 'حَرْفُ الوَاو.. وَرْدَة! وَ، وَ، وَرْدَةٌ حَمْرَاءُ جَمِيلَةٌ رَائِحَتُهَا عَطِرَة!', girl: 'حَرْفُ الوَاو.. وَرْدَة! وَ، وَ، وَرْدَةٌ حَمْرَاءُ جَمِيلَةٌ رَائِحَتُهَا عَطِرَة!' },
+    'ي': { boy: 'حَرْفُ اليَاءِ.. يَد! يَ، يَ، يَدٌ صَغِيرَةٌ نَظِيفَةٌ تُلَوِّحُ بِمَحَبَّة!', girl: 'حَرْفُ اليَاءِ.. يَد! يَ، يَ، يَدٌ صَغِيرَةٌ نَظِيفَةٌ تُلَوِّحُ بِمَحَبَّة!' }
+  };
+
+  function getChildVocative() {
+    if (state.childName) return state.childName;
+    if (state.lang === 'en') {
+      return state.gender === 'boy' ? 'little hero' : 'little princess';
+    } else {
+      return state.gender === 'boy' ? 'يا بطلي الصغير' : 'يا أميرتي الصغيرة';
+    }
+  }
+
+  function getNaturalPraise() {
+    const name = state.childName;
+    if (state.lang === 'en') {
+      const boyPraises = [
+        name ? `Woohoo! You did it, ${name}! You are a superhero!` : 'Woohoo! You did it, my brave champion!',
+        'Awesome job, superstar! You are so smart!',
+        'High five, buddy! Look at you go!',
+        'That was magnificent! You are an alphabet master!'
+      ];
+      const girlPraises = [
+        name ? `Yay! You did it, ${name}! You shine so bright!` : 'Yay! You did it, my sweet little princess!',
+        'Fantastic job, superstar! You are so talented!',
+        'Hooray! Look at you go, sweet star!',
+        'That was pure magic! You are an alphabet star!'
+      ];
+      const list = state.gender === 'boy' ? boyPraises : girlPraises;
+      return list[Math.floor(Math.random() * list.length)];
+    } else {
+      const boyPraisesAr = [
+        name ? `أَحْسَنْتَ يَا ${name}! أَنْتَ بَطَلٌ خَارِق!` : 'أَحْسَنْتَ يَا بَطَلَ الأَبْطَال! رَائِعٌ جِدًّا!',
+        'مَا شَاءَ الله عَلَيْكَ يَا بَطَلِي الذَّكِيّ!',
+        'مُمْتَازٌ يَا حَبِيبِي! أَنْتَ نَجْمُ السَّفَارِي!',
+        'عَمَلٌ رَائِعٌ جِدًّا! أَنَا فَخُورٌ بِكَ!'
+      ];
+      const girlPraisesAr = [
+        name ? `أَحْسَنْتِ يَا ${name}! أَنْتِ أَمِيرَةٌ سَاحِرَة!` : 'أَحْسَنْتِ يَا أَمِيرَتِي الحُلْوَة! رَائِعَةٌ جِدًّا!',
+        'مَا شَاءَ الله عَلَيْكِ يَا شَاطِرَة!',
+        'مُمْتَازَةٌ يَا حَبِيبَتِي! أَنْتِ نَجْمَةُ السَّفَارِي!',
+        'إِبْدَاعٌ جَمِيلٌ جِدًّا! أَنَا فَخُورَةٌ بِكِ!'
+      ];
+      const list = state.gender === 'boy' ? boyPraisesAr : girlPraisesAr;
+      return list[Math.floor(Math.random() * list.length)];
+    }
+  }
+
+  function getNaturalLetterSentence(item) {
+    if (state.lang === 'en') {
+      return NATURAL_PHONICS_EN[item.char] || `${item.name} is for ${item.word}! ${item.speechHint}`;
+    } else {
+      const entry = NATURAL_PHONICS_AR[item.char];
+      if (entry) {
+        return state.gender === 'boy' ? entry.boy : entry.girl;
+      }
+      return `${item.name}... ${item.word}! ${item.speechHint}`;
+    }
+  }
+
+
+  // ==========================================================================
+  // GENDER CONFIGURATION & COMPANION CONTROLLER
+  // ==========================================================================
+
+  function applyGenderUI() {
+    document.body.setAttribute('data-gender', state.gender);
+
+    // Header badge elements
+    const avatarBadge = document.getElementById('gender-avatar-badge');
+    const badgeTitle = document.getElementById('gender-badge-title');
+    const pillTag = document.getElementById('gender-pill-tag');
+    const compAvatar = document.getElementById('companion-avatar');
+    const compNameTag = document.getElementById('companion-name-tag');
+
+    const isBoy = state.gender === 'boy';
+    const activeAvatar = state.avatar || (isBoy ? '👦' : '👧');
+
+    if (avatarBadge) avatarBadge.textContent = activeAvatar;
+    if (pillTag) pillTag.textContent = isBoy ? 'Boy' : 'Girl';
+
+    if (badgeTitle) {
+      if (isBoy) {
+        badgeTitle.innerHTML = '<span class="eng-text">' + (state.childName ? state.childName + ' • Boy' : 'Little Boy') + '</span><span class="ar-text">' + (state.childName ? state.childName + ' • بطل' : 'البطل الصغير') + '</span>';
+      } else {
+        badgeTitle.innerHTML = '<span class="eng-text">' + (state.childName ? state.childName + ' • Girl' : 'Little Girl') + '</span><span class="ar-text">' + (state.childName ? state.childName + ' • أميرة' : 'الأميرة الصغيرة') + '</span>';
+      }
+    }
+
+    if (compAvatar) compAvatar.textContent = activeAvatar;
+    if (compNameTag) {
+      const defaultNameEn = isBoy ? 'Leo • Hero' : 'Noor • Star';
+      const defaultNameAr = isBoy ? 'زيد • البطل' : 'نور • الأميرة';
+      const displayEn = state.childName ? state.childName + ' • ' + (isBoy ? 'Hero' : 'Star') : defaultNameEn;
+      const displayAr = state.childName ? state.childName + ' • ' + (isBoy ? 'البطل' : 'الأميرة') : defaultNameAr;
+      compNameTag.innerHTML = '<span class="eng-text">' + displayEn + '</span><span class="ar-text">' + displayAr + '</span>';
+    }
+
+    // Modal selection highlight
+    document.querySelectorAll('.gender-card-option').forEach(card => {
+      card.classList.toggle('selected', card.dataset.gender === state.gender);
+    });
+
+    // Modal avatar highlight
+    document.querySelectorAll('.avatar-choice-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.avatar === activeAvatar);
+    });
+
+    const nameInput = document.getElementById('input-child-name');
+    if (nameInput) nameInput.value = state.childName;
+  }
+
+  function setGender(newGender, avatar, name) {
+    state.gender = newGender;
+    if (avatar) state.avatar = avatar;
+    if (name !== undefined) state.childName = name.trim();
+
+    localStorage.setItem('alpha_gender', state.gender);
+    localStorage.setItem('alpha_avatar', state.avatar);
+    localStorage.setItem('alpha_child_name', state.childName);
+
+    applyGenderUI();
+    playChimeSound();
+
+    // Welcome voice announcement
+    const voc = getChildVocative();
+    if (state.lang === 'en') {
+      const msg = state.gender === 'boy' 
+        ? `Awesome! Welcome, ${voc}! Let's go on our safari adventure!` 
+        : `Wonderful! Welcome, ${voc}! Let's go on our magical safari!`;
+      speakText(msg);
+      updateCompanionBubble(msg);
+    } else {
+      const msgAr = state.gender === 'boy'
+        ? `أَهْلًا وَسَهْلًا بِكَ يَا ${voc}! هَيَّا بِنَا نَبْدَأُ المَغَامَرَةَ فِي عَالَمِ الحُرُوف!`
+        : `أَهْلًا وَسَهْلًا بِكِ يَا ${voc}! هَيَّا بِنَا نَبْدَأُ المَغَامَرَةَ السَّاحِرَةَ مَعَ الحُرُوف!`;
+      speakText(msgAr);
+      updateCompanionBubble(msgAr);
+    }
+  }
+
+  function updateCompanionBubble(text) {
+    const bubbleText = document.getElementById('mascot-bubble-text');
+    if (bubbleText) {
+      bubbleText.textContent = text;
+    }
+  }
+
+  function bounceCompanion() {
+    const comp = document.getElementById('companion-avatar');
+    if (comp) {
+      comp.classList.remove('bouncy');
+      void comp.offsetWidth;
+      comp.classList.add('bouncy');
+    }
+  }
+
+  function openGenderModal() {
+    const modal = document.getElementById('modal-gender');
+    if (modal) {
+      applyGenderUI();
+      modal.classList.add('open');
+      modal.setAttribute('aria-hidden', 'false');
+      playSparkleSound();
+    }
+  }
+
+function speakText(text, langOverride, customPitch, customRate) {
     if (!state.soundEnabled) return;
     if (!('speechSynthesis' in window)) return;
 
@@ -272,13 +503,44 @@
     const utter = new SpeechSynthesisUtterance(text);
     const targetLang = langOverride || (state.lang === 'en' ? 'en-US' : 'ar-SA');
     utter.lang = targetLang;
-    utter.rate = state.voiceSpeed;
-    utter.pitch = 1.15; // Friendly warm pitch for kids
+    utter.rate = customRate || state.voiceSpeed;
 
-    // Find best match voice if available
+    // Pitch tailored to gender for warm, enthusiastic preschool sound
+    if (customPitch) {
+      utter.pitch = customPitch;
+    } else if (state.gender === 'boy') {
+      utter.pitch = (targetLang.startsWith('en')) ? 1.12 : 1.05;
+    } else {
+      utter.pitch = (targetLang.startsWith('en')) ? 1.30 : 1.25;
+    }
+
+    // Select the most natural human voice available on the device
     if (voices.length > 0) {
-      const match = voices.find(v => v.lang.startsWith(targetLang.slice(0, 2)));
-      if (match) utter.voice = match;
+      const isArabic = targetLang.startsWith('ar');
+      const isEnglish = targetLang.startsWith('en');
+
+      let candidate = null;
+      if (isEnglish) {
+        if (state.gender === 'boy') {
+          // Look for warm natural male/boy voices
+          candidate = voices.find(v => v.lang.startsWith('en') && (v.name.includes('Guy') || v.name.includes('David') || v.name.includes('George') || v.name.includes('Male')));
+          if (!candidate) candidate = voices.find(v => v.lang.startsWith('en') && v.name.includes('Natural'));
+        } else {
+          // Look for sweet natural female/girl voices
+          candidate = voices.find(v => v.lang.startsWith('en') && (v.name.includes('Jenny') || v.name.includes('Zira') || v.name.includes('Aria') || v.name.includes('Female')));
+          if (!candidate) candidate = voices.find(v => v.lang.startsWith('en') && v.name.includes('Natural'));
+        }
+        if (!candidate) candidate = voices.find(v => v.lang.startsWith('en'));
+      } else if (isArabic) {
+        if (state.gender === 'boy') {
+          candidate = voices.find(v => v.lang.startsWith('ar') && (v.name.includes('Naayf') || v.name.includes('Maged') || v.name.includes('Tarik') || v.name.includes('Male')));
+        } else {
+          candidate = voices.find(v => v.lang.startsWith('ar') && (v.name.includes('Salma') || v.name.includes('Hoda') || v.name.includes('Zeina') || v.name.includes('Laila') || v.name.includes('Female')));
+        }
+        if (!candidate) candidate = voices.find(v => v.lang.startsWith('ar'));
+      }
+
+      if (candidate) utter.voice = candidate;
     }
 
     window.speechSynthesis.speak(utter);
@@ -286,18 +548,23 @@
 
   function speakCurrentLetter() {
     const item = getCurrentItem();
-    if (state.lang === 'en') {
-      speakText(`${item.name}. ${item.word}!`);
-    } else {
-      speakText(`${item.name}... ${item.word}!`);
-    }
+    // Warm natural child-friendly sentence
+    const sentence = getNaturalLetterSentence(item);
+    speakText(sentence);
     playMarimbaTone(state.currentIndex);
+
+    // Update companion speech bubble with current sentence
+    updateCompanionBubble(sentence);
+    bounceCompanion();
   }
 
   function speakCurrentPhonicsPhrase() {
     const item = getCurrentItem();
-    speakText(item.speechHint);
+    const sentence = getNaturalLetterSentence(item);
+    speakText(sentence);
     playMarimbaTone(state.currentIndex);
+    updateCompanionBubble(sentence);
+    bounceCompanion();
   }
 
   function speakArabicVowel(vowelType) {
@@ -417,10 +684,18 @@
 
   function showCelebrateModal(msg) {
     triggerConfetti();
+    playFanfareSound();
+    bounceCompanion();
     const modal = document.getElementById('modal-celebrate');
     const msgEl = document.getElementById('celebrate-text');
-    if (msgEl) msgEl.textContent = msg || 'You did an amazing job! Keep going!';
+    const naturalPraise = getNaturalPraise();
+    if (msgEl) msgEl.textContent = msg ? (msg + ' ' + naturalPraise) : naturalPraise;
     if (modal) modal.classList.add('open');
+
+    // Natural celebratory speech with short delay after fanfare
+    setTimeout(() => {
+      speakText(naturalPraise);
+    }, 350);
   }
 
   // ==========================================================================
@@ -1272,6 +1547,108 @@
   // ==========================================================================
 
   function bindEvents() {
+    // Gender Profile Button
+    const btnGender = document.getElementById('btn-gender');
+    if (btnGender) {
+      btnGender.addEventListener('click', () => {
+        openGenderModal();
+      });
+    }
+
+    // Interactive Mascot Tap to Speak
+    const interactiveMascotBtn = document.getElementById('interactive-mascot');
+    if (interactiveMascotBtn) {
+      interactiveMascotBtn.addEventListener('click', () => {
+        bounceCompanion();
+        playSparkleSound();
+        const voc = getChildVocative();
+        if (state.lang === 'en') {
+          const phrase = state.gender === 'boy'
+            ? `Hi ${voc}! I'm Leo, your safari buddy! Tap any letter to hear its story!`
+            : `Hello ${voc}! I'm Noor, your safari buddy! Tap any letter to hear its magical story!`;
+          speakText(phrase);
+          updateCompanionBubble(phrase);
+        } else {
+          const phraseAr = state.gender === 'boy'
+            ? `مَرْحَبًا يَا ${voc}! أَنَا صَدِيقُكَ اللَّطِيف، اِضْغَطْ عَلَى أَيِّ حَرْفٍ لِنَسْتَمِعَ إِلَى قِصَّتِهِ الرَّائِعَة!`
+            : `مَرْحَبًا يَا ${voc}! أَنَا صَدِيقَتُكِ اللَّطِيفَة، اِضْغَطِي عَلَى أَيِّ حَرْفٍ لِنَسْتَمِعَ إِلَى قِصَّتِهِ السَّاحِرَة!`;
+          speakText(phraseAr);
+          updateCompanionBubble(phraseAr);
+        }
+      });
+    }
+
+    // Gender Modal Card Selections
+    document.querySelectorAll('.gender-card-option').forEach(card => {
+      card.addEventListener('click', (e) => {
+        if (e.target.closest('.btn-voice-preview')) return;
+        const g = card.dataset.gender;
+        document.querySelectorAll('.gender-card-option').forEach(c => c.classList.remove('selected'));
+        card.classList.add('selected');
+        // Auto update default avatar if user hasn't picked one
+        const defaultAv = (g === 'boy') ? '👦' : '👧';
+        state.gender = g;
+        state.avatar = defaultAv;
+        document.querySelectorAll('.avatar-choice-btn').forEach(btn => {
+          btn.classList.toggle('active', btn.dataset.avatar === defaultAv);
+        });
+        playChimeSound();
+      });
+    });
+
+    // Voice preview buttons inside gender modal
+    document.querySelectorAll('.btn-voice-preview').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const previewGender = btn.dataset.preview;
+        const tempOld = state.gender;
+        state.gender = previewGender;
+        if (state.lang === 'en') {
+          const sample = (previewGender === 'boy')
+            ? "Hello little explorer! Let's learn the alphabet together!"
+            : "Hello sweet star! Let's discover magical letters together!";
+          speakText(sample);
+        } else {
+          const sampleAr = (previewGender === 'boy')
+            ? "مَرْحَبًا يَا بَطَل! هَيَّا بِنَا نَتَعَلَّمُ الحُرُوفَ العَرَبِيَّةَ مَعًا!"
+            : "مَرْحَبًا يَا أَمِيرَة! هَيَّا بِنَا نَكْتَشِفُ الحُرُوفَ العَرَبِيَّةَ الجَمِيلَة!";
+          speakText(sampleAr);
+        }
+        state.gender = tempOld;
+      });
+    });
+
+    // Avatar pickers inside modal
+    document.querySelectorAll('.avatar-choice-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.avatar-choice-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        state.avatar = btn.dataset.avatar;
+        playChimeSound();
+      });
+    });
+
+    // Save Gender Button
+    const btnSaveGender = document.getElementById('btn-save-gender');
+    if (btnSaveGender) {
+      btnSaveGender.addEventListener('click', () => {
+        const selectedOption = document.querySelector('.gender-card-option.selected');
+        const g = selectedOption ? selectedOption.dataset.gender : state.gender;
+        const nameInput = document.getElementById('input-child-name');
+        const name = nameInput ? nameInput.value : '';
+        const activeAvBtn = document.querySelector('.avatar-choice-btn.active');
+        const av = activeAvBtn ? activeAvBtn.dataset.avatar : state.avatar;
+
+        setGender(g, av, name);
+
+        const modal = document.getElementById('modal-gender');
+        if (modal) {
+          modal.classList.remove('open');
+          modal.setAttribute('aria-hidden', 'true');
+        }
+      });
+    }
+
     // Language Toggle
     const btnEn = document.getElementById('btn-lang-en');
     const btnAr = document.getElementById('btn-lang-ar');
@@ -1477,19 +1854,6 @@
       });
     }
 
-    // Mascot Click
-    const mascot = document.getElementById('interactive-mascot');
-    if (mascot) {
-      mascot.addEventListener('click', () => {
-        playSparkleSound();
-        if (state.lang === 'en') {
-          speakText("Hello! I am Leo the Lion and Noor the Bunny! Let's have fun!");
-        } else {
-          speakText("أهلاً بك يا بطل! أنا الأسد ليو والأرنوبة نور! هيا نتعلم!");
-        }
-      });
-    }
-
     const speakBubbleBtn = document.getElementById('btn-speak-bubble');
     if (speakBubbleBtn) {
       speakBubbleBtn.addEventListener('click', () => {
@@ -1652,10 +2016,83 @@
   }
 
   // ==========================================================================
+  // UNIFIED PLATFORM BRIDGE (Android, Windows Desktop & Web/PWA)
+  // ==========================================================================
+  const PlatformBridge = {
+    isAndroid: !!(window.AndroidBridge || /Android/i.test(navigator.userAgent) || navigator.userAgent.includes('wv')),
+    isWindowsDesktop: !!(window.pywebview || /AlphabetSafariWin/i.test(navigator.userAgent)),
+    isPWA: window.matchMedia && window.matchMedia('(display-mode: standalone)').matches,
+
+    init() {
+      if (this.isAndroid) document.documentElement.classList.add('platform-android');
+      if (this.isWindowsDesktop) document.documentElement.classList.add('platform-windows');
+      if (this.isPWA) document.documentElement.classList.add('platform-pwa');
+
+      this.setupHaptics();
+      this.setupDesktopShortcuts();
+      console.log(`[PlatformBridge] Initialized on: ${this.getPlatformName()}`);
+    },
+
+    getPlatformName() {
+      if (this.isWindowsDesktop) return 'Windows Desktop (WebView2)';
+      if (this.isAndroid) return 'Android Native (WebView)';
+      if (this.isPWA) return 'PWA Standalone';
+      return 'Web Browser';
+    },
+
+    vibrate(pattern = [25]) {
+      try {
+        if (window.AndroidBridge && typeof window.AndroidBridge.vibrate === 'function') {
+          window.AndroidBridge.vibrate(pattern[0] || 25);
+        } else if (navigator.vibrate) {
+          navigator.vibrate(pattern);
+        }
+      } catch (e) {
+        // Haptics optional
+      }
+    },
+
+    setupHaptics() {
+      document.addEventListener('pointerdown', (e) => {
+        if (e.target.closest('.letter-card, .balloon, .btn-action, .star-btn, .companion-avatar')) {
+          this.vibrate([20]);
+        }
+      }, { passive: true });
+    },
+
+    setupDesktopShortcuts() {
+      window.addEventListener('keydown', (e) => {
+        if (e.key === 'F11' && this.isWindowsDesktop) {
+          e.preventDefault();
+          if (window.pywebview && window.pywebview.api && window.pywebview.api.toggle_fullscreen) {
+            window.pywebview.api.toggle_fullscreen();
+          }
+        }
+        if (e.code === 'Space' && e.target === document.body) {
+          e.preventDefault();
+          const speakBtn = document.getElementById('modal-speak-btn');
+          if (speakBtn && speakBtn.offsetParent !== null) {
+            speakBtn.click();
+          } else {
+            speakCompanionGreeting();
+          }
+        }
+        if (e.key === 'Escape') {
+          closeAllModals();
+        }
+      });
+    }
+  };
+
+  window.PlatformBridge = PlatformBridge;
+
+  // ==========================================================================
   // INITIALIZATION
   // ==========================================================================
 
   function init() {
+    PlatformBridge.init();
+    applyGenderUI();
     updateStarUI();
     bindEvents();
     renderExploreView();

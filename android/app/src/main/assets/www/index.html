@@ -66,6 +66,16 @@
       </div>
 
       <div class="header-right">
+        
+        <!-- Gender / Explorer Profile Button -->
+        <button id="btn-gender" class="gender-badge-btn" title="Choose Explorer Profile: Little Boy or Little Girl">
+          <span id="gender-avatar-badge" class="gender-avatar-emoji">👦</span>
+          <span class="gender-badge-text">
+            <span id="gender-badge-title" class="gender-title-text"><span class="eng-text">Little Boy</span><span class="ar-text">البطل الصغير</span></span>
+          </span>
+          <span class="gender-pill-tag" id="gender-pill-tag">Boy</span>
+        </button>
+
         <!-- Star Counter Reward -->
         <button id="btn-rewards" class="star-badge-btn" title="View Star Rewards & Stickers">
           <img src="assets/star_badge.jpg" alt="Star badge" class="star-icon spin-wiggle">
@@ -126,11 +136,17 @@
 
     <!-- Mascot Speech Cheer Bubble -->
     <aside class="mascot-bar">
-      <div class="mascot-mascot" id="interactive-mascot">
-        <img src="assets/mascot.jpg" alt="Leo the Lion and Noor the Bunny" class="mascot-img-sm bouncy">
+      <div class="mascot-mascot" id="interactive-mascot" role="button" tabindex="0" title="Tap your buddy to hear a cheerful message!">
+        <div class="companion-avatar-wrap">
+          <span id="companion-avatar" class="companion-emoji bouncy">👦</span>
+          <span id="companion-status-icon" class="companion-sparkle">⭐</span>
+        </div>
+        <div class="companion-meta">
+          <span id="companion-name-tag" class="companion-tag"><span class="eng-text">Zayd • Hero</span><span class="ar-text">زيد • البطل</span></span>
+        </div>
       </div>
       <div class="mascot-bubble" id="mascot-message">
-        <span id="mascot-bubble-text">Hi little buddy! Tap any letter to start learning! 🌟</span>
+        <span id="mascot-bubble-text"><span class="eng-text">Hi little hero! Tap any letter to start our safari! 🚀</span><span class="ar-text">مَرْحَبًا يَا بَطَلِي الصَّغِير! اِضْغَطْ عَلَى أَيِّ حَرْفٍ لِنَبْدَأَ مَغَامَرَتَنَا! 🦁</span></span>
         <button id="btn-speak-bubble" class="bubble-speaker-btn" title="Hear voice">🔊</button>
       </div>
     </aside>
@@ -593,6 +609,95 @@
           <span class="eng-text">Yay! Keep Playing 🎉</span>
           <span class="ar-text">رائع! استمر في اللعب 🎉</span>
         </button>
+      </div>
+    </div>
+
+  
+    <!-- ================= 4. GENDER & EXPLORER PROFILE MODAL ================= -->
+    <div class="modal-overlay" id="modal-gender" aria-hidden="true">
+      <div class="modal-card modal-card-gender" role="dialog" aria-labelledby="gender-modal-title">
+        <div class="modal-header">
+          <div class="modal-title-wrap">
+            <span class="modal-icon-badge">🎈</span>
+            <h2 id="gender-modal-title">
+              <span class="eng-text">Choose Your Explorer!</span>
+              <span class="ar-text">اخْتَرْ بَطَلَ المَغَامَرَة!</span>
+            </h2>
+          </div>
+          <button class="modal-close-btn" data-close="modal-gender" aria-label="Close">✕</button>
+        </div>
+
+        <div class="modal-body gender-modal-body">
+          <p class="modal-intro-text">
+            <span class="eng-text">Are you a Little Boy or a Little Girl? We will personalize voices, praise, and colors for you!</span>
+            <span class="ar-text">هَلْ أَنْتَ بَطَلٌ صَغِيرٌ أَمْ أَمِيرَةٌ حُلْوَة؟ سَنُخَصِّصُ الأَصْوَاتَ وَالأَلْوَانَ لَكَ!</span>
+          </p>
+
+          <!-- Gender Cards Selection -->
+          <div class="gender-cards-grid">
+            <!-- Little Boy Card -->
+            <div class="gender-card-option" id="card-gender-boy" data-gender="boy" role="button" tabindex="0">
+              <div class="gender-card-badge">👦</div>
+              <div class="gender-card-content">
+                <h3 class="gender-card-title"><span class="eng-text">Little Boy</span><span class="ar-text">البطل الصغير</span></h3>
+                <p class="gender-card-sub"><span class="eng-text">Brave Explorer • Blue & Gold Theme</span><span class="ar-text">بطل شجاع • أصوات مبهجة</span></p>
+                <div class="gender-voice-sample">
+                  <button type="button" class="btn-voice-preview" data-preview="boy">🔊 <span class="eng-text">Hear Voice</span><span class="ar-text">اسمع الصوت</span></button>
+                </div>
+              </div>
+              <div class="gender-check-icon">✓</div>
+            </div>
+
+            <!-- Little Girl Card -->
+            <div class="gender-card-option" id="card-gender-girl" data-gender="girl" role="button" tabindex="0">
+              <div class="gender-card-badge">👧</div>
+              <div class="gender-card-content">
+                <h3 class="gender-card-title"><span class="eng-text">Little Girl</span><span class="ar-text">الأميرة الصغيرة</span></h3>
+                <p class="gender-card-sub"><span class="eng-text">Sweet Princess • Pink & Magic Theme</span><span class="ar-text">أميرة حلوة • أصوات رقيقة</span></p>
+                <div class="gender-voice-sample">
+                  <button type="button" class="btn-voice-preview" data-preview="girl">🔊 <span class="eng-text">Hear Voice</span><span class="ar-text">اسمع الصوت</span></button>
+                </div>
+              </div>
+              <div class="gender-check-icon">✓</div>
+            </div>
+          </div>
+
+          <!-- Child Name Input -->
+          <div class="child-name-row">
+            <label for="input-child-name" class="name-label">
+              <span class="eng-text">Child's Name (Optional):</span>
+              <span class="ar-text">اسْمُ الطِّفْل (اخْتِيَارِي):</span>
+            </label>
+            <input type="text" id="input-child-name" class="name-input" placeholder="e.g. Zayd / Noor / Adam / Sarah" maxlength="18">
+          </div>
+
+          <!-- Avatar Icons Selector -->
+          <div class="avatar-picker-section">
+            <span class="avatar-picker-label">
+              <span class="eng-text">Pick Your Character Avatar:</span>
+              <span class="ar-text">اخْتَرْ شَخْصِيَّتَك:</span>
+            </span>
+            <div class="avatar-icons-row" id="avatar-icons-row">
+              <!-- Dynamically populated or static -->
+              <button type="button" class="avatar-choice-btn active" data-avatar="👦">👦</button>
+              <button type="button" class="avatar-choice-btn" data-avatar="🦁">🦁</button>
+              <button type="button" class="avatar-choice-btn" data-avatar="🚀">🚀</button>
+              <button type="button" class="avatar-choice-btn" data-avatar="👑">👑</button>
+              <button type="button" class="avatar-choice-btn" data-avatar="👧">👧</button>
+              <button type="button" class="avatar-choice-btn" data-avatar="🌸">🌸</button>
+              <button type="button" class="avatar-choice-btn" data-avatar="🦄">🦄</button>
+              <button type="button" class="avatar-choice-btn" data-avatar="🐰">🐰</button>
+            </div>
+          </div>
+
+          <!-- Save Button -->
+          <div class="modal-footer-btn-wrap">
+            <button id="btn-save-gender" class="btn-primary-squishy btn-save-gender">
+              <span class="eng-text">Save & Start Adventure! 🎈</span>
+              <span class="ar-text">احْفَظْ وَابْدَأِ المَغَامَرَة! 🎈</span>
+            </button>
+          </div>
+        </div>
       </div>
     </div>
 

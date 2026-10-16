@@ -1,11 +1,14 @@
 package com.alphabetsafari.app
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.os.Build
 import android.os.Bundle
+import android.os.VibrationEffect
+import android.os.Vibrator
+import android.os.VibratorManager
 import android.view.View
-import android.view.WindowInsets
-import android.view.WindowInsetsController
+import android.webkit.JavascriptInterface
 import android.webkit.WebChromeClient
 import android.webkit.WebSettings
 import android.webkit.WebView
@@ -14,6 +17,31 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+
+class AndroidBridge(private val context: Context) {
+    @JavascriptInterface
+    fun vibrate(durationMs: Long) {
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                val vibratorManager = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as? VibratorManager
+                vibratorManager?.defaultVibrator?.vibrate(
+                    VibrationEffect.createOneShot(durationMs.coerceIn(10, 500), VibrationEffect.DEFAULT_AMPLITUDE)
+                )
+            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                @Suppress("DEPRECATION")
+                val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
+                vibrator?.vibrate(
+                    VibrationEffect.createOneShot(durationMs.coerceIn(10, 500), VibrationEffect.DEFAULT_AMPLITUDE)
+                )
+            }
+        } catch (_: Exception) {
+            // Haptics optional
+        }
+    }
+
+    @JavascriptInterface
+    fun getPlatform(): String = "android"
+}
 
 class MainActivity : AppCompatActivity() {
 
@@ -37,6 +65,9 @@ class MainActivity : AppCompatActivity() {
 
             // Enable smooth hardware acceleration
             setLayerType(View.LAYER_TYPE_HARDWARE, null)
+
+            // Register Unified Android Bridge
+            addJavascriptInterface(AndroidBridge(this@MainActivity), "AndroidBridge")
 
             webViewClient = object : WebViewClient() {
                 override fun shouldOverrideUrlLoading(view: WebView?, url: String?): Boolean {

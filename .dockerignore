@@ -3,3 +3,13 @@ android/
 .git
 .gitignore
 README-ANDROID.md
+node_modules/
+windows/
+tools/
+*.py
+*.bat
+requirements.txt
+package*.json
+eslint.config.mjs
+assets/cache_audio/
+assets/audio/manifest.json

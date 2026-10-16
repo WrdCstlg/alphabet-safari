@@ -66,8 +66,12 @@ py windows/alphabet_safari_app.py
   windows/dist/AlphabetSafari.exe (~16.8 MB)
   ```
 - Features:
-  - 100% offline with zero external network dependencies.
-  - Built-in local HTTP server resolving sound, SpeechSynthesis, and Canvas CORS.
+  - Letters, recorded phonics clips and games work fully offline.
+  - Dynamic phrases (praise, the child's name, game prompts) use Microsoft neural voices via
+    `edge-tts` when online, cached in `%LOCALAPPDATA%\AlphabetSafari\tts_cache`; offline they fall
+    back to the installed Windows voices.
+  - Progress (stars, stickers, settings) is kept between launches: the app uses a fixed local
+    port (48127) and persistent WebView2 storage in `%LOCALAPPDATA%\AlphabetSafari\webview`.
   - Multi-resolution mascot icon (`assets/mascot.ico`).
 
 ---
@@ -87,6 +91,9 @@ Output APK is generated at:
 android/app/build/outputs/apk/debug/app-debug.apk
 ```
 
+Dynamic phrases are spoken with the device's TextToSpeech engine through `AndroidBridge.speak`
+(Android WebView has no Web Speech API). Recorded phonics clips play from the bundled assets.
+
 ---
 
 ### 4. Web & Cloud Hosting
@@ -100,12 +107,36 @@ android/app/build/outputs/apk/debug/app-debug.apk
 
 ---
 
+## ✏️ Editing Letters, Words & Voices
+
+All letters, picture words, emoji and spoken phrases live in **`content.js`**, the single
+source of truth shared by the app, the audio generator and the validator. After editing it:
+
+```powershell
+py generate_studio_audio.py   # re-records only the clips whose phrase or voice changed
+py build.py --sync --verify   # copies to Android and checks parity + content + audio
+```
+
+`tools/validate_content.py` fails if a phrase never says its on-screen word (e.g. the picture
+shows a yo-yo but the voice says "yacht"), a field is missing, or a clip is missing or stale.
+`assets/audio/manifest.json` records which phrase each clip was recorded from.
+
+## 🧪 Checks
+
+```powershell
+npm ci                                  # dev tooling only; the app has no build step
+npm run lint                            # ESLint, including no-undef
+$env:BROWSER_CHANNEL="msedge"; npm run smoke   # drives every mode in a real browser
+py build.py --verify                    # asset parity + content/audio validation
+```
+
 ## 🤖 GitHub Actions Automated CI/CD
 
 The repository includes end-to-end continuous integration and deployment workflows:
 
 1. **`ci.yml`**:
-   - `Core Web & Asset Parity Validation`: Node.js syntax inspection, JSON manifest validation, and asset hash check.
+   - `Core Web & Asset Parity Validation`: ESLint, syntax checks, manifest validation, Android asset parity, and content/audio validation.
+   - `Browser Smoke Test`: Playwright drives every mode in headless Chromium.
    - `Android Native APK Build`: Ubuntu runner with JDK 17 compiles `app-debug.apk` and uploads it as an artifact.
    - `Windows Standalone Desktop Build`: Windows runner compiles `AlphabetSafari.exe` and uploads it as an artifact.
    - `Docker Web Server Live Verification`: Docker build and live endpoint curl assertion.

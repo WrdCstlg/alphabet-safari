@@ -12,8 +12,6 @@ import os
 import sys
 import argparse
 import subprocess
-import shutil
-import hashlib
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ANDROID_DIR = os.path.join(BASE_DIR, "android")
@@ -33,29 +31,37 @@ def run_sync():
     return True
 
 def run_verify():
+    from sync_assets import CORE_FILES, ANDROID_WWW_DIR, compute_sha256, iter_asset_files
+
     log("Verifying core project integrity...", symbol="CHECK")
-    core_files = ["index.html", "styles.css", "script.js", "manifest.json", "sw.js"]
-    for f in core_files:
+    ok = True
+    for f in CORE_FILES:
         p = os.path.join(BASE_DIR, f)
         if not os.path.exists(p):
             log(f"Missing core asset: {f}", symbol="FAIL")
             return False
         log(f"Verified core asset: {f} ({os.path.getsize(p):,} bytes)", symbol="OK")
 
-    # Verify Android assets copy matches
-    android_www = os.path.join(ANDROID_DIR, "app", "src", "main", "assets", "www")
-    for f in core_files:
-        src = os.path.join(BASE_DIR, f)
-        dst = os.path.join(android_www, f)
+    # Every app file and asset must be byte-identical in the Android bundle.
+    src_assets = os.path.join(BASE_DIR, "assets")
+    pairs = [(os.path.join(BASE_DIR, f), os.path.join(ANDROID_WWW_DIR, f)) for f in CORE_FILES]
+    pairs += [(os.path.join(src_assets, rel), os.path.join(ANDROID_WWW_DIR, "assets", rel))
+              for rel in iter_asset_files(src_assets)]
+    for src, dst in pairs:
+        rel = os.path.relpath(src, BASE_DIR)
         if not os.path.exists(dst):
-            log(f"Android asset missing: {f}", symbol="FAIL")
-            return False
-        with open(src, "rb") as sf, open(dst, "rb") as df:
-            if hashlib.sha256(sf.read()).digest() != hashlib.sha256(df.read()).digest():
-                log(f"Hash mismatch on {f}!", symbol="FAIL")
-                return False
-    log("Android asset parity: 100% verified.", symbol="OK")
-    return True
+            log(f"Android copy missing: {rel} (run `py build.py --sync`)", symbol="FAIL")
+            ok = False
+        elif compute_sha256(src) != compute_sha256(dst):
+            log(f"Android copy out of date: {rel} (run `py build.py --sync`)", symbol="FAIL")
+            ok = False
+    if ok:
+        log(f"Android asset parity verified ({len(pairs)} files).", symbol="OK")
+
+    log("Validating content.js against the recorded audio...", symbol="CHECK")
+    if subprocess.call([sys.executable, os.path.join(BASE_DIR, "tools", "validate_content.py")]) != 0:
+        ok = False
+    return ok
 
 def build_windows():
     log("Building Native Windows Desktop Executable...", symbol="WIN")
@@ -109,12 +115,12 @@ def main():
         print("  py build.py --windows   -> Compiles Windows standalone .exe")
         print("  py build.py --android   -> Compiles Android debug APK")
         print("  py build.py --all       -> Compiles both Windows and Android targets")
-        return
+        sys.exit(0 if verified else 1)
 
     if args.sync:
         run_sync()
-    if args.verify:
-        run_verify()
+    if args.verify and not run_verify():
+        sys.exit(1)
     if args.windows or args.all:
         build_windows()
     if args.android or args.all:

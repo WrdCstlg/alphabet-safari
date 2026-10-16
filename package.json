@@ -1,0 +1,16 @@
+{
+  "name": "alphabet-safari",
+  "private": true,
+  "description": "Dev tooling for Alphabet Safari (the app itself has no build step or runtime dependencies).",
+  "scripts": {
+    "lint": "eslint script.js sw.js content.js tests/smoke.mjs",
+    "validate": "py tools/validate_content.py || python tools/validate_content.py",
+    "smoke": "node tests/smoke.mjs"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "eslint": "10.13.0",
+    "globals": "17.13.0",
+    "playwright": "1.64.1"
+  }
+}

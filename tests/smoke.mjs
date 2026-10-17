@@ -42,8 +42,10 @@ async function check(name, fn) {
     // In GitHub Actions, also raise an annotation so the failing check is visible on the
     // commit/PR without opening the logs.
     if (process.env.GITHUB_ACTIONS) {
-      const clean = (t) => t.replace(/%/g, '%25').replace(/\r?\n/g, ' ').slice(0, 500);
-      console.log(`::error title=Smoke check failed: ${clean(name)}::${clean(e.message)}`);
+      // Workflow-command escaping: the message escapes %, CR, LF; a property (title) also , and :
+      const msg = (t) => t.slice(0, 500).replace(/%/g, '%25').replace(/\r/g, '%0D').replace(/\n/g, '%0A');
+      const prop = (t) => msg(t).replace(/:/g, '%3A').replace(/,/g, '%2C');
+      console.log(`::error title=${prop(`Smoke check failed: ${name}`)}::${msg(e.message)}`);
     }
   }
 }
@@ -107,13 +109,14 @@ await check('Y shows the yo-yo and its phrase says yo-yo', async () => {
 await check('profile save closes the modal, persists, and treats the name as text', async () => {
   await page.click('#btn-gender');
   await page.click('.gender-card-option[data-gender="girl"]');
-  await page.fill('#input-child-name', '<img src=x>Noor');
+  // Not "Noor" or "Leo"/"Zayd": those are the companions' own names and appear in phrases anyway.
+  await page.fill('#input-child-name', '<img src=x>Mira');
   await page.click('#btn-save-gender');
   await page.waitForTimeout(200);
   assert(!(await page.locator('#modal-gender').evaluate(el => el.classList.contains('open'))), 'modal still open');
   assert(await store('alpha_gender') === 'girl', 'gender not saved');
   const badge = await page.locator('#gender-badge-title').textContent();
-  assert(badge.includes('<img src=x>Noor'), `badge text: ${badge}`);
+  assert(badge.includes('<img src=x>Mira'), `badge text: ${badge}`);
   assert(await page.locator('#gender-badge-title img').count() === 0, 'name was injected as HTML');
 });
 
@@ -124,9 +127,25 @@ await check("the child's name is never sent to the cloud TTS endpoint", async ()
   await page.click('.mode-tab[data-mode="match"]'); // a nameless prompt, which may use the cloud
   await page.waitForTimeout(600);
   assert(ttsTexts.length > 0, 'the TTS route was never used, so this check proves nothing');
-  const leaked = ttsTexts.filter(t => t.includes('Noor'));
+  const leaked = ttsTexts.filter(t => t.includes('Mira'));
   assert(leaked.length === 0, `name sent to TTS: ${JSON.stringify(leaked)}`);
   await page.click('.mode-tab[data-mode="explore"]');
+});
+
+// Which path the check above takes depends on the machine: with on-device voices the name
+// stays local; without them (e.g. CI's Linux) the greeting falls back to a nameless version.
+// Force the second case so both paths are covered on every OS.
+await check('with no on-device voice, the greeting is spoken without the name', async () => {
+  ttsTexts.length = 0;
+  await page.evaluate(() => {
+    window.speechSynthesis.getVoices = () => [];
+    window.speechSynthesis.onvoiceschanged();
+  });
+  await page.click('#interactive-mascot');
+  await page.waitForTimeout(600);
+  const greeting = ttsTexts.find(t => /safari buddy/.test(t));
+  assert(greeting, `nameless greeting never reached the TTS route: ${JSON.stringify(ttsTexts)}`);
+  assert(!greeting.includes('Mira') && /^Hello!/.test(greeting), `unexpected fallback text: ${greeting}`);
 });
 
 await check('a child who opens the parent gate can always get back out', async () => {

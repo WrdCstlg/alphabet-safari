@@ -56,6 +56,12 @@
       try {
         localStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value));
       } catch (e) {}
+    },
+    // "Erase Everything" in Parents Corner: every key this app has written.
+    clearAll() {
+      try {
+        Object.keys(localStorage).filter(k => k.startsWith('alpha_')).forEach(k => localStorage.removeItem(k));
+      } catch (e) {}
     }
   };
 
@@ -93,6 +99,17 @@
   // Pick the boy/girl variant of a phrase for the active child profile.
   function g(boyText, girlText) {
     return state.gender === 'girl' ? girlText : boyText;
+  }
+
+  // Bumped whenever the screen changes (mode, language, game restart). Delayed callbacks
+  // scheduled with laterInView() do nothing once the child has moved on, so a timer from
+  // an old round can't swap the question on a new one.
+  let viewEpoch = 0;
+  function laterInView(fn, ms) {
+    const epoch = viewEpoch;
+    return setTimeout(() => {
+      if (epoch === viewEpoch) fn();
+    }, ms);
   }
 
   // Helper getters
@@ -299,13 +316,13 @@
     if (state.lang === 'en') {
       const boyPraises = [
         name ? `Woohoo! You did it, ${name}! You are a superhero!` : 'Woohoo! You did it, my brave champion!',
-        'Awesome job, superstar! You are so smart!',
+        'Awesome job! You kept trying and you got it!',
         'High five, buddy! Look at you go!',
         'That was magnificent! You are an alphabet master!'
       ];
       const girlPraises = [
         name ? `Yay! You did it, ${name}! You shine so bright!` : 'Yay! You did it, my sweet little princess!',
-        'Fantastic job, superstar! You are so talented!',
+        'Fantastic job! You listened so carefully!',
         'Hooray! Look at you go, sweet star!',
         'That was pure magic! You are an alphabet star!'
       ];
@@ -445,9 +462,13 @@
     }
   }
 
+  let focusBeforeModal = null;
+
   function openModal(id) {
     const modal = document.getElementById(id);
     if (!modal) return;
+    if (!document.querySelector('.modal-overlay.open')) focusBeforeModal = document.activeElement;
+    modal.inert = false;
     modal.classList.add('open');
     modal.setAttribute('aria-hidden', 'false');
     const focusTarget = modal.querySelector('.modal-close-btn, button');
@@ -459,6 +480,11 @@
     if (!modal) return;
     modal.classList.remove('open');
     modal.setAttribute('aria-hidden', 'true');
+    modal.inert = true; // out of the tab order and the accessibility tree
+    if (!document.querySelector('.modal-overlay.open') && focusBeforeModal && focusBeforeModal.focus) {
+      focusBeforeModal.focus({ preventScroll: true });
+      focusBeforeModal = null;
+    }
   }
 
   function closeAllModals() {
@@ -570,14 +596,16 @@
     return ttsServerProbe;
   }
 
-  function getBestVoice(targetLang, gender) {
+  function getBestVoice(targetLang, gender, localOnly) {
     if (!voices || voices.length === 0) return null;
 
     const isArabic = targetLang.startsWith('ar');
     const isEnglish = targetLang.startsWith('en');
     const isBoy = gender === 'boy';
 
+    // localOnly: voices that synthesize on the device (network voices would upload the text).
     const langVoices = voices.filter(v => {
+      if (localOnly && !v.localService) return false;
       if (isArabic) return v.lang.toLowerCase().startsWith('ar');
       if (isEnglish) return v.lang.toLowerCase().startsWith('en');
       return true;
@@ -634,35 +662,58 @@
 
     const targetLang = langOverride || (state.lang === 'en' ? 'en-US' : 'ar-SA');
     const gender = genderOverride || state.gender;
+    // The child's name is only ever spoken by on-device voices, never sent to a cloud
+    // service. If no on-device voice is available, the same phrase is said without the name.
+    const personal = containsChildName(text);
 
+    let result;
     if (hasNativeTTS()) {
-      return speakNative(text, targetLang);
+      result = await speakNative(text, targetLang, personal);
+    } else {
+      if (!personal && await hasTtsServer()) {
+        const ttsUrl = `api/tts?text=${encodeURIComponent(text)}&lang=${targetLang}&gender=${gender}`;
+        result = await playAudioUrl(ttsUrl);
+        if (result !== 'failed') return result;
+      }
+      result = await speakWithBrowser(text, targetLang, gender, personal);
     }
-
-    if (await hasTtsServer()) {
-      const ttsUrl = `api/tts?text=${encodeURIComponent(text)}&lang=${targetLang}&gender=${gender}`;
-      const result = await playAudioUrl(ttsUrl);
-      if (result !== 'failed') return result;
+    if (result === 'failed' && personal) {
+      return speakText(withoutChildName(text), langOverride, genderOverride);
     }
-
-    return speakWithBrowser(text, targetLang, gender);
+    return result;
   }
 
-  function speakNative(text, targetLang) {
+  function containsChildName(text) {
+    return !!state.childName && text.includes(state.childName);
+  }
+
+  // "Hi Noor! ..." -> "Hi! ...", "مرحبا يا نور! ..." -> "مرحبا! ..."
+  function withoutChildName(text) {
+    return text.split(state.childName).join('')
+      .replace(/(^|\s)يَا\s*(?=[!?.,،؟])/g, '$1')
+      .replace(/\s+([!?.,،؟])/g, '$1')
+      .replace(/[,،]([!?.؟])/g, '$1')
+      .replace(/\s{2,}/g, ' ')
+      .trim();
+  }
+
+  function speakNative(text, targetLang, localOnly) {
     stopAllSpeechAndAudio();
     const id = `u${++nativeUtteranceSeq}`;
     return new Promise((resolve) => {
       nativePending[id] = resolve;
       try {
-        window.AndroidBridge.speak(text, targetLang, state.voiceSpeed, id);
+        window.AndroidBridge.speak(text, targetLang, state.voiceSpeed, id, !!localOnly);
       } catch (e) {
         window.AlphabetSafariSpeechDone(id, false);
       }
     });
   }
 
-  function speakWithBrowser(text, targetLang, gender) {
+  function speakWithBrowser(text, targetLang, gender, localOnly) {
     if (!('speechSynthesis' in window)) return Promise.resolve('failed');
+    const bestVoice = getBestVoice(targetLang, gender, localOnly);
+    if (localOnly && !bestVoice) return Promise.resolve('failed');
     stopAllSpeechAndAudio();
 
     return new Promise((resolve) => {
@@ -672,7 +723,6 @@
       // Natural pitch: shifting browser voices introduces a metallic, robotic ring.
       utter.pitch = 1.0;
 
-      const bestVoice = getBestVoice(targetLang, gender);
       if (bestVoice) utter.voice = bestVoice;
 
       activeDone = resolve;
@@ -907,6 +957,7 @@
   function renderLettersGrid() {
     const grid = document.getElementById('letters-grid');
     if (!grid) return;
+    const hadFocus = grid.contains(document.activeElement);
     grid.innerHTML = '';
 
     const list = getActiveAlphabet();
@@ -934,6 +985,10 @@
 
       grid.appendChild(card);
     });
+    // Rebuilding the grid would otherwise drop keyboard focus back to <body>.
+    if (hadFocus && grid.children[state.currentIndex]) {
+      grid.children[state.currentIndex].focus({ preventScroll: true });
+    }
   }
 
   function updateMascotCheer(item) {
@@ -967,6 +1022,7 @@
   let moveCount = 0;
   let traceAwarded = false; // one reward per letter attempt
   let traceSamples = null;  // sample points used to score how well the letter was traced
+  let activePointerId = null; // one finger draws; a resting palm or second finger is ignored
 
   const TRACE_BRUSH_WIDTH = 26;
   const TRACE_SAMPLE_STEP = 8;
@@ -1010,6 +1066,10 @@
     clearTimeout(traceResizeTimer);
     traceResizeTimer = setTimeout(() => {
       if (state.mode !== 'trace') return;
+      // Many devices fire resize without a size change (e.g. toolbars); keep the drawing then.
+      const wrapper = document.getElementById('canvas-wrapper');
+      if (wrapper && userCanvas && wrapper.clientWidth === userCanvas.width &&
+          wrapper.clientHeight === userCanvas.height) return;
       setupCanvas();
       drawGuideLetter();
     }, 150);
@@ -1023,8 +1083,12 @@
     traceAwarded = false;
   }
 
+  // Fit the glyph to the canvas so wide letters (ص, ض, W) don't overflow on phones.
   function letterFont() {
-    return state.lang === 'en' ? '800 240px Fredoka, sans-serif' : '800 280px "Baloo 2", sans-serif';
+    const w = guideCanvas ? guideCanvas.width : 550;
+    const h = guideCanvas ? guideCanvas.height : 400;
+    const size = Math.round(Math.min(state.lang === 'en' ? 240 : 280, h * 0.68, w * 0.62));
+    return state.lang === 'en' ? `800 ${size}px Fredoka, sans-serif` : `800 ${size}px "Baloo 2", sans-serif`;
   }
 
   function letterOrigin(canvas) {
@@ -1127,6 +1191,10 @@
     traceAwarded = true;
     addStars(2);
     triggerConfetti();
+    praiseTracing();
+  }
+
+  function praiseTracing() {
     speakText(state.lang === 'en'
       ? 'Super job! You traced the letter!'
       : g('أَحْسَنْتَ يَا بَطَل! رَسْمٌ رَائِعٌ لِلْحَرْف!', 'أَحْسَنْتِ يَا أَمِيرَة! رَسْمٌ رَائِعٌ لِلْحَرْف!'));
@@ -1134,7 +1202,8 @@
 
   function checkTracing() {
     if (traceAwarded) {
-      celebrateTracing();
+      // Already rewarded for this letter: praise again, but no more stars.
+      praiseTracing();
       return;
     }
     if (tracingPassed()) {
@@ -1169,10 +1238,11 @@
 
   // Pointer events cover mouse, touch and stylus (Windows touch screens and Android alike).
   function handleTraceStart(e) {
-    if (!userCtx) return;
+    if (!userCtx || activePointerId !== null) return;
     e.preventDefault();
     initAudioContext();
     isTracing = true;
+    activePointerId = e.pointerId;
     try {
       userCanvas.setPointerCapture(e.pointerId);
     } catch (err) {}
@@ -1187,7 +1257,7 @@
   }
 
   function handleTraceMove(e) {
-    if (!isTracing || !userCtx) return;
+    if (!isTracing || !userCtx || e.pointerId !== activePointerId) return;
     e.preventDefault();
 
     const pos = getCanvasPos(e);
@@ -1211,9 +1281,10 @@
     }
   }
 
-  function handleTraceEnd() {
-    if (!isTracing) return;
+  function handleTraceEnd(e) {
+    if (!isTracing || (e && e.pointerId !== activePointerId)) return;
     isTracing = false;
+    activePointerId = null;
     // Reward automatically as soon as the letter is well covered, once per attempt.
     if (!traceAwarded && tracingPassed()) {
       celebrateTracing();
@@ -1265,6 +1336,7 @@
   const BALLOON_MIN_TARGETS = 2; // of 5 balloons, so every round is winnable
 
   function initBalloonGame() {
+    viewEpoch++;
     balloonScore = 0;
     balloonStreak = 0;
     balloonRoundLocked = false;
@@ -1373,8 +1445,7 @@
           ? `Yay! You popped ${balloonTarget.name}!`
           : `رائع! حرف ${balloonTarget.name}!`);
 
-        setTimeout(() => {
-          if (state.mode !== 'balloon') return;
+        laterInView(() => {
           balloon.classList.remove('popped');
           chooseBalloonTarget();
           letterAllBalloons();
@@ -1383,12 +1454,16 @@
         }, 1400);
       } else {
         balloonStreak = 0;
-        balloon.style.transform = 'scale(0.85) rotate(-15deg)';
+        // Independent scale/rotate properties compose with the sway animation, which owns
+        // `transform`; setting transform here was silently overridden and never showed.
+        balloon.style.scale = '0.85';
+        balloon.style.rotate = '-15deg';
         speakText(state.lang === 'en'
           ? `That's ${item.name}! Find ${balloonTarget.name}!`
           : `هذا حرف ${item.name}! ${g('ابحث', 'ابحثي')} عن ${balloonTarget.name}!`);
         setTimeout(() => {
-          balloon.style.transform = '';
+          balloon.style.scale = '';
+          balloon.style.rotate = '';
         }, 600);
       }
       updateBalloonStats();
@@ -1401,15 +1476,24 @@
 
   let matchTarget = null;
   let matchSolved = false; // stops a double tap on the right answer from scoring twice
+  let matchMisses = 0;
 
   function initMatchGame() {
+    viewEpoch++;
     pickNewMatchQuest();
+  }
+
+  // Letters whose keyword holds them at the end (X in "fox") can't be asked as
+  // "which letter starts the word"; they still appear as distractors.
+  function startsItsKeyword(item) {
+    return item.keywordPosition !== 'end';
   }
 
   function pickNewMatchQuest() {
     const list = getActiveAlphabet();
-    matchTarget = list[Math.floor(Math.random() * list.length)];
+    matchTarget = randomItem(list.filter(startsItsKeyword));
     matchSolved = false;
+    matchMisses = 0;
 
     const iconEl = document.getElementById('match-quest-icon');
     const wordEl = document.getElementById('match-quest-word');
@@ -1422,6 +1506,9 @@
       hintEl.textContent = state.lang === 'en'
         ? `"${matchTarget.char}... ${matchTarget.word}!"`
         : `"${matchTarget.char}... ${matchTarget.word}!"`;
+      // The written hint gives the answer away, so it waits until the child needs help;
+      // with sound off it is the only prompt, so it shows straight away.
+      hintEl.classList.toggle('is-hidden', state.soundEnabled);
     }
     if (feedbackEl) {
       feedbackEl.textContent = state.lang === 'en' ? 'Tap the letter that starts the word!' : g('المس الحرف الأول من الكلمة!', 'المسي الحرف الأول من الكلمة!');
@@ -1440,6 +1527,16 @@
 
     renderMatchOptions(options);
     speakMatchPrompt();
+  }
+
+  // After two misses: show the written hint, take away one wrong choice and ask again.
+  function revealMatchHelp(grid) {
+    const hintEl = document.getElementById('match-quest-hint');
+    if (hintEl) hintEl.classList.remove('is-hidden');
+    const wrongChoices = [...grid.querySelectorAll('.match-choice-btn:not(.eliminated)')]
+      .filter(b => b.textContent !== matchTarget.char);
+    if (wrongChoices.length > 1) randomItem(wrongChoices).classList.add('eliminated');
+    laterInView(speakMatchPrompt, 1800);
   }
 
   function speakMatchPrompt() {
@@ -1482,9 +1579,7 @@
             speakText(`نعم! ${matchTarget.char} مثل ${matchTarget.word}! ${g('أحسنت', 'أحسنتِ')}!`);
           }
 
-          setTimeout(() => {
-            if (state.mode === 'match') pickNewMatchQuest();
-          }, 1800);
+          laterInView(pickNewMatchQuest, 1800);
         } else {
           // Wrong
           btn.classList.add('wrong');
@@ -1495,6 +1590,8 @@
             speakText(`هذا حرف ${opt.name}! ${g('حاول', 'حاولي')} مرة أخرى!`);
           }
           setTimeout(() => btn.classList.remove('wrong'), 800);
+          matchMisses++;
+          if (matchMisses === 2) revealMatchHelp(grid);
         }
       });
 
@@ -1519,7 +1616,7 @@
     const list = getActiveAlphabet();
 
     // Pick random items
-    const shuffled = shuffleInPlace([...list]).slice(0, memoryPairsCount);
+    const shuffled = shuffleInPlace(list.filter(startsItsKeyword)).slice(0, memoryPairsCount);
     const deck = [];
 
     shuffled.forEach((item, id) => {
@@ -1728,8 +1825,13 @@
 
     const startedAt = Date.now();
     const timeout = new Promise(resolve => setTimeout(resolve, JUKEBOX_MAX_WAIT_MS));
-    Promise.race([speakCurrentLetter(), timeout]).then(() => {
+    Promise.race([speakCurrentLetter(), timeout]).then((result) => {
       if (!state.jukeboxPlaying || step !== jukeboxStep) return;
+      // 'stopped' means the child tapped something else: let them explore, pause Auto Play.
+      if (result === 'stopped') {
+        toggleJukebox();
+        return;
+      }
       const wait = Math.max(JUKEBOX_GAP_MS, JUKEBOX_MIN_DWELL_MS - (Date.now() - startedAt));
       state.jukeboxTimer = setTimeout(() => {
         if (!state.jukeboxPlaying || step !== jukeboxStep) return;
@@ -1758,7 +1860,7 @@
     optWrap.innerHTML = '';
 
     const nums = [gateTarget];
-    while (nums.length < 3) {
+    while (nums.length < 4) {
       const r = gateTarget + Math.floor(Math.random() * 7) - 3;
       if (r > 0 && !nums.includes(r)) nums.push(r);
     }
@@ -1774,9 +1876,10 @@
           document.getElementById('parents-gate-view').style.display = 'none';
           document.getElementById('parents-settings-view').style.display = 'block';
         } else {
-          // Failed gate
+          // Failed gate: a short pause stops random tapping from cycling through questions.
           playPopSound();
-          initParentGate();
+          optWrap.querySelectorAll('.gate-btn').forEach(b => { b.disabled = true; });
+          setTimeout(initParentGate, 1500);
         }
       });
       optWrap.appendChild(btn);
@@ -1789,11 +1892,8 @@
 
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
+    // Keep the prompt for the parent's install button, but don't pulse it at the child.
     state.deferredPrompt = e;
-    const installBtn = document.getElementById('btn-android-app');
-    if (installBtn) {
-      installBtn.classList.add('pulse-anim');
-    }
   });
 
   function triggerPWAInstall() {
@@ -2116,6 +2216,30 @@
       triggerInstallBtn.addEventListener('click', triggerPWAInstall);
     }
 
+    // Tapping the dimmed backdrop closes a dialog too.
+    document.querySelectorAll('.modal-overlay').forEach(modal => {
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal(modal.id);
+      });
+    });
+
+    // <div role="button"> controls need Enter/Space like real buttons.
+    document.addEventListener('keydown', (e) => {
+      if ((e.key === 'Enter' || e.key === ' ') && e.target.matches && e.target.matches('[role="button"]:not(button)')) {
+        e.preventDefault();
+        e.target.click();
+      }
+    });
+
+    const btnForget = document.getElementById('btn-forget-child');
+    if (btnForget) {
+      btnForget.addEventListener('click', () => {
+        if (!confirm("Erase the child's name, profile, settings and progress from this device?")) return;
+        store.clearAll();
+        window.location.reload();
+      });
+    }
+
     // Close Modals
     document.querySelectorAll('[data-close]').forEach(btn => {
       btn.addEventListener('click', () => closeModal(btn.dataset.close));
@@ -2225,6 +2349,7 @@
   }
 
   function switchMode(newMode) {
+    viewEpoch++;
     if (state.jukeboxPlaying && newMode !== 'explore') {
       toggleJukebox();
     }
@@ -2266,12 +2391,19 @@
   // ==========================================================================
   const PlatformBridge = {
     isAndroid: !!(window.AndroidBridge || /Android/i.test(navigator.userAgent) || navigator.userAgent.includes('wv')),
-    isWindowsDesktop: !!(window.pywebview || /AlphabetSafariWin/i.test(navigator.userAgent)),
+    // pywebview injects window.pywebview after this script runs, so check at use time.
+    get isWindowsDesktop() {
+      return !!(window.pywebview || /AlphabetSafariWin/i.test(navigator.userAgent));
+    },
     isPWA: window.matchMedia && window.matchMedia('(display-mode: standalone)').matches,
 
     init() {
       if (this.isAndroid) document.documentElement.classList.add('platform-android');
       if (this.isWindowsDesktop) document.documentElement.classList.add('platform-windows');
+      if (window.AndroidBridge || this.isWindowsDesktop) document.documentElement.classList.add('native-app');
+      window.addEventListener('pywebviewready', () => {
+        document.documentElement.classList.add('platform-windows', 'native-app');
+      });
       if (this.isPWA) document.documentElement.classList.add('platform-pwa');
 
       this.setupHaptics();
@@ -2336,12 +2468,30 @@
 
   window.PlatformBridge = PlatformBridge;
 
+  // Native hooks. Android's Back button asks whether the page handled it (closing a dialog);
+  // the app is paused when it goes to the background.
+  window.AlphabetSafariBack = function () {
+    if (document.querySelector('.modal-overlay.open')) {
+      closeAllModals();
+      return true;
+    }
+    return false;
+  };
+  window.AlphabetSafariPause = function () {
+    stopAllSpeechAndAudio();
+    if (state.jukeboxPlaying) toggleJukebox();
+  };
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) window.AlphabetSafariPause();
+  });
+
   // ==========================================================================
   // INITIALIZATION
   // ==========================================================================
 
   function init() {
     if (!VOICE_SPEEDS.some(sp => sp.rate === state.voiceSpeed)) state.voiceSpeed = 0.95;
+    document.querySelectorAll('.modal-overlay:not(.open)').forEach(modal => { modal.inert = true; });
     PlatformBridge.init();
     applyLanguageChrome();
     applyGenderUI();

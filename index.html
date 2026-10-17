@@ -2,7 +2,7 @@
 <html lang="en" dir="ltr">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#FF85A2">
   <meta name="description" content="Fun, interactive English and Arabic alphabet learning app for children under 5 with voice, sounds, letter tracing, games, and sticker rewards.">
   <meta name="mobile-web-app-capable" content="yes">
@@ -12,13 +12,12 @@
   <title>Alphabet Safari 🦁🎈 | Learn English & Arabic for Kids</title>
   
   <link rel="manifest" href="manifest.json">
-  <link rel="icon" type="image/jpeg" href="assets/mascot.jpg">
-  <link rel="apple-touch-icon" href="assets/mascot.jpg">
+  <link rel="icon" type="image/png" href="assets/icon-192.png">
+  <link rel="apple-touch-icon" href="assets/icon-192.png">
 
   <!-- Google Fonts for playful, friendly typography in English and Arabic -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Fredoka:wght@400;500;600;700&family=Quicksand:wght@600;700&family=Amiri:wght@700&display=swap" rel="stylesheet">
+  <!-- Fonts are bundled (OFL-licensed) so no request leaves the device for them. -->
+  <link rel="stylesheet" href="assets/fonts/fonts.css">
   
   <link rel="stylesheet" href="styles.css">
 </head>
@@ -43,7 +42,7 @@
     <header class="app-header">
       <div class="header-left">
         <div class="app-brand" id="brand-logo" role="button" tabindex="0" title="Alphabet Safari">
-          <img src="assets/mascot.jpg" alt="Leo and Noor" class="brand-mascot-avatar pulse-anim">
+          <img src="assets/mascot-256.webp" alt="Leo and Noor" class="brand-mascot-avatar pulse-anim">
           <div class="brand-text">
             <h1 class="brand-title"><span class="eng-text">Alphabet Safari</span><span class="ar-text">سفاري الحروف</span></h1>
             <span class="brand-subtitle"><span class="eng-text">Learn • Listen • Play</span><span class="ar-text">تعلّم • استمع • العب</span></span>
@@ -78,18 +77,18 @@
 
         <!-- Star Counter Reward -->
         <button id="btn-rewards" class="star-badge-btn" title="View Star Rewards & Stickers">
-          <img src="assets/star_badge.jpg" alt="Star badge" class="star-icon spin-wiggle">
+          <img src="assets/star-256.webp" alt="Star badge" class="star-icon spin-wiggle">
           <span id="star-count" class="star-count-num">0</span>
           <span class="star-label"><span class="eng-text">Stars</span><span class="ar-text">نجوم</span></span>
         </button>
 
         <!-- Audio Speed / Repeat -->
-        <button id="btn-voice-speed" class="tool-btn" title="Voice Speed: Slow (Turtle), Normal (Puppy), Fast (Cheetah)">
+        <button id="btn-voice-speed" aria-label="Voice speed" class="tool-btn" title="Voice Speed: Slow (Turtle), Normal (Puppy), Fast (Cheetah)">
           <span id="speed-icon">🐢</span>
         </button>
 
         <!-- Music / Sound toggle -->
-        <button id="btn-sound-toggle" class="tool-btn" title="Sound Effects Toggle">
+        <button id="btn-sound-toggle" aria-label="Sound on or off" class="tool-btn" title="Sound Effects Toggle">
           <span id="sound-icon">🔊</span>
         </button>
 
@@ -100,7 +99,7 @@
         </button>
 
         <!-- Parent Gate Settings -->
-        <button id="btn-parents" class="tool-btn" title="Parents & Teachers Settings">
+        <button id="btn-parents" aria-label="Parents and teachers settings" class="tool-btn" title="Parents & Teachers Settings">
           <span>⚙️</span>
         </button>
       </div>
@@ -147,7 +146,7 @@
       </div>
       <div class="mascot-bubble" id="mascot-message">
         <span id="mascot-bubble-text"><span class="eng-text">Hi little hero! Tap any letter to start our safari! 🚀</span><span class="ar-text">مَرْحَبًا يَا بَطَلِي الصَّغِير! اِضْغَطْ عَلَى أَيِّ حَرْفٍ لِنَبْدَأَ مَغَامَرَتَنَا! 🦁</span></span>
-        <button id="btn-speak-bubble" class="bubble-speaker-btn" title="Hear voice">🔊</button>
+        <button id="btn-speak-bubble" class="bubble-speaker-btn" title="Hear voice" aria-label="Hear it again">🔊</button>
       </div>
     </aside>
 
@@ -210,7 +209,7 @@
 
             <!-- Card Bottom Action Bar -->
             <div class="spotlight-controls">
-              <button id="btn-prev-letter" class="nav-arrow-btn prev-btn" title="Previous Letter">
+              <button id="btn-prev-letter" aria-label="Previous letter" class="nav-arrow-btn prev-btn" title="Previous Letter">
                 <span>◀</span>
               </button>
               
@@ -232,7 +231,7 @@
                 <span id="jukebox-text-ar" class="ar-text" style="display:none;">تشغيل تلقائي</span>
               </button>
 
-              <button id="btn-next-letter" class="nav-arrow-btn next-btn" title="Next Letter">
+              <button id="btn-next-letter" aria-label="Next letter" class="nav-arrow-btn next-btn" title="Next Letter">
                 <span>▶</span>
               </button>
             </div>
@@ -268,12 +267,12 @@
             </div>
 
             <div class="trace-brush-colors" id="trace-colors" role="radiogroup" aria-label="Sparkle brush colors">
-              <button class="color-dot active" style="background: linear-gradient(135deg, #FF4B4B, #FF8533);" data-color="rainbow" title="Rainbow Sparkle"></button>
-              <button class="color-dot" style="background: #2575fc;" data-color="#2575fc" title="Ocean Blue"></button>
-              <button class="color-dot" style="background: #20bf6b;" data-color="#20bf6b" title="Emerald Green"></button>
-              <button class="color-dot" style="background: #f7b731;" data-color="#f7b731" title="Golden Honey"></button>
-              <button class="color-dot" style="background: #a55eea;" data-color="#a55eea" title="Purple Magic"></button>
-              <button class="color-dot" style="background: #ff5e7e;" data-color="#ff5e7e" title="Pink Candy"></button>
+              <button class="color-dot active" style="background: linear-gradient(135deg, #FF4B4B, #FF8533);" data-color="rainbow" title="Rainbow Sparkle" aria-label="Rainbow Sparkle"></button>
+              <button class="color-dot" style="background: #2575fc;" data-color="#2575fc" title="Ocean Blue" aria-label="Ocean Blue"></button>
+              <button class="color-dot" style="background: #20bf6b;" data-color="#20bf6b" title="Emerald Green" aria-label="Emerald Green"></button>
+              <button class="color-dot" style="background: #f7b731;" data-color="#f7b731" title="Golden Honey" aria-label="Golden Honey"></button>
+              <button class="color-dot" style="background: #a55eea;" data-color="#a55eea" title="Purple Magic" aria-label="Purple Magic"></button>
+              <button class="color-dot" style="background: #ff5e7e;" data-color="#ff5e7e" title="Pink Candy" aria-label="Pink Candy"></button>
             </div>
 
             <div class="trace-actions">
@@ -356,7 +355,7 @@
           <div class="match-quest-card">
             <div class="quest-avatar-box">
               <div class="quest-illustration" id="match-quest-icon">🦁</div>
-              <button id="btn-match-quest-sound" class="bubble-speaker-btn quest-speaker" title="Listen to word">🔊</button>
+              <button id="btn-match-quest-sound" class="bubble-speaker-btn quest-speaker" title="Listen to word" aria-label="Hear the word again">🔊</button>
             </div>
             <div class="quest-text-box">
               <span class="quest-sub"><span class="eng-text">Which letter starts:</span><span class="ar-text">ما هو الحرف الذي تبدأ به:</span></span>
@@ -458,7 +457,7 @@
         
         <div class="modal-body android-install-body">
           <div class="install-banner">
-            <img src="assets/mascot.jpg" alt="Alphabet Safari Icon" class="install-app-icon">
+            <img src="assets/mascot-256.webp" alt="Alphabet Safari Icon" class="install-app-icon">
             <div class="install-banner-text">
               <h3><span class="eng-text">Alphabet Safari Kids (English & Arabic)</span><span class="ar-text">سفاري الحروف للأطفال (عربي وإنجليزي)</span></h3>
               <p><span class="eng-text">Designed specially for toddlers & preschoolers (Ages 2-5). Works 100% offline with zero ads, high-clarity voice output, and child-safe controls.</span><span class="ar-text">مصمم خصيصاً للأطفال الصغار (الأعمار ٢-٥). يعمل بدون إنترنت ١٠٠٪ بدون إعلانات، مع نطق صوتي واضح جداً وحماية للأطفال.</span></p>
@@ -520,8 +519,13 @@
           <h3><span class="eng-text">Grown-ups Only!</span><span class="ar-text">للكبار فقط!</span></h3>
           <p id="gate-question-text"><span class="eng-text">What is</span><span class="ar-text">كم يساوي</span> <strong id="gate-target-num" dir="ltr">7 + 5</strong>?</p>
           <div class="gate-buttons" id="gate-options">
-            <!-- 3 options -->
+            <!-- 4 options, built by initParentGate() -->
           </div>
+          <!-- A child who wanders in must always have an obvious way back out. -->
+          <button class="action-btn gate-back-btn" data-close="modal-parents">
+            <span aria-hidden="true">⬅️</span>
+            <span class="eng-text">Back to play</span><span class="ar-text">ارجع للعب</span>
+          </button>
         </div>
 
         <!-- Actual Settings View (Shown once gate passes) -->
@@ -587,6 +591,21 @@
               </div>
               <button id="btn-reset-progress" class="btn-sm-danger">Reset Progress</button>
             </div>
+
+            <div class="setting-row">
+              <div class="setting-info">
+                <span class="setting-name">Erase Child Profile</span>
+                <span class="setting-desc">Remove the name, profile, settings and progress from this device</span>
+              </div>
+              <button id="btn-forget-child" class="btn-sm-danger">Erase Everything</button>
+            </div>
+
+            <div class="setting-row privacy-note">
+              <div class="setting-info">
+                <span class="setting-name">Privacy</span>
+                <span class="setting-desc">No accounts, ads or tracking. Progress and your child's name stay on this device, and the name is only ever spoken by voices that run on the device.</span>
+              </div>
+            </div>
           </div>
 
           <div class="modal-footer">
@@ -601,7 +620,7 @@
     <div class="modal-overlay" id="modal-celebrate" aria-hidden="true">
       <div class="modal-card modal-celebrate-card" role="dialog">
         <div class="celebrate-avatar-wrap">
-          <img src="assets/star_badge.jpg" alt="Super Star" class="celebrate-star-img pop-in">
+          <img src="assets/star-256.webp" alt="Super Star" class="celebrate-star-img pop-in">
         </div>
         <h2 class="celebrate-title"><span class="eng-text">Super Star! ⭐</span><span class="ar-text">أحسنت يا بطل! ⭐</span></h2>
         <p class="celebrate-msg" id="celebrate-text">You earned 5 stars and unlocked a new sticker!</p>

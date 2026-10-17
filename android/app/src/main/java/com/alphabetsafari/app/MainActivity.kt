@@ -9,12 +9,15 @@ import android.os.Vibrator
 import android.os.VibratorManager
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
+import android.speech.tts.Voice
 import android.view.View
 import android.webkit.JavascriptInterface
 import android.webkit.WebChromeClient
 import android.webkit.WebSettings
 import android.webkit.WebView
+import android.webkit.WebResourceRequest
 import android.webkit.WebViewClient
+import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
@@ -45,13 +48,26 @@ class NativeSpeech(context: Context, private val webView: WebView) : TextToSpeec
         })
     }
 
-    fun speak(text: String, langTag: String, rate: Float, utteranceId: String) {
+    /**
+     * [localOnly] is set for phrases containing the child's name: they may only be spoken by a
+     * voice that runs on the device. If there is none, report failure and let the page fall
+     * back to the same phrase without the name, rather than sending the name to a cloud voice.
+     */
+    fun speak(text: String, langTag: String, rate: Float, utteranceId: String, localOnly: Boolean) {
         if (!ready) {
             notifyDone(utteranceId, false)
             return
         }
-        val availability = tts.setLanguage(Locale.forLanguageTag(langTag))
+        val locale = Locale.forLanguageTag(langTag)
+        val availability = tts.setLanguage(locale)
         if (availability == TextToSpeech.LANG_MISSING_DATA || availability == TextToSpeech.LANG_NOT_SUPPORTED) {
+            notifyDone(utteranceId, false)
+            return
+        }
+        val onDevice = bestOnDeviceVoice(locale)
+        if (onDevice != null) {
+            tts.voice = onDevice
+        } else if (localOnly) {
             notifyDone(utteranceId, false)
             return
         }
@@ -61,6 +77,18 @@ class NativeSpeech(context: Context, private val webView: WebView) : TextToSpeec
 
     fun stop() {
         if (ready) tts.stop()
+    }
+
+    private fun bestOnDeviceVoice(locale: Locale): Voice? = try {
+        tts.voices
+            ?.filter { v ->
+                v.locale.language == locale.language &&
+                    !v.isNetworkConnectionRequired &&
+                    TextToSpeech.Engine.KEY_FEATURE_NOT_INSTALLED !in v.features
+            }
+            ?.maxByOrNull { it.quality }
+    } catch (_: Exception) {
+        null
     }
 
     fun shutdown() {
@@ -100,8 +128,8 @@ class AndroidBridge(private val context: Context, private val speech: NativeSpee
     }
 
     @JavascriptInterface
-    fun speak(text: String, langTag: String, rate: Float, utteranceId: String) =
-        speech.speak(text, langTag, rate, utteranceId)
+    fun speak(text: String, langTag: String, rate: Float, utteranceId: String, localOnly: Boolean) =
+        speech.speak(text, langTag, rate, utteranceId, localOnly)
 
     @JavascriptInterface
     fun stopSpeaking() = speech.stop()
@@ -129,8 +157,9 @@ class MainActivity : AppCompatActivity() {
             settings.javaScriptEnabled = true
             settings.domStorageEnabled = true
             settings.databaseEnabled = true
-            settings.allowFileAccess = true
-            settings.allowContentAccess = true
+            // file:///android_asset stays readable without these; nothing else on the device should be.
+            settings.allowFileAccess = false
+            settings.allowContentAccess = false
             settings.mediaPlaybackRequiresUserGesture = false
             settings.cacheMode = WebSettings.LOAD_DEFAULT
 
@@ -140,19 +169,39 @@ class MainActivity : AppCompatActivity() {
             // Register Unified Android Bridge
             addJavascriptInterface(AndroidBridge(this@MainActivity, speech), "AndroidBridge")
 
+            // The page has AndroidBridge attached, so it must never navigate away from the
+            // bundled app. Any other URL is simply refused.
             webViewClient = object : WebViewClient() {
-                override fun shouldOverrideUrlLoading(view: WebView?, url: String?): Boolean {
-                    return false
+                override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
+                    val url = request?.url?.toString() ?: return true
+                    return !url.startsWith(APP_ASSET_ROOT)
                 }
             }
 
             webChromeClient = object : WebChromeClient() {}
 
             // Load the bundled offline web assets
-            loadUrl("file:///android_asset/www/index.html")
+            loadUrl(APP_ASSET_ROOT + "index.html")
         }
 
         setContentView(webView)
+
+        // Back first closes an open dialog (e.g. the parent gate a toddler wandered into);
+        // only when nothing is open does it leave the app. With targetSdk 36 the deprecated
+        // onBackPressed() is no longer called, so this goes through the dispatcher.
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                webView.evaluateJavascript(
+                    "window.AlphabetSafariBack ? window.AlphabetSafariBack() : false"
+                ) { handled ->
+                    if (handled != "true") {
+                        isEnabled = false
+                        onBackPressedDispatcher.onBackPressed()
+                        isEnabled = true
+                    }
+                }
+            }
+        })
     }
 
     override fun onResume() {
@@ -164,7 +213,7 @@ class MainActivity : AppCompatActivity() {
     override fun onPause() {
         // Don't keep talking or playing clips once the app is in the background.
         speech.stop()
-        webView.evaluateJavascript("document.querySelectorAll('audio').forEach(a => a.pause())", null)
+        webView.evaluateJavascript("window.AlphabetSafariPause && window.AlphabetSafariPause()", null)
         webView.onPause()
         super.onPause()
     }
@@ -190,12 +239,7 @@ class MainActivity : AppCompatActivity() {
             WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
     }
 
-    @Deprecated("Deprecated in Java")
-    override fun onBackPressed() {
-        if (webView.canGoBack()) {
-            webView.goBack()
-        } else {
-            super.onBackPressed()
-        }
+    companion object {
+        private const val APP_ASSET_ROOT = "file:///android_asset/www/"
     }
 }

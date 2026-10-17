@@ -1209,10 +1209,10 @@ html, body {
 
 @keyframes floatUpSky {
   0% {
-    bottom: -140px;
+    translate: 0 0;
   }
   100% {
-    bottom: 500px;
+    translate: 0 -640px;
   }
 }
 
@@ -2495,4 +2495,90 @@ body[data-gender="girl"] .name-input:focus {
   font-weight: 800;
   border-radius: var(--radius-lg);
   cursor: pointer;
+}
+
+/* ==========================================================================
+   REVIEW CYCLE 2: accessibility, motion, contrast and platform fixes
+   ========================================================================== */
+
+/* Closed dialogs must be out of the tab order and the accessibility tree, not just transparent. */
+.modal-overlay:not(.open) {
+  visibility: hidden;
+  transition: opacity 0.25s ease, visibility 0s linear 0.25s;
+}
+
+/* Letters on light balloons (mint, lemon) were ~1.5:1 contrast; a dark outline keeps them legible. */
+.flying-balloon {
+  text-shadow:
+    -2px -2px 0 rgba(15, 23, 42, 0.55), 2px -2px 0 rgba(15, 23, 42, 0.55),
+    -2px 2px 0 rgba(15, 23, 42, 0.55), 2px 2px 0 rgba(15, 23, 42, 0.55),
+    0 3px 6px rgba(15, 23, 42, 0.35);
+}
+
+/* Toddler-sized touch targets (these were 36-38px). */
+.bubble-speaker-btn,
+.modal-close-btn {
+  width: 56px;
+  height: 56px;
+  font-size: 1.4rem;
+}
+.color-dot {
+  width: 48px;
+  height: 48px;
+}
+
+/* In Arabic the row is mirrored, so the arrows must be too, or both point inward. */
+[dir="rtl"] .nav-arrow-btn > span {
+  display: inline-block;
+  transform: scaleX(-1);
+}
+
+/* Parent gate: a big, obvious way back out for a child who wandered in. */
+.gate-back-btn {
+  margin-top: 18px;
+  min-height: 56px;
+  font-size: 1.15rem;
+}
+.gate-btn:disabled {
+  opacity: 0.4;
+}
+
+/* Find Letter: the written hint stays hidden until the child needs help. */
+.quest-hint.is-hidden {
+  visibility: hidden;
+}
+.match-choice-btn.eliminated {
+  opacity: 0.2;
+  pointer-events: none;
+}
+
+.privacy-note .setting-desc {
+  max-width: none;
+}
+
+/* Inside the Android and Windows apps there is nothing to install. */
+.native-app #btn-android-app {
+  display: none !important;
+}
+
+/* Blur over a constantly animated background re-renders every frame on low-end Android. */
+.platform-android * {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+/* Respect the OS "reduce motion" setting. Balloons keep rising because that is the game. */
+@media (prefers-reduced-motion: reduce) {
+  *:not(.flying-balloon),
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .flying-balloon {
+    animation-name: floatUpSky;
+    animation-duration: 14s;
+  }
 }

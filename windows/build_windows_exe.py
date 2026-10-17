@@ -1,11 +1,14 @@
 import os
 import sys
 import subprocess
+import tempfile
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 WINDOWS_DIR = os.path.join(BASE_DIR, "windows")
 DIST_DIR = os.path.join(WINDOWS_DIR, "dist")
-BUILD_DIR = os.path.join(WINDOWS_DIR, "build")
+# PyInstaller's scratch tree lives outside the repo: inside a OneDrive-synced folder,
+# `--clean` intermittently fails with "Access is denied" on files OneDrive is syncing.
+BUILD_DIR = os.path.join(tempfile.gettempdir(), "AlphabetSafari-pyinstaller")
 ICON_PATH = os.path.join(WINDOWS_DIR, "mascot.ico")
 
 def build_exe():
@@ -60,6 +63,7 @@ def build_exe():
         print(f"\nSUCCESS: Created Standalone Windows App: {exe_path} ({size_mb:.2f} MB)")
     else:
         print("ERROR: Output executable not found.")
+        sys.exit(1)
 
 if __name__ == "__main__":
     build_exe()

@@ -11,6 +11,7 @@ Supports:
 import os
 import sys
 import argparse
+import shutil
 import subprocess
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -63,6 +64,25 @@ def run_verify():
         ok = False
     return ok
 
+def build_site(out_dir=None):
+    """Stage exactly what the web app needs into _site/ (for GitHub Pages).
+
+    Publishing the repo root would also ship android/, windows/, tools/, tests/ and build
+    scripts; this uses the same file list and asset filter as the native targets.
+    """
+    from sync_assets import CORE_FILES, ASSET_IGNORE
+
+    out_dir = out_dir or os.path.join(BASE_DIR, "_site")
+    shutil.rmtree(out_dir, ignore_errors=True)
+    os.makedirs(out_dir)
+    for f in CORE_FILES:
+        shutil.copy2(os.path.join(BASE_DIR, f), out_dir)
+    shutil.copytree(os.path.join(BASE_DIR, "assets"), os.path.join(out_dir, "assets"), ignore=ASSET_IGNORE)
+    count = sum(len(files) for _, _, files in os.walk(out_dir))
+    log(f"Web site staged in {out_dir} ({count} files)", symbol="SITE")
+    return True
+
+
 def build_windows():
     log("Building Native Windows Desktop Executable...", symbol="WIN")
     run_sync()
@@ -104,13 +124,14 @@ def main():
     parser.add_argument("--windows", action="store_true", help="Build standalone Windows executable")
     parser.add_argument("--android", action="store_true", help="Build Android APK")
     parser.add_argument("--all", action="store_true", help="Build both Windows and Android")
+    parser.add_argument("--site", action="store_true", help="Stage the web app into _site/ for GitHub Pages")
 
     args = parser.parse_args()
 
-    if not any([args.sync, args.verify, args.windows, args.android, args.all]):
+    if not any([args.sync, args.verify, args.windows, args.android, args.all, args.site]):
         # Default behavior: sync and verify
         run_sync()
-        run_verify()
+        verified = run_verify()
         print("\nUsage examples:")
         print("  py build.py --windows   -> Compiles Windows standalone .exe")
         print("  py build.py --android   -> Compiles Android debug APK")
@@ -121,10 +142,15 @@ def main():
         run_sync()
     if args.verify and not run_verify():
         sys.exit(1)
+    # A failed build must fail the command, or CI goes green without an artifact.
+    ok = True
+    if args.site:
+        ok = build_site() and ok
     if args.windows or args.all:
-        build_windows()
+        ok = build_windows() and ok
     if args.android or args.all:
-        build_android()
+        ok = build_android() and ok
+    sys.exit(0 if ok else 1)
 
 if __name__ == "__main__":
     main()

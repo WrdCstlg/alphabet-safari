@@ -134,11 +134,16 @@ py build.py --verify                    # asset parity + content/audio validatio
 
 The repository includes end-to-end continuous integration and deployment workflows:
 
-1. **`ci.yml`**:
-   - `Core Web & Asset Parity Validation`: ESLint, syntax checks, manifest validation, Android asset parity, and content/audio validation.
-   - `Browser Smoke Test`: Playwright drives every mode in headless Chromium.
-   - `Android Native APK Build`: Ubuntu runner with JDK 17 compiles `app-debug.apk` and uploads it as an artifact.
-   - `Windows Standalone Desktop Build`: Windows runner compiles `AlphabetSafari.exe` and uploads it as an artifact.
-   - `Docker Web Server Live Verification`: Docker build and live endpoint curl assertion.
-2. **`deploy.yml`**:
-   - Automatic live deployment to GitHub Pages on every push to `main`.
+One workflow, **`ci.yml`**, runs on every push and pull request:
+- `Core Web & Asset Parity Validation`: ESLint, syntax checks, manifest validation, Android asset parity, and content/audio validation.
+- `Browser Smoke Test`: Playwright drives every mode in headless Chromium, including privacy (the child's name never reaches cloud TTS), offline use, and the parent gate.
+- `Android Native APK Build`: AGP 9.4 / Gradle 9.7 on JDK 21, targetSdk 36; the Gradle wrapper is checksum-verified.
+- `Windows Standalone Desktop Build`: compiles `AlphabetSafari.exe` from `requirements.txt`.
+- `Docker Web Server Live Verification`: pinned nginx image; asserts real content types, not just a page body.
+- `Deploy to GitHub Pages`: runs only on `main` and only after validation, smoke and Docker pass. It publishes `_site/` from `py build.py --site` (the web app only, not the whole repo).
+
+## 🔒 Privacy
+
+No accounts, ads, analytics or third-party requests (fonts are bundled). Progress and the child's
+name stay on the device. Phrases containing the name are spoken only by on-device voices; if none is
+available the phrase is said without the name. Parents can erase everything from Parents Corner.

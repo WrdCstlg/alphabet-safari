@@ -1,16 +1,16 @@
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
 }
 
 android {
     namespace = "com.alphabetsafari.app"
-    compileSdk = 34
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.alphabetsafari.app"
         minSdk = 24
-        targetSdk = 34
+        // Google Play requires API 36 for new apps and updates from 2026-08-31.
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0.0"
 
@@ -26,12 +26,10 @@ android {
             )
         }
     }
+    // AGP 9 compiles Kotlin itself; its jvmTarget follows targetCompatibility.
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
-    }
-    kotlinOptions {
-        jvmTarget = "1.8"
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 }
 

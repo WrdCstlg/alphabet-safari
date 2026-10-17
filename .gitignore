@@ -16,3 +16,4 @@ assets/cache_audio/
 android/app/src/main/assets/www/assets/cache_audio/
 
 node_modules/
+_site/

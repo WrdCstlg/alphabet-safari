@@ -61,9 +61,18 @@ page.on('console', msg => {
   if (msg.type() === 'error' && !/Failed to load resource/.test(msg.text())) pageErrors.push(msg.text());
 });
 page.on('dialog', d => d.accept());
-const clipRequests = [];
-page.on('requestfinished', req => {
-  if (req.url().includes('/assets/audio/')) clipRequests.push(req.url());
+const clipResponses = [];
+page.on('response', res => {
+  if (res.url().includes('/assets/audio/')) clipResponses.push({ url: res.url(), status: res.status() });
+});
+
+// Pretend to be the Windows desktop host (which has a cloud TTS endpoint) and record every
+// phrase sent to it, so the test can prove the child's name never leaves the device.
+const ttsTexts = [];
+await page.route('**/api/health', route => route.fulfill({ json: { tts: true } }));
+await page.route('**/api/tts?*', route => {
+  ttsTexts.push(new URL(route.request().url()).searchParams.get('text'));
+  return route.fulfill({ status: 404 });
 });
 
 const stars = () => page.$eval('#star-count', el => parseInt(el.textContent, 10));
@@ -80,7 +89,8 @@ await check('loads English alphabet without script errors', async () => {
 await check('tapping Next plays the recorded clip for the new letter', async () => {
   await page.click('#btn-next-letter');
   await page.waitForTimeout(400);
-  assert(clipRequests.some(u => u.endsWith('/assets/audio/en/boy/B.mp3')), `clip requests: ${clipRequests.join(', ')}`);
+  const clip = clipResponses.find(r => r.url.endsWith('/assets/audio/en/boy/B.mp3'));
+  assert(clip && clip.status === 200, `clip responses: ${JSON.stringify(clipResponses)}`);
 });
 
 await check('Y shows the yo-yo and its phrase says yo-yo', async () => {
@@ -99,6 +109,26 @@ await check('profile save closes the modal, persists, and treats the name as tex
   const badge = await page.locator('#gender-badge-title').textContent();
   assert(badge.includes('<img src=x>Noor'), `badge text: ${badge}`);
   assert(await page.locator('#gender-badge-title img').count() === 0, 'name was injected as HTML');
+});
+
+await check("the child's name is never sent to the cloud TTS endpoint", async () => {
+  ttsTexts.length = 0;
+  await page.click('#interactive-mascot'); // greeting that includes the name
+  await page.waitForTimeout(600);
+  await page.click('.mode-tab[data-mode="match"]'); // a nameless prompt, which may use the cloud
+  await page.waitForTimeout(600);
+  assert(ttsTexts.length > 0, 'the TTS route was never used, so this check proves nothing');
+  const leaked = ttsTexts.filter(t => t.includes('Noor'));
+  assert(leaked.length === 0, `name sent to TTS: ${JSON.stringify(leaked)}`);
+  await page.click('.mode-tab[data-mode="explore"]');
+});
+
+await check('a child who opens the parent gate can always get back out', async () => {
+  assert(await page.locator('#modal-parents').evaluate(el => el.inert), 'closed dialog is not inert');
+  await page.click('#btn-parents');
+  await page.click('.gate-back-btn');
+  await page.waitForTimeout(300);
+  assert(!(await page.locator('#modal-parents').evaluate(el => el.classList.contains('open'))), 'gate still open');
 });
 
 await check('Escape closes an open modal', async () => {
@@ -142,6 +172,35 @@ await check('balloons: every round has targets, and the letter shown is the lett
   }
 });
 
+const correctMatchChar = () => page.evaluate(() => {
+  const word = document.getElementById('match-quest-word').textContent;
+  const all = [...window.ALPHABET_CONTENT.en, ...window.ALPHABET_CONTENT.ar];
+  return all.find(i => i.word === word).char;
+});
+
+await check('find letter: hint hidden until two misses, then a wrong choice is removed', async () => {
+  await page.click('.mode-tab[data-mode="match"]');
+  assert(await page.locator('#match-quest-hint').evaluate(el => el.classList.contains('is-hidden')), 'hint shown up front');
+  const answer = await correctMatchChar();
+  for (let i = 0; i < 2; i++) {
+    await page.locator('.match-choice-btn:not(.eliminated)').filter({ hasNotText: answer }).first().click();
+    await page.waitForTimeout(200);
+  }
+  assert(!(await page.locator('#match-quest-hint').evaluate(el => el.classList.contains('is-hidden'))), 'hint still hidden');
+  assert(await page.locator('.match-choice-btn.eliminated').count() === 1, 'no wrong choice was removed');
+});
+
+await check('find letter: leaving and returning mid-celebration keeps the new question', async () => {
+  await page.click('.mode-tab[data-mode="match"]');
+  await page.locator('.match-choice-btn', { hasText: await correctMatchChar() }).first().click();
+  await page.keyboard.press('Escape');
+  await page.click('.mode-tab[data-mode="explore"]');
+  await page.click('.mode-tab[data-mode="match"]');
+  const word = await page.locator('#match-quest-word').textContent();
+  await page.waitForTimeout(2300); // past the old round's 1.8s "next question" timer
+  assert(await page.locator('#match-quest-word').textContent() === word, 'an old timer replaced the question');
+});
+
 await check('tracing: empty or scribbled canvas earns nothing, a traced letter earns stars', async () => {
   await page.click('.mode-tab[data-mode="trace"]');
   await page.waitForTimeout(300);
@@ -159,16 +218,34 @@ await check('tracing: empty or scribbled canvas earns nothing, a traced letter e
   await page.click('#btn-trace-clear');
   await page.evaluate(() => {
     const c = document.getElementById('trace-user-canvas');
-    const ctx = c.getContext('2d');
-    const ch = document.getElementById('trace-current-char').textContent;
-    ctx.font = '800 240px Fredoka, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillStyle = '#f00';
-    ctx.fillText(ch, c.width / 2, c.height / 2 + 30);
+    c.getContext('2d').drawImage(document.getElementById('trace-guide-canvas'), 0, 0);
   });
   await page.click('#btn-trace-check');
   assert(await stars() === before + 2, `traced letter: stars ${before} -> ${await stars()}`);
+
+  for (let i = 0; i < 3; i++) {
+    await page.keyboard.press('Escape');
+    await page.click('#btn-trace-check');
+  }
+  assert(await stars() === before + 2, `repeat taps kept paying: ${before} -> ${await stars()}`);
+});
+
+await check('tracing: a resting second finger does not draw', async () => {
+  await page.click('#btn-trace-clear');
+  const painted = await page.evaluate(() => {
+    const c = document.getElementById('trace-user-canvas');
+    const r = c.getBoundingClientRect();
+    const at = (fx, fy) => ({ clientX: r.left + r.width * fx, clientY: r.top + r.height * fy });
+    const fire = (type, id, p) => c.dispatchEvent(new PointerEvent(type, { pointerId: id, bubbles: true, cancelable: true, ...p }));
+    fire('pointerdown', 1, at(0.1, 0.1));          // drawing finger
+    fire('pointerdown', 2, at(0.9, 0.9));          // resting palm
+    for (let k = 1; k <= 10; k++) fire('pointermove', 2, at(0.9 - k * 0.03, 0.9));
+    fire('pointerup', 2, at(0.6, 0.9));
+    fire('pointerup', 1, at(0.1, 0.1));
+    const x = Math.round(c.width * 0.75), y = Math.round(c.height * 0.9);
+    return c.getContext('2d').getImageData(x, y, 1, 1).data[3];
+  });
+  assert(painted === 0, 'the second pointer drew on the canvas');
 });
 
 await check('memory game deals 6 cards', async () => {
@@ -202,6 +279,20 @@ await check('Arabic: 28 letters, RTL, د shows the dolphin, language persists', 
 
 await check('no script errors during the whole session', async () => {
   assert(pageErrors.length === 0, pageErrors.join(' | '));
+});
+
+await check('works offline once the service worker has cached it', async () => {
+  const swContext = await browser.newContext({ viewport: { width: 1280, height: 860 } });
+  const swPage = await swContext.newPage();
+  await swPage.goto(`${base}/index.html`);
+  await swPage.evaluate(() => navigator.serviceWorker.ready);
+  await swPage.reload(); // now controlled by the service worker
+  await swPage.waitForSelector('#letters-grid .grid-letter-card');
+  await swContext.setOffline(true);
+  await swPage.reload();
+  await swPage.waitForSelector('#letters-grid .grid-letter-card', { timeout: 10000 });
+  assert(await swPage.locator('#letters-grid .grid-letter-card').count() > 0, 'no letters offline');
+  await swContext.close();
 });
 
 await browser.close();

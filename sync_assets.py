@@ -11,8 +11,10 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ANDROID_WWW_DIR = os.path.join(BASE_DIR, "android", "app", "src", "main", "assets", "www")
 WINDOWS_DIR = os.path.join(BASE_DIR, "windows")
 CORE_FILES = ["index.html", "styles.css", "content.js", "script.js", "manifest.json", "sw.js"]
-# Runtime caches and generator bookkeeping that should never ship inside the app.
-ASSET_IGNORE = shutil.ignore_patterns("cache_audio", "manifest.json", "*.part", ".DS_Store", "Thumbs.db")
+# Never shipped inside the app: runtime caches, generator bookkeeping, and the full-size
+# source images (the app uses the small icon-*.png / *-256.webp renditions made from them).
+ASSET_IGNORE = shutil.ignore_patterns("cache_audio", "manifest.json", "*.part", ".DS_Store", "Thumbs.db",
+                                      "mascot.jpg", "star_badge.jpg")
 
 
 def compute_sha256(filepath):

@@ -13,3 +13,10 @@ package*.json
 eslint.config.mjs
 assets/cache_audio/
 assets/audio/manifest.json
+_site/
+tests/
+assets/mascot.jpg
+assets/star_badge.jpg
+Dockerfile
+docker-compose.yml
+README*.md

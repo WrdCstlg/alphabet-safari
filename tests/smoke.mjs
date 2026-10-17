@@ -39,6 +39,12 @@ async function check(name, fn) {
   } catch (e) {
     results.push({ name, ok: false });
     console.log(`  FAIL  ${name}\n        ${e.message.split('\n')[0]}`);
+    // In GitHub Actions, also raise an annotation so the failing check is visible on the
+    // commit/PR without opening the logs.
+    if (process.env.GITHUB_ACTIONS) {
+      const clean = (t) => t.replace(/%/g, '%25').replace(/\r?\n/g, ' ').slice(0, 500);
+      console.log(`::error title=Smoke check failed: ${clean(name)}::${clean(e.message)}`);
+    }
   }
 }
 function assert(cond, msg) {

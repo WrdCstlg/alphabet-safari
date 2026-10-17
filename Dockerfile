@@ -8,6 +8,7 @@ COPY . /usr/share/nginx/html
 # Custom nginx configuration for PWA & SPA routing and caching
 RUN printf 'server {\n\
     listen 80;\n\
+    listen [::]:80;\n\
     server_name localhost;\n\
     root /usr/share/nginx/html;\n\
     index index.html;\n\

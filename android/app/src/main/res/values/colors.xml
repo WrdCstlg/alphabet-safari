@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Top colour of the page's background gradient (bg-gradient in styles.css). Shown while
+         the page loads and in the strip kept clear of a camera cutout. -->
+    <color name="page_background">#FDE2E4</color>
+</resources>

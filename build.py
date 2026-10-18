@@ -9,6 +9,7 @@ Supports:
 """
 
 import os
+import re
 import sys
 import argparse
 import shutil
@@ -17,6 +18,7 @@ import subprocess
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ANDROID_DIR = os.path.join(BASE_DIR, "android")
 WINDOWS_DIR = os.path.join(BASE_DIR, "windows")
+ALLOWED_ANDROID_PERMISSIONS = {"android.permission.VIBRATE"}
 
 def log(msg, symbol="*"):
     print(f"[{symbol}] {msg}")
@@ -30,6 +32,30 @@ def run_sync():
         log("sync_assets.py not found!", symbol="ERROR")
         return False
     return True
+
+# Google Play's limits, in characters. Play rejects a listing or release over them.
+PLAY_TEXT_LIMITS = {"title.txt": 30, "short_description.txt": 80, "full_description.txt": 4000}
+PLAY_RELEASE_NOTES_LIMIT = 500
+
+
+def verify_play_listing():
+    """Store listing text in fastlane/metadata/android/<locale>/ is present and within limits."""
+    from sync_assets import PLAY_LISTING_DIR, PLAY_LOCALES
+
+    ok = True
+    for locale in PLAY_LOCALES:
+        folder = os.path.join(PLAY_LISTING_DIR, locale)
+        files = dict(PLAY_TEXT_LIMITS, **{os.path.join("changelogs", "default.txt"): PLAY_RELEASE_NOTES_LIMIT})
+        for name, limit in files.items():
+            path = os.path.join(folder, name)
+            text = open(path, encoding="utf-8").read().strip() if os.path.exists(path) else ""
+            if not text or len(text) > limit:
+                log(f"Play listing {locale}/{name}: {len(text)} characters (must be 1-{limit})", symbol="FAIL")
+                ok = False
+    if ok:
+        log(f"Play listing text present and within limits ({', '.join(PLAY_LOCALES)}).", symbol="OK")
+    return ok
+
 
 def run_verify():
     from sync_assets import CORE_FILES, ANDROID_WWW_DIR, compute_sha256, iter_asset_files
@@ -59,6 +85,31 @@ def run_verify():
     if ok:
         log(f"Android asset parity verified ({len(pairs)} files).", symbol="OK")
 
+    # Release builds (the Play bundle) refuse launcher icons that aren't real PNGs.
+    from sync_assets import launcher_icon_specs, is_png
+    bad_icons = [(os.path.relpath(p, BASE_DIR), size) for p, size in launcher_icon_specs()
+                 if not is_png(p, size, rgba=p.endswith("icon.png"))]
+    for rel, size in bad_icons:
+        log(f"Icon is not a {size}x{size} PNG of the right kind: {rel} (run `py build.py --sync`)", symbol="FAIL")
+    if bad_icons:
+        ok = False
+    else:
+        log("Launcher icons and the 32-bit Play listing icon are valid PNGs.", symbol="OK")
+
+    ok = verify_play_listing() and ok
+
+    # privacy.html and the Play Data safety answers say the Android app can't reach the
+    # internet and asks only for vibration. A new permission must update those first.
+    manifest = os.path.join(ANDROID_DIR, "app", "src", "main", "AndroidManifest.xml")
+    with open(manifest, encoding="utf-8") as f:
+        permissions = set(re.findall(r'<uses-permission\s+android:name="([^"]+)"', f.read()))
+    if permissions != ALLOWED_ANDROID_PERMISSIONS:
+        log(f"Android permissions changed: {sorted(permissions)}. Update privacy.html and "
+            "docs/google-play/README.md (Data safety), then ALLOWED_ANDROID_PERMISSIONS in build.py.", symbol="FAIL")
+        ok = False
+    else:
+        log("Android permissions match the privacy policy (vibration only, no internet).", symbol="OK")
+
     log("Validating content.js against the recorded audio...", symbol="CHECK")
     if subprocess.call([sys.executable, os.path.join(BASE_DIR, "tools", "validate_content.py")]) != 0:
         ok = False
@@ -74,10 +125,10 @@ def build_site(out_dir=None):
 
     out_dir = out_dir or os.path.join(BASE_DIR, "_site")
     shutil.rmtree(out_dir, ignore_errors=True)
-    os.makedirs(out_dir)
+    os.makedirs(out_dir, exist_ok=True)
     for f in CORE_FILES:
         shutil.copy2(os.path.join(BASE_DIR, f), out_dir)
-    shutil.copytree(os.path.join(BASE_DIR, "assets"), os.path.join(out_dir, "assets"), ignore=ASSET_IGNORE)
+    shutil.copytree(os.path.join(BASE_DIR, "assets"), os.path.join(out_dir, "assets"), dirs_exist_ok=True, ignore=ASSET_IGNORE)
     count = sum(len(files) for _, _, files in os.walk(out_dir))
     log(f"Web site staged in {out_dir} ({count} files)", symbol="SITE")
     return True

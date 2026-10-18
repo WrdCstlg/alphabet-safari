@@ -44,6 +44,61 @@ Children's Arabic and English Alphabet/android/
 
 ---
 
+## 🚀 Releasing to Google Play
+
+Play takes an Android App Bundle (`.aab`) signed with your **upload key**. Play App Signing
+then re-signs it for devices, so a lost upload key can be reset through Play support. The
+app signing key itself never leaves Google.
+
+### 1. Create the upload key (once)
+Keep the `.jks` file and both passwords somewhere safe outside the repo (a password manager).
+`*.jks` and `android/keystore.properties` are git-ignored.
+```bash
+keytool -genkeypair -v -keystore alphabet-safari-upload.jks -alias upload \
+  -keyalg RSA -keysize 4096 -validity 10000
+```
+
+### 2a. Build a signed bundle locally
+Create `android/keystore.properties`:
+```properties
+storeFile=C:/path/to/alphabet-safari-upload.jks
+storePassword=...
+keyAlias=upload
+keyPassword=...
+```
+Then:
+```bash
+cd android
+./gradlew bundleRelease -PversionCode=2   # every upload needs a higher versionCode
+```
+Output: `android/app/build/outputs/bundle/release/app-release.aab`
+
+### 2b. Or let CI sign it
+Add these repository secrets (GitHub → Settings → Secrets and variables → Actions):
+
+| Secret | Value |
+|---|---|
+| `ANDROID_KEYSTORE_BASE64` | `base64 -w0 alphabet-safari-upload.jks` (PowerShell: `[Convert]::ToBase64String([IO.File]::ReadAllBytes("alphabet-safari-upload.jks"))`) |
+| `ANDROID_KEYSTORE_PASSWORD` | the keystore password |
+| `ANDROID_KEY_ALIAS` | `upload` |
+| `ANDROID_KEY_PASSWORD` | the key password |
+
+Every CI run then publishes an `AlphabetSafari-Play-Bundle-signed` artifact whose versionCode is
+the commit count, ready to upload to a Play testing track. Without the secrets the bundle is
+built unsigned (`...-unsigned`), which still proves the release build works.
+
+### 3. Publish
+Accounts, the first upload, Play Console's forms and the `Release to Google Play` workflow are
+covered step by step in [docs/google-play/README.md](docs/google-play/README.md).
+
+### Testing on a device
+`npm run device -- android/app/build/outputs/apk/debug/app-debug.apk` drives the debug app on a
+connected phone or emulator (adb on PATH or `ANDROID_HOME` set): the native bridge, recorded
+clips, speech, the privacy policy, Back, restarts, rotation and the camera cutout. CI runs it on
+an API 36 emulator.
+
+---
+
 ## 🧸 Educational Highlights for Kids under 5:
 - **Dual Alphabet Explorer**: 26 English letters (A-Z) and 28 Arabic letters (أ - ي) with accurate phonics and Harakat vowels.
 - **Auditory Speech & Synth**: Native speech synthesis with child-friendly speed and Web Audio musical chimes.

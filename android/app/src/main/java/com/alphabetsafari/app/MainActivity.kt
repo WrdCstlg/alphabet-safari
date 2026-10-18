@@ -2,6 +2,7 @@ package com.alphabetsafari.app
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.pm.ApplicationInfo
 import android.os.Build
 import android.os.Bundle
 import android.os.VibrationEffect
@@ -11,14 +12,18 @@ import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
 import android.speech.tts.Voice
 import android.view.View
+import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.webkit.JavascriptInterface
 import android.webkit.WebChromeClient
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebResourceRequest
 import android.webkit.WebViewClient
+import android.widget.FrameLayout
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
+import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
@@ -150,13 +155,17 @@ class MainActivity : AppCompatActivity() {
         // Make activity full-screen immersive for children
         enableImmersiveMode()
 
+        // Debug builds only: lets tests/android-device.mjs drive the page over DevTools.
+        if ((applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0) {
+            WebView.setWebContentsDebuggingEnabled(true)
+        }
+
         webView = WebView(this)
         speech = NativeSpeech(this, webView)
 
         webView.apply {
             settings.javaScriptEnabled = true
             settings.domStorageEnabled = true
-            settings.databaseEnabled = true
             // file:///android_asset stays readable without these; nothing else on the device should be.
             settings.allowFileAccess = false
             settings.allowContentAccess = false
@@ -184,7 +193,19 @@ class MainActivity : AppCompatActivity() {
             loadUrl(APP_ASSET_ROOT + "index.html")
         }
 
-        setContentView(webView)
+        // Immersive mode lets the window reach under a camera cutout (always, from targetSdk 35),
+        // which hid the header buttons in landscape. Keep the page clear of it; the strip
+        // behind the cutout gets the page's top background colour.
+        val root = FrameLayout(this).apply {
+            setBackgroundColor(ContextCompat.getColor(this@MainActivity, R.color.page_background))
+            addView(webView, FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
+        }
+        ViewCompat.setOnApplyWindowInsetsListener(root) { view, insets ->
+            val cutout = insets.getInsets(WindowInsetsCompat.Type.displayCutout())
+            view.setPadding(cutout.left, cutout.top, cutout.right, cutout.bottom)
+            WindowInsetsCompat.CONSUMED
+        }
+        setContentView(root)
 
         // Back first closes an open dialog (e.g. the parent gate a toddler wandered into);
         // only when nothing is open does it leave the app. With targetSdk 36 the deprecated

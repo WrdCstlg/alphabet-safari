@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<!-- Google Play feature graphic (1024x500), rendered by tools/store_assets.mjs.
+     ?lang=ar gives the Arabic listing's version. -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="../../assets/fonts/fonts.css">
+  <style>
+    html, body { margin: 0; }
+    body {
+      width: 1024px; height: 500px; overflow: hidden; box-sizing: border-box;
+      display: flex; align-items: center; gap: 48px; padding: 0 60px;
+      background: linear-gradient(120deg, #FDE2E4 0%, #E2ECE9 50%, #DFE7FD 100%);
+      font-family: 'Fredoka', sans-serif; color: #3F3B63;
+    }
+    body[dir="rtl"] { font-family: 'Baloo 2', sans-serif; }
+    img {
+      width: 360px; height: 360px; flex-shrink: 0; border-radius: 56px; border: 8px solid #fff;
+      box-shadow: 0 18px 40px rgba(87, 75, 144, 0.25);
+    }
+    h1 {
+      margin: 0; font-size: 78px; line-height: 1.05; font-weight: 700;
+      background: linear-gradient(90deg, #FF6B8B, #FF8E53 55%, #8B5CF6);
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    .letters { margin: 22px 0 14px; font-size: 64px; font-weight: 700; color: #4F46E5; }
+    .letters .ar { font-family: 'Baloo 2', sans-serif; }
+    p { margin: 0; font-size: 31px; font-weight: 600; color: #5B5875; }
+  </style>
+</head>
+<body>
+  <img src="../../assets/mascot.jpg" alt="">
+  <div>
+    <h1 id="title">Alphabet Safari</h1>
+    <div class="letters"><span dir="ltr">ABC</span> · <span class="ar" dir="rtl">أ ب ت</span></div>
+    <p id="tagline">English &amp; Arabic letters for little learners</p>
+  </div>
+  <script>
+    if (new URLSearchParams(location.search).get('lang') === 'ar') {
+      document.documentElement.lang = 'ar';
+      document.body.dir = 'rtl';
+      document.getElementById('title').textContent = 'سفاري الحروف';
+      document.getElementById('tagline').textContent = 'حروف عربية وإنجليزية للصغار';
+    }
+  </script>
+</body>
+</html>

@@ -85,17 +85,44 @@ jobs:
       - name: Run Smoke Test
         run: npm run smoke
 
+      # Play listing screenshots (phone, 7" and 10" tablet; English and Arabic), rendered from
+      # this commit's app. Not committed, so they are always current; download from the run.
+      - name: Render Play Store Screenshots
+        if: github.event_name != 'pull_request'
+        run: npm run store-assets
+
+      - name: Upload Play Store Listing
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-artifact@v7
+        with:
+          name: AlphabetSafari-Play-Listing
+          path: fastlane/metadata/android/
+          if-no-files-found: error
+          retention-days: 30
+
   # =========================================================================
   # 2. ANDROID NATIVE APK BUILD (AGP 9 / Gradle 9 / JDK 21)
   # =========================================================================
   build-android:
-    name: Android Native APK Build
+    name: Android Build & Emulator Test
     runs-on: ubuntu-24.04
     needs: [validate-core]
+    timeout-minutes: 45
+    # The Play upload key comes from repository secrets (see README-ANDROID.md). Without them
+    # (forks, or before the key exists) the release bundle is built unsigned.
+    env:
+      HAS_UPLOAD_KEY: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
 
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v7
+        with:
+          fetch-depth: 0 # full history: the commit count is the versionCode
+
+      # Same scheme as release.yml: a later commit always has a higher versionCode, so any
+      # bundle from main can be uploaded to Play after the previous one.
+      - name: Version Code from Commit Count
+        run: echo "VERSION_CODE=$(git rev-list --count HEAD)" >> "$GITHUB_ENV"
 
       - name: Set up JDK 21
         uses: actions/setup-java@v6
@@ -107,11 +134,45 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v6
 
-      - name: Build Android Debug APK
+      - name: Decode Play Upload Key
+        if: env.HAS_UPLOAD_KEY == 'true'
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/upload.jks"
+
+      # Debug APK for sideloading and the device test; release bundle (.aab, R8-minified) for
+      # Google Play. Android lint fails the build on errors.
+      - name: Build Android Debug APK and Release Bundle
         working-directory: ./android
+        env:
+          ANDROID_KEYSTORE_FILE: ${{ env.HAS_UPLOAD_KEY == 'true' && format('{0}/upload.jks', runner.temp) || '' }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
           chmod +x gradlew
-          ./gradlew assembleDebug --no-daemon --stacktrace
+          ./gradlew assembleDebug bundleRelease lintRelease -PversionCode=$VERSION_CODE --no-daemon --stacktrace
+
+      # privacy.html and the Play Data safety answers promise vibration only and no internet.
+      # Libraries can add permissions to the merged manifest, so check what actually ships.
+      - name: Check Shipped Permissions
+        run: |
+          manifest=$(find android/app/build/intermediates -path '*merged_manifest/release*' -name AndroidManifest.xml | head -1)
+          test -n "$manifest" || { echo "::error::merged release manifest not found"; exit 1; }
+          extra=$(grep -oE '<uses-permission[^>]*android:name="[^"]+"' "$manifest" | sed -E 's/.*name="([^"]+)"/\1/' \
+            | grep -vxE 'android\.permission\.VIBRATE|com\.alphabetsafari\.app\.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION' || true)
+          if [ -n "$extra" ]; then
+            echo "::error::Permissions the privacy policy doesn't cover: $extra"
+            exit 1
+          fi
+
+      - name: Verify Release Bundle Signature
+        if: env.HAS_UPLOAD_KEY == 'true'
+        run: jarsigner -verify android/app/build/outputs/bundle/release/app-release.aab | grep -q "jar verified"
+
+      - name: Remove Upload Key
+        if: always() && env.HAS_UPLOAD_KEY == 'true'
+        run: rm -f "$RUNNER_TEMP/upload.jks"
 
       - name: Upload Android APK Artifact
         uses: actions/upload-artifact@v7
@@ -119,6 +180,53 @@ jobs:
           name: AlphabetSafari-Android-APK
           path: android/app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload Play Bundle Artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: AlphabetSafari-Play-Bundle-${{ env.HAS_UPLOAD_KEY == 'true' && 'signed' || 'unsigned' }}
+          path: |
+            android/app/build/outputs/bundle/release/*.aab
+            android/app/build/outputs/mapping/release/mapping.txt
+          if-no-files-found: error
+          retention-days: 30
+
+      # Drives the debug APK on an API 36 emulator over WebView DevTools: native bridge, clips,
+      # fonts, speech, privacy policy, Back, restart, rotation and the display cutout.
+      - name: Set up Node.js (device test driver)
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install Device Test Driver
+        run: npm ci --no-audit --no-fund
+
+      - name: Enable KVM for the Emulator
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      # pixel_6 has a camera cutout, which the cutout check needs.
+      - name: Run Device Test on an API 36 Emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 36
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          disable-animations: true
+          script: node tests/android-device.mjs android/app/build/outputs/apk/debug/app-debug.apk
+
+      - name: Upload Device Test Screenshots and Log
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: AlphabetSafari-Device-Test
+          path: device-test-output/
+          if-no-files-found: ignore
           retention-days: 14
 
   # =========================================================================
@@ -184,6 +292,15 @@ jobs:
           curl -fsSI http://localhost:8085/content.js | grep -qi "content-type: application/javascript"
           curl -fsSI http://localhost:8085/assets/fonts/fonts.css | grep -qi "content-type: text/css"
           curl -fsSI http://localhost:8085/assets/audio/en/boy/A.mp3 | grep -qi "content-type: audio/mpeg"
+          curl -fsSI http://localhost:8085/assets/fonts/noto-emoji-subset-8ed309.woff2 | grep -qi "content-type: font/woff2"
+          # App code must revalidate (stale script.js after a deploy); media may be cached.
+          curl -fsSI http://localhost:8085/script.js | grep -qi "cache-control: no-cache"
+          curl -fsSI http://localhost:8085/ | grep -qi "cache-control: no-cache"
+          curl -fsSI http://localhost:8085/assets/audio/en/boy/A.mp3 | grep -qi "cache-control: public, max-age=604800"
+          # A missing asset is a real 404, not index.html; extension-less routes still fall back.
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8085/missing.js)" = 404
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8085/assets/audio/en/boy/missing.mp3)" = 404
+          curl -fsS http://localhost:8085/some/route | grep -q "Alphabet Safari"
 
       - name: Teardown Docker Stack
         if: always()

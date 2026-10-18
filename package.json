@@ -3,9 +3,11 @@
   "private": true,
   "description": "Dev tooling for Alphabet Safari (the app itself has no build step or runtime dependencies).",
   "scripts": {
-    "lint": "eslint script.js sw.js content.js tests/smoke.mjs",
+    "lint": "eslint script.js sw.js content.js tests/*.mjs tools/*.mjs",
     "validate": "py tools/validate_content.py || python tools/validate_content.py",
-    "smoke": "node tests/smoke.mjs"
+    "smoke": "node tests/smoke.mjs",
+    "device": "node tests/android-device.mjs",
+    "store-assets": "node tools/store_assets.mjs"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",

@@ -94,6 +94,9 @@ android/app/build/outputs/apk/debug/app-debug.apk
 Dynamic phrases are spoken with the device's TextToSpeech engine through `AndroidBridge.speak`
 (Android WebView has no Web Speech API). Recorded phonics clips play from the bundled assets.
 
+For Google Play, `./gradlew bundleRelease` builds the signed, R8-minified `.aab`; see
+[README-ANDROID.md](README-ANDROID.md#-releasing-to-google-play) for the upload key and CI secrets.
+
 ---
 
 ### 4. Web & Cloud Hosting
@@ -127,7 +130,9 @@ shows a yo-yo but the voice says "yacht"), a field is missing, or a clip is miss
 npm ci                                  # dev tooling only; the app has no build step
 npm run lint                            # ESLint, including no-undef
 $env:BROWSER_CHANNEL="msedge"; npm run smoke   # drives every mode in a real browser
-py build.py --verify                    # asset parity + content/audio validation
+py build.py --verify                    # asset parity, content/audio, icons, Play listing, permissions
+npm run device -- <app-debug.apk>       # the Android app on a phone or emulator (README-ANDROID.md)
+npm run store-assets                    # Play screenshots + feature graphic from the real app
 ```
 
 ## 🤖 GitHub Actions Automated CI/CD
@@ -137,13 +142,22 @@ The repository includes end-to-end continuous integration and deployment workflo
 One workflow, **`ci.yml`**, runs on every push and pull request:
 - `Core Web & Asset Parity Validation`: ESLint, syntax checks, manifest validation, Android asset parity, and content/audio validation.
 - `Browser Smoke Test`: Playwright drives every mode in headless Chromium, including privacy (the child's name never reaches cloud TTS), offline use, and the parent gate.
-- `Android Native APK Build`: AGP 9.4 / Gradle 9.7 on JDK 21, targetSdk 36; the Gradle wrapper is checksum-verified.
+- `Android Build & Emulator Test`: AGP 9.4 / Gradle 9.7 on JDK 21, targetSdk 36; the Gradle wrapper is checksum-verified. Builds the debug APK and the Play bundle (`.aab`, versionCode = commit count), signed with the upload key when the repository has the signing secrets; runs Android lint, checks the shipped permissions, then drives the app on an API 36 emulator (`tests/android-device.mjs`).
 - `Windows Standalone Desktop Build`: compiles `AlphabetSafari.exe` from `requirements.txt`.
-- `Docker Web Server Live Verification`: pinned nginx image; asserts real content types, not just a page body.
-- `Deploy to GitHub Pages`: runs only on `main` and only after validation, smoke and Docker pass. It publishes `_site/` from `py build.py --site` (the web app only, not the whole repo).
+- `Docker Web Server Live Verification`: pinned nginx image; asserts real content types, the cache policy (app code revalidates, media is cached) and that missing assets are real 404s.
+- `Deploy to GitHub Pages`: runs only on `main` and only after validation, smoke and Docker pass. It publishes `_site/` from `py build.py --site` (the web app only, not the whole repo), including the privacy policy the Play listing links to.
+
+A second workflow, **`release.yml`**, is run by hand: it uploads the signed bundle of a commit
+whose CI passed to a Google Play track. See [docs/google-play/README.md](docs/google-play/README.md).
 
 ## 🔒 Privacy
 
 No accounts, ads, analytics or third-party requests (fonts are bundled). Progress and the child's
 name stay on the device. Phrases containing the name are spoken only by on-device voices; if none is
 available the phrase is said without the name. Parents can erase everything from Parents Corner.
+
+## 🙏 Credits
+
+`assets/fonts/noto-emoji-subset-*.woff2` is a subset of [Noto Color Emoji](https://github.com/googlefonts/noto-emoji)
+(SIL Open Font License 1.1), covering only the newer emoji (🦒 🦓 🦘 🧩 🧹 🪀 🪺 🪼) that
+Windows 10 and Android 7–9 would otherwise show as empty boxes.

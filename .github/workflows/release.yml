@@ -1,0 +1,158 @@
+name: Release to Google Play
+
+# Manual: Actions > "Release to Google Play" > Run workflow, from a commit whose CI passed.
+# Builds the signed bundle and uploads it to a Play track with its R8 mapping file and the
+# release notes in fastlane/metadata/android/<locale>/changelogs/default.txt.
+#
+# Secrets (repository or the "google-play" environment): ANDROID_KEYSTORE_BASE64,
+# ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS, ANDROID_KEY_PASSWORD (README-ANDROID.md) and
+# PLAY_SERVICE_ACCOUNT_JSON (docs/google-play/README.md).
+on:
+  workflow_dispatch:
+    inputs:
+      track:
+        description: "Play track"
+        type: choice
+        options: [internal, alpha, beta, production]
+        default: internal
+      status:
+        description: "draft: you roll it out in Play Console (required until the app's first release is published). completed: roll out now."
+        type: choice
+        options: [draft, completed]
+        default: draft
+      version_name:
+        description: "Version name shown in the store, e.g. 1.0.1 (blank keeps the one in build.gradle.kts)"
+        type: string
+        required: false
+
+concurrency:
+  group: play-release
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  release:
+    name: Build and Upload to Google Play
+    runs-on: ubuntu-24.04
+    # Add required reviewers to this environment (Settings > Environments) for a sign-off step.
+    environment: google-play
+
+    steps:
+      - name: Check Release Secrets
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          missing=""
+          for name in ANDROID_KEYSTORE_BASE64 ANDROID_KEYSTORE_PASSWORD ANDROID_KEY_ALIAS ANDROID_KEY_PASSWORD PLAY_SERVICE_ACCOUNT_JSON; do
+            [ -n "${!name}" ] || missing="$missing $name"
+          done
+          if [ -n "$missing" ]; then
+            echo "::error::Missing secrets:$missing (see docs/google-play/README.md)"
+            exit 1
+          fi
+
+      - name: Checkout Repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0 # full history: the commit count is the versionCode
+
+      # The emulator device test, smoke test and Docker checks run in ci.yml; don't ship a
+      # commit they haven't passed.
+      - name: Require a Passing CI Run for This Commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          passed=$(gh run list --workflow ci.yml --commit "$GITHUB_SHA" --status success --json databaseId --jq length)
+          if [ "${passed:-0}" -eq 0 ]; then
+            echo "::error::No successful CI run for $GITHUB_SHA. Wait for CI to pass on this commit, then run the release again."
+            exit 1
+          fi
+
+      - name: Version Code from Commit Count
+        run: echo "VERSION_CODE=$(git rev-list --count HEAD)" >> "$GITHUB_ENV"
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Verify Assets, Listing Text and Permissions
+        run: python build.py --verify
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v6
+        with:
+          java-version: "21"
+          distribution: "temurin"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Decode Play Upload Key
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/upload.jks"
+
+      - name: Build Signed Release Bundle
+        working-directory: ./android
+        env:
+          ANDROID_KEYSTORE_FILE: ${{ runner.temp }}/upload.jks
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          VERSION_NAME: ${{ inputs.version_name }}
+        run: |
+          chmod +x gradlew
+          ./gradlew bundleRelease -PversionCode=$VERSION_CODE ${VERSION_NAME:+-PversionName=$VERSION_NAME} --no-daemon --stacktrace
+
+      - name: Remove Upload Key
+        if: always()
+        run: rm -f "$RUNNER_TEMP/upload.jks"
+
+      - name: Verify Bundle Signature
+        run: jarsigner -verify android/app/build/outputs/bundle/release/app-release.aab | grep -q "jar verified"
+
+      # Play reads release notes as whatsnew-<locale> files.
+      - name: Collect Release Notes
+        run: |
+          mkdir -p "$RUNNER_TEMP/whatsnew"
+          for dir in fastlane/metadata/android/*/; do
+            locale=$(basename "$dir")
+            cp "$dir/changelogs/default.txt" "$RUNNER_TEMP/whatsnew/whatsnew-$locale"
+          done
+          ls "$RUNNER_TEMP/whatsnew"
+
+      - name: Upload to Google Play
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: com.alphabetsafari.app
+          releaseFiles: android/app/build/outputs/bundle/release/app-release.aab
+          mappingFile: android/app/build/outputs/mapping/release/mapping.txt
+          whatsNewDirectory: ${{ runner.temp }}/whatsnew
+          track: ${{ inputs.track }}
+          status: ${{ inputs.status }}
+
+      - name: Keep the Uploaded Bundle
+        uses: actions/upload-artifact@v7
+        with:
+          name: AlphabetSafari-Play-Release-${{ env.VERSION_CODE }}
+          path: |
+            android/app/build/outputs/bundle/release/app-release.aab
+            android/app/build/outputs/mapping/release/mapping.txt
+          retention-days: 90
+
+      - name: Summary
+        run: |
+          {
+            echo "### Uploaded to Google Play"
+            echo "- Track: \`${{ inputs.track }}\` (status \`${{ inputs.status }}\`)"
+            echo "- versionCode: \`$VERSION_CODE\`, commit \`${GITHUB_SHA::7}\`"
+          } >> "$GITHUB_STEP_SUMMARY"

@@ -197,3 +197,17 @@
   src: url(quicksand-latin-21dc8b.woff2) format('woff2');
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
+/* Safari Emoji: Noto Color Emoji (SIL OFL), subset to the picture-card emoji newer than
+   Unicode 9: 🦒 🦓 🦘 🧩 🧹 🪀 🪺 🪼. Windows 10 (frozen at Emoji 12) has no jellyfish or
+   nest, and Android 7-9 lack several others, so those cards showed blank boxes.
+   unicode-range limits it to these characters; every other emoji keeps the system look.
+   tech(color-COLRv1) makes browsers that can't draw this colour format skip it and use
+   the system font as before, instead of showing nothing. */
+@font-face {
+  font-family: 'Safari Emoji';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url(noto-emoji-subset-8ed309.woff2) format('woff2') tech(color-COLRv1);
+  unicode-range: U+1F992-1F993, U+1F998, U+1F9E9, U+1F9F9, U+1FA80, U+1FABA, U+1FABC;
+}

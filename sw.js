@@ -2,7 +2,7 @@
 //  - App code: network-first, so updates arrive immediately, with an offline fallback.
 //  - Recorded phonics clips and images: cache-first (they only change with a new CACHE_NAME).
 //  - api/ (desktop text-to-speech) is never cached here.
-const CACHE_NAME = 'alphabet-safari-v6';
+const CACHE_NAME = 'alphabet-safari-v7';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -10,7 +10,9 @@ const ASSETS_TO_CACHE = [
   './content.js',
   './script.js',
   './manifest.json',
+  './privacy.html',
   './assets/fonts/fonts.css',
+  './assets/fonts/noto-emoji-subset-8ed309.woff2',
   './assets/mascot-256.webp',
   './assets/star-256.webp',
   './assets/icon-192.png',
@@ -18,9 +20,11 @@ const ASSETS_TO_CACHE = [
 ];
 
 self.addEventListener('install', (event) => {
+  // cache: 'reload' skips the HTTP cache, so a new CACHE_NAME never precaches a stale copy
+  // that the host (e.g. GitHub Pages' max-age=600) still considers fresh.
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then((cache) => cache.addAll(ASSETS_TO_CACHE))
+      .then((cache) => cache.addAll(ASSETS_TO_CACHE.map((url) => new Request(url, { cache: 'reload' }))))
       .then(() => self.skipWaiting())
   );
 });

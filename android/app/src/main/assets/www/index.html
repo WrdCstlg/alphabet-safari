@@ -541,9 +541,10 @@
           <div class="modal-body">
             <div class="setting-row">
               <div class="setting-info">
-                <span class="setting-name">Pronunciation Speed</span>
-                <span class="setting-desc">Pacing for speech synthesis</span>
+                <span class="setting-name"><span class="eng-text">Pronunciation Speed</span><span class="ar-text">سرعة النطق</span></span>
+                <span class="setting-desc"><span class="eng-text">Pacing for speech synthesis</span><span class="ar-text">سرعة الكلام المنطوق</span></span>
               </div>
+              <!-- Option text follows the language in applyLanguageChrome(). -->
               <select id="setting-voice-speed" class="setting-select">
                 <option value="0.75" selected>Slow & Clear (Toddlers)</option>
                 <option value="0.95">Natural (Preschoolers)</option>
@@ -553,8 +554,8 @@
 
             <div class="setting-row">
               <div class="setting-info">
-                <span class="setting-name">Arabic Harakat (Vowels)</span>
-                <span class="setting-desc">Show Fat-ha, Damma, Kasra buttons</span>
+                <span class="setting-name"><span class="eng-text">Arabic Harakat (Vowels)</span><span class="ar-text">الحركات (التشكيل)</span></span>
+                <span class="setting-desc"><span class="eng-text">Show Fat-ha, Damma, Kasra buttons</span><span class="ar-text">إظهار أزرار الفتحة والضمة والكسرة</span></span>
               </div>
               <label class="switch-toggle">
                 <input type="checkbox" id="setting-arabic-vowels" checked>
@@ -564,8 +565,8 @@
 
             <div class="setting-row">
               <div class="setting-info">
-                <span class="setting-name">English Transliteration</span>
-                <span class="setting-desc">Show phonetic names (e.g. Alif, Baa)</span>
+                <span class="setting-name"><span class="eng-text">English Transliteration</span><span class="ar-text">النطق بالحروف الإنجليزية</span></span>
+                <span class="setting-desc"><span class="eng-text">Show phonetic names (e.g. Alif, Baa)</span><span class="ar-text">إظهار أسماء الحروف بالإنجليزية (مثل Alif و Baa)</span></span>
               </div>
               <label class="switch-toggle">
                 <input type="checkbox" id="setting-translit" checked>
@@ -575,8 +576,8 @@
 
             <div class="setting-row">
               <div class="setting-info">
-                <span class="setting-name">Sound Effects & Chimes</span>
-                <span class="setting-desc">Play marimba notes and cheers</span>
+                <span class="setting-name"><span class="eng-text">Sound Effects & Chimes</span><span class="ar-text">المؤثرات الصوتية والنغمات</span></span>
+                <span class="setting-desc"><span class="eng-text">Play marimba notes and cheers</span><span class="ar-text">تشغيل نغمات الماريمبا والتشجيع</span></span>
               </div>
               <label class="switch-toggle">
                 <input type="checkbox" id="setting-sound-effects" checked>
@@ -586,33 +587,49 @@
 
             <div class="setting-row">
               <div class="setting-info">
-                <span class="setting-name">Reset Stars & Stickers</span>
-                <span class="setting-desc">Clear progress for a fresh start</span>
+                <span class="setting-name"><span class="eng-text">Reset Stars & Stickers</span><span class="ar-text">إعادة النجوم والملصقات</span></span>
+                <span class="setting-desc"><span class="eng-text">Clear progress for a fresh start</span><span class="ar-text">مسح التقدم للبدء من جديد</span></span>
               </div>
-              <button id="btn-reset-progress" class="btn-sm-danger">Reset Progress</button>
+              <button id="btn-reset-progress" class="btn-sm-danger"><span class="eng-text">Reset Progress</span><span class="ar-text">إعادة التقدم</span></button>
             </div>
 
             <div class="setting-row">
               <div class="setting-info">
-                <span class="setting-name">Erase Child Profile</span>
-                <span class="setting-desc">Remove the name, profile, settings and progress from this device</span>
+                <span class="setting-name"><span class="eng-text">Erase Child Profile</span><span class="ar-text">مسح ملف الطفل</span></span>
+                <span class="setting-desc"><span class="eng-text">Remove the name, profile, settings and progress from this device</span><span class="ar-text">إزالة الاسم والملف والإعدادات والتقدم من هذا الجهاز</span></span>
               </div>
-              <button id="btn-forget-child" class="btn-sm-danger">Erase Everything</button>
+              <button id="btn-forget-child" class="btn-sm-danger"><span class="eng-text">Erase Everything</span><span class="ar-text">مسح كل شيء</span></button>
             </div>
 
             <div class="setting-row privacy-note">
               <div class="setting-info">
-                <span class="setting-name">Privacy</span>
-                <span class="setting-desc">No accounts, ads or tracking. Progress and your child's name stay on this device, and the name is only ever spoken by voices that run on the device.</span>
+                <span class="setting-name"><span class="eng-text">Privacy</span><span class="ar-text">الخصوصية</span></span>
+                <span class="setting-desc"><span class="eng-text">No accounts, ads or tracking. Progress and your child's name stay on this device, and the name is only ever spoken by voices that run on the device.</span><span class="ar-text">لا حسابات ولا إعلانات ولا تتبّع. يبقى التقدم واسم طفلك على هذا الجهاز، ولا يُنطق الاسم إلا بأصوات تعمل على الجهاز.</span></span>
               </div>
+              <button id="btn-privacy-policy" class="btn-sm-fun"><span class="eng-text">Privacy Policy</span><span class="ar-text">سياسة الخصوصية</span></button>
             </div>
           </div>
 
           <div class="modal-footer">
-            <button class="action-btn modal-dismiss-btn" data-close="modal-parents">Done</button>
+            <button class="action-btn modal-dismiss-btn" data-close="modal-parents"><span class="eng-text">Done</span><span class="ar-text">تم</span></button>
           </div>
         </div>
 
+      </div>
+    </div>
+
+    <!-- 2b. Privacy policy. Opened from Parents Corner, so it sits behind the parent gate.
+         privacy.html is the one copy of the text; the Play listing links to it too. -->
+    <div class="modal-overlay" id="modal-privacy" aria-hidden="true">
+      <div class="modal-card modal-card-wide" role="dialog" aria-labelledby="privacy-modal-title">
+        <div class="modal-header">
+          <div class="modal-title-wrap">
+            <span class="modal-icon-badge">🔒</span>
+            <h2 id="privacy-modal-title"><span class="eng-text">Privacy Policy</span><span class="ar-text">سياسة الخصوصية</span></h2>
+          </div>
+          <button class="modal-close-btn" data-close="modal-privacy" aria-label="Close">✕</button>
+        </div>
+        <iframe id="privacy-frame" class="privacy-frame" title="Privacy policy"></iframe>
       </div>
     </div>
 

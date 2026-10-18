@@ -35,9 +35,9 @@
   --card-shadow: 0 12px 30px rgba(87, 75, 144, 0.12), 0 4px 10px rgba(0, 0, 0, 0.04);
   --active-btn-shift: translateY(4px);
 
-  /* Fonts */
-  --font-en: 'Fredoka', 'Quicksand', -apple-system, sans-serif;
-  --font-ar: 'Baloo 2', 'Amiri', 'Tajawal', sans-serif;
+  /* Fonts. 'Safari Emoji' only covers a few newer emoji (see assets/fonts/fonts.css). */
+  --font-en: 'Safari Emoji', 'Fredoka', 'Quicksand', -apple-system, sans-serif;
+  --font-ar: 'Safari Emoji', 'Baloo 2', 'Amiri', 'Tajawal', sans-serif;
   
   --radius-xl: 32px;
   --radius-lg: 24px;
@@ -70,6 +70,12 @@ html, body {
 
 [dir="rtl"] {
   font-family: var(--font-ar);
+}
+
+/* Form controls don't inherit the page font by default, so letter cards fell back to the
+   system font (a different letter shape from the spotlight) and skipped the emoji font. */
+button, input, select, textarea {
+  font-family: inherit;
 }
 
 /* Text Visibility helper for dual-language */
@@ -154,8 +160,12 @@ html, body {
 /* ==========================================================================
    HEADER SECTION
    ========================================================================== */
+/* Wraps rather than overflows: between phone and desktop widths (a phone in landscape, a 10"
+   tablet in portrait) or with a long child's name, the three groups don't fit on one row,
+   and the Parents button used to end up past the right edge. */
 .app-header {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
@@ -253,8 +263,11 @@ html, body {
 /* Header Right Action & Rewards */
 .header-right {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
+  justify-content: flex-end;
   gap: 8px;
+  margin-inline-start: auto;
 }
 
 .star-badge-btn {
@@ -343,8 +356,10 @@ html, body {
   display: none;
 }
 
+/* Grow to fill the row but never shrink below the label: a squeezed tab let its icon and
+   text spill over the next tab. The row scrolls sideways instead (.mode-nav). */
 .mode-tab {
-  flex: 1;
+  flex: 1 0 auto;
   min-width: 120px;
   display: flex;
   align-items: center;
@@ -1395,6 +1410,7 @@ html, body {
   aspect-ratio: 1;
   perspective: 1000px;
   cursor: pointer;
+  border-radius: var(--radius-lg);
 }
 
 .memory-card-inner {
@@ -1408,12 +1424,20 @@ html, body {
   box-shadow: 0 6px 0 #CBD5E1, 0 10px 16px rgba(0,0,0,0.06);
 }
 
+.memory-card:hover .memory-card-inner {
+  transform: translateY(-2px);
+}
+
 .memory-card.flipped .memory-card-inner {
   transform: rotateY(180deg);
 }
 
+.memory-card.flipped:hover .memory-card-inner {
+  transform: rotateY(180deg) translateY(-2px);
+}
+
 .memory-card.matched .memory-card-inner {
-  box-shadow: 0 6px 0 #22C55E;
+  box-shadow: 0 6px 0 #22C55E, 0 0 16px rgba(34, 197, 94, 0.4);
 }
 
 .memory-front, .memory-back {
@@ -1992,8 +2016,13 @@ input:checked + .slider:before {
     order: 1;
   }
 
+  /* Full-width, wrapping row: on phones the tool buttons (sound, app, parents) were pushed
+     past the right edge and could not be reached at all. */
   .header-right {
     order: 2;
+    width: 100%;
+    flex-wrap: wrap;
+    justify-content: center;
   }
 
   .header-center {
@@ -2056,6 +2085,11 @@ input:checked + .slider:before {
 
 @media (max-width: 480px) {
   .brand-subtitle {
+    display: none;
+  }
+
+  /* The badge title already says boy/girl; give the row room instead. */
+  .gender-pill-tag {
     display: none;
   }
 
@@ -2527,6 +2561,17 @@ body[data-gender="girl"] .name-input:focus {
   height: 48px;
 }
 
+/* At 48px, six colours and four buttons no longer fit across a 360px phone: the last colour
+   was cut off and "I Did It!" broke onto three lines. Wrap the rows, not the labels. */
+.trace-brush-colors,
+.trace-actions {
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.btn-sm-fun {
+  white-space: nowrap;
+}
+
 /* In Arabic the row is mirrored, so the arrows must be too, or both point inward. */
 [dir="rtl"] .nav-arrow-btn > span {
   display: inline-block;
@@ -2556,6 +2601,23 @@ body[data-gender="girl"] .name-input:focus {
   max-width: none;
 }
 
+.privacy-note {
+  gap: 12px;
+}
+
+.privacy-note .btn-sm-fun {
+  flex-shrink: 0;
+}
+
+/* privacy.html in a frame, so the dialog and the hosted policy are the same text. */
+.privacy-frame {
+  width: 100%;
+  height: min(65vh, 620px);
+  border: 0;
+  border-radius: var(--radius-lg);
+  background: #FDF2F8;
+}
+
 /* Inside the Android and Windows apps there is nothing to install. */
 .native-app #btn-android-app {
   display: none !important;
@@ -2565,6 +2627,47 @@ body[data-gender="girl"] .name-input:focus {
 .platform-android * {
   -webkit-backdrop-filter: none !important;
   backdrop-filter: none !important;
+}
+
+/* Focus rings for keyboard, screen-reader and switch-access navigation */
+:focus-visible {
+  outline: 3px solid #6366F1;
+  outline-offset: 3px;
+}
+
+.memory-card:focus-visible {
+  outline: 4px solid #4F46E5;
+  outline-offset: 4px;
+}
+
+.flying-balloon:focus-visible {
+  outline: 4px solid #F59E0B;
+  outline-offset: 4px;
+  border-radius: 50% 50% 50% 50% / 40% 40% 60% 60%;
+}
+
+.sticker-item:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 3px;
+}
+
+.app-brand:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 4px;
+  border-radius: var(--radius-md);
+}
+
+/* Arabic has no upper/lower case, so the Aa toggle did nothing there. */
+[dir="rtl"] #btn-case-toggle {
+  display: none;
+}
+
+/* Toddler-sized touch targets for the game toolbars (these were 41px tall). */
+.btn-sm-fun {
+  min-height: 48px;
+}
+.grid-tool-btn {
+  min-height: 44px;
 }
 
 /* Respect the OS "reduce motion" setting. Balloons keep rising because that is the game. */

@@ -20,3 +20,15 @@ assets/star_badge.jpg
 Dockerfile
 docker-compose.yml
 README*.md
+.github/
+.dockerignore
+.nvmrc
+__pycache__/
+*.spec
+# The whole context is served by nginx: never let a stray signing key into it.
+*.jks
+*.keystore
+keystore.properties
+device-test-output/
+fastlane/
+docs/

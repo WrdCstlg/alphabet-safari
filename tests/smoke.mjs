@@ -11,7 +11,8 @@ import { chromium } from 'playwright';
 const ROOT = path.resolve(process.env.SMOKE_ROOT || path.join(path.dirname(fileURLToPath(import.meta.url)), '..'));
 const MIME = {
   '.html': 'text/html', '.js': 'application/javascript', '.css': 'text/css', '.json': 'application/json',
-  '.mp3': 'audio/mpeg', '.png': 'image/png', '.jpg': 'image/jpeg', '.ico': 'image/x-icon'
+  '.mp3': 'audio/mpeg', '.png': 'image/png', '.jpg': 'image/jpeg', '.ico': 'image/x-icon',
+  '.webp': 'image/webp', '.woff2': 'font/woff2'
 };
 
 function serve() {
@@ -92,6 +93,13 @@ await page.waitForSelector('#letters-grid .grid-letter-card');
 await check('loads English alphabet without script errors', async () => {
   assert(await page.locator('#letters-grid .grid-letter-card').count() === 26, 'expected 26 letter cards');
   assert(pageErrors.length === 0, `page errors: ${pageErrors.join(' | ')}`);
+});
+
+// Windows 10 and Android 7-9 have no glyph for e.g. the jellyfish or giraffe, so the app
+// ships a small Noto Color Emoji subset for exactly those code points.
+await check('bundled emoji font loads for the newer animal emoji', async () => {
+  const faces = await page.evaluate(async () => (await document.fonts.load('48px "Safari Emoji"', '🪼🦒')).length);
+  assert(faces > 0, 'the Safari Emoji face did not load');
 });
 
 await check('tapping Next plays the recorded clip for the new letter', async () => {
@@ -278,16 +286,85 @@ await check('memory game deals 6 cards', async () => {
   assert(await page.locator('#memory-grid .memory-card').count() === 6, 'expected 6 cards');
 });
 
-await check('parent gate asks a sum and settings persist across reloads', async () => {
+await check('memory cards have role=button, tabindex=0, and flip via keyboard Enter', async () => {
+  await page.click('.mode-tab[data-mode="memory"]');
+  const firstCard = page.locator('#memory-grid .memory-card').first();
+  assert(await firstCard.getAttribute('role') === 'button', 'missing role=button');
+  assert(await firstCard.getAttribute('tabindex') === '0', 'missing tabindex=0');
+  assert(await firstCard.getAttribute('aria-label') !== null, 'missing aria-label');
+  await firstCard.focus();
+  await page.keyboard.press('Enter');
+  await page.waitForTimeout(200);
+  assert(await firstCard.evaluate(el => el.classList.contains('flipped')), 'card did not flip on Enter');
+});
+
+await check('balloons have role=button, tabindex=0, and aria-label for accessibility', async () => {
+  await page.click('.mode-tab[data-mode="balloon"]');
+  const balloon = page.locator('#balloon-sky .flying-balloon').first();
+  assert(await balloon.getAttribute('role') === 'button', 'missing role=button');
+  assert(await balloon.getAttribute('tabindex') === '0', 'missing tabindex=0');
+  const label = await balloon.getAttribute('aria-label');
+  assert(label && label.includes('Balloon letter'), `unexpected label: ${label}`);
+});
+
+await check('clicking brand logo returns to explore mode', async () => {
+  await page.click('.mode-tab[data-mode="stickers"]');
+  assert(await page.locator('#view-stickers').evaluate(el => el.classList.contains('active')), 'not in stickers mode');
+  await page.click('#brand-logo');
+  assert(await page.locator('#view-explore').evaluate(el => el.classList.contains('active')), 'did not return to explore view');
+});
+
+await check('arrow keys navigate explore letters even when a button had focus', async () => {
+  await page.click('.mode-tab[data-mode="explore"]');
+  await page.locator('#btn-next-letter').focus();
+  const beforeChar = await page.locator('#spotlight-letter').textContent();
+  await page.keyboard.press('ArrowRight');
+  await page.waitForTimeout(200);
+  const afterChar = await page.locator('#spotlight-letter').textContent();
+  assert(beforeChar !== afterChar, `letter did not change: ${beforeChar} -> ${afterChar}`);
+});
+
+await check('arrow keys do not change the letter behind an open dialog', async () => {
+  const before = await page.locator('#spotlight-letter').textContent();
+  await page.click('#btn-gender');
+  await page.keyboard.press('ArrowRight');
+  await page.waitForTimeout(200);
+  await page.keyboard.press('Escape');
+  const after = await page.locator('#spotlight-letter').textContent();
+  assert(before === after, `letter changed behind the dialog: ${before} -> ${after}`);
+});
+
+async function passParentGate() {
   await page.click('#btn-parents');
   const question = await page.locator('#gate-target-num').textContent();
   const [a, b] = question.split('+').map(n => parseInt(n, 10));
   await page.locator('#gate-options .gate-btn', { hasText: new RegExp(`^${a + b}$`) }).click();
+}
+
+await check('parent gate asks a sum and settings persist across reloads', async () => {
+  await passParentGate();
   assert(await page.locator('#parents-settings-view').isVisible(), 'settings not shown after correct answer');
   await page.selectOption('#setting-voice-speed', '0.75');
   await page.reload();
   await page.waitForSelector('#letters-grid .grid-letter-card');
   assert(await page.locator('#speed-icon').textContent() === '🐢', 'voice speed not restored');
+});
+
+// The Play listing links to privacy.html; the app shows the same page behind the parent gate.
+await check('privacy policy: only behind the parent gate, shows the policy, closes back to settings', async () => {
+  await page.click('#btn-parents');
+  assert(!(await page.locator('#btn-privacy-policy').isVisible()), 'policy button visible before the gate');
+  await page.keyboard.press('Escape');
+  await passParentGate();
+  await page.click('#btn-privacy-policy');
+  const policy = page.frameLocator('#privacy-frame').locator('#en');
+  await policy.locator('h1').waitFor();
+  const text = await policy.textContent();
+  assert(text.includes('does not collect, share or sell any personal information'), 'policy summary missing');
+  assert(text.includes('no internet permission'), 'policy no longer states the Android app has no internet permission');
+  await page.click('#modal-privacy .modal-close-btn');
+  assert(await page.locator('#parents-settings-view').isVisible(), 'closing the policy did not return to Parents Corner');
+  await page.keyboard.press('Escape');
 });
 
 await check('Arabic: 28 letters, RTL, د shows the dolphin, language persists', async () => {
@@ -302,8 +379,125 @@ await check('Arabic: 28 letters, RTL, د shows the dolphin, language persists', 
   assert(await page.locator('#letters-grid .grid-letter-card').count() === 28, 'language not restored');
 });
 
+await check('Arabic: Parents Corner and the privacy policy are in Arabic', async () => {
+  await passParentGate();
+  const erase = await page.locator('#btn-forget-child').innerText();
+  assert(erase.trim() === 'مسح كل شيء', `erase button not Arabic: ${erase}`);
+  const speed = await page.locator('#setting-voice-speed option[value="0.75"]').textContent();
+  assert(speed.startsWith('بطيء'), `speed option not Arabic: ${speed}`);
+  await page.click('#btn-privacy-policy');
+  assert((await page.locator('#privacy-frame').getAttribute('src')).endsWith('#ar'), 'policy did not open at the Arabic text');
+  await page.frameLocator('#privacy-frame').locator('#ar h1').waitFor();
+  await page.keyboard.press('Escape');
+});
+
+await check('Arabic: no case toggle, Arabic memory label, celebration title matches a girl', async () => {
+  assert(!(await page.locator('#btn-case-toggle').isVisible()), 'upper/lower-case toggle shown for Arabic');
+  await page.click('.mode-tab[data-mode="memory"]');
+  const label = await page.locator('#memory-diff-label').textContent();
+  assert(/بطاقات/.test(label), `memory label not Arabic: ${label}`);
+
+  // Win the round: pair each letter card with the card showing its picture. DOM clicks, since
+  // a sticker unlocked on the way opens its own celebration over the grid.
+  const pairs = await page.evaluate(() => {
+    const cards = [...document.querySelectorAll('#memory-grid .memory-card')];
+    return cards.filter(c => c.querySelector('.memory-val-letter')).map(l => {
+      const char = l.querySelector('.memory-val-letter').textContent.trim();
+      const item = window.ALPHABET_CONTENT.ar.find(i => i.char === char);
+      return [cards.indexOf(l), cards.findIndex(c => c.querySelector('.memory-val-pic')?.textContent.trim() === item.emoji)];
+    });
+  });
+  for (const pair of pairs) {
+    await page.evaluate(([a, b]) => {
+      const cards = document.querySelectorAll('#memory-grid .memory-card');
+      cards[a].click();
+      cards[b].click();
+    }, pair);
+    await page.waitForTimeout(700);
+  }
+  await page.waitForTimeout(800);
+  assert(await page.locator('#modal-celebrate').evaluate(el => el.classList.contains('open')), 'no celebration after winning');
+  const title = await page.locator('#modal-celebrate .celebrate-title').textContent();
+  assert(title.includes('بَطَلَة'), `title is not the feminine form: ${title}`);
+});
+
 await check('no script errors during the whole session', async () => {
   assert(pageErrors.length === 0, pageErrors.join(' | '));
+});
+
+// Phone landscape and 10" tablet portrait sit between the phone and desktop layouts; a long
+// child's name widens the profile badge.
+await check('layout from phone to desktop, any name: header, tabs and tracing toolbar all fit', async () => {
+  const problems = [];
+  for (const [width, height] of [[375, 740], [640, 360], [800, 380], [915, 412], [800, 1280], [1024, 768], [1280, 800]]) {
+    for (const lang of ['en', 'ar']) {
+      const ctx = await browser.newContext({ viewport: { width, height }, serviceWorkers: 'block' });
+      const p = await ctx.newPage();
+      await p.addInitScript(l => {
+        localStorage.setItem('alpha_lang', l);
+        localStorage.setItem('alpha_child_name', 'Alexandrina-Maria');
+      }, lang);
+      await p.goto(`${base}/index.html`);
+      await p.waitForSelector('#letters-grid .grid-letter-card');
+      const found = await p.evaluate(() => {
+        const out = [];
+        for (const b of document.querySelectorAll('.app-header button')) {
+          const r = b.getBoundingClientRect();
+          if (b.offsetParent !== null && (r.left < -1 || r.right > innerWidth + 1)) out.push(`${b.id} off screen`);
+        }
+        for (const tab of document.querySelectorAll('.mode-tab')) {
+          if (tab.scrollWidth > tab.clientWidth + 1) out.push(`${tab.dataset.mode} tab content overflows`);
+        }
+        if (document.documentElement.scrollWidth > innerWidth + 1) out.push('page scrolls sideways');
+        return out;
+      });
+      // Tracing toolbar: every colour and button inside its card, labels on one line.
+      await p.click('.mode-tab[data-mode="trace"]');
+      found.push(...await p.evaluate(() => {
+        const card = document.querySelector('.trace-container').getBoundingClientRect();
+        const out = [];
+        for (const b of document.querySelectorAll('.trace-toolbar button')) {
+          const r = b.getBoundingClientRect();
+          if (r.left < card.left - 1 || r.right > card.right + 1) out.push(`trace ${b.id || b.title} cut off`);
+          if (b.classList.contains('btn-sm-fun') && r.height > 64) out.push(`trace ${b.id} label wraps`);
+        }
+        return out;
+      }));
+      problems.push(...found.map(f => `${width}x${height} ${lang}: ${f}`));
+      await ctx.close();
+    }
+  }
+  assert(problems.length === 0, problems.slice(0, 6).join('; '));
+});
+
+await check('phone (375px): header buttons fit on screen, trace strip keeps the letter in view', async () => {
+  const phone = await browser.newContext({ viewport: { width: 375, height: 740 }, hasTouch: true, serviceWorkers: 'block' });
+  const p = await phone.newPage();
+  try {
+    await p.goto(`${base}/index.html`);
+    await p.waitForSelector('#letters-grid .grid-letter-card');
+    const offscreen = await p.evaluate(() => [...document.querySelectorAll('.header-right button')]
+      .filter(b => b.offsetParent !== null)
+      .filter(b => { const r = b.getBoundingClientRect(); return r.left < 0 || r.right > window.innerWidth; })
+      .map(b => b.id || b.className));
+    assert(offscreen.length === 0, `header buttons off screen: ${offscreen.join(', ')}`);
+
+    const activeChipInView = () => p.evaluate(() => {
+      const ribbon = document.getElementById('trace-letter-ribbon');
+      const r = ribbon.getBoundingClientRect();
+      const c = ribbon.querySelector('.trace-chip.active').getBoundingClientRect();
+      return { overflows: ribbon.scrollWidth > ribbon.clientWidth, inView: c.left >= r.left - 1 && c.right <= r.right + 1 };
+    });
+    await p.locator('#letters-grid .grid-letter-card').nth(22).click(); // W, chosen in Explore
+    await p.click('.mode-tab[data-mode="trace"]');
+    const fromExplore = await activeChipInView();
+    assert(fromExplore.overflows, 'the strip fits on screen, so this check proves nothing');
+    assert(fromExplore.inView, 'W picked in Explore is scrolled out of the strip');
+    await p.locator('#trace-letter-ribbon .trace-chip').nth(12).click(); // M
+    assert((await activeChipInView()).inView, 'the tapped letter scrolled out of the strip');
+  } finally {
+    await phone.close();
+  }
 });
 
 await check('works offline once the service worker has cached it', async () => {

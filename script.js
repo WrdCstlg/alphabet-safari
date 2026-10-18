@@ -387,7 +387,7 @@
     const activeAvatar = state.avatar || (isBoy ? '👦' : '👧');
 
     if (avatarBadge) avatarBadge.textContent = activeAvatar;
-    if (pillTag) pillTag.textContent = isBoy ? 'Boy' : 'Girl';
+    if (pillTag) setBilingualText(pillTag, isBoy ? 'Boy' : 'Girl', isBoy ? 'وَلَد' : 'بِنْت');
 
     const name = state.childName;
     if (badgeTitle) {
@@ -872,6 +872,11 @@
     const msgEl = document.getElementById('celebrate-text');
     const naturalPraise = getNaturalPraise();
     if (msgEl) msgEl.textContent = msg ? (msg + ' ' + naturalPraise) : naturalPraise;
+    // The Arabic title was always "أحسنت يا بطل" (masculine), even for girls.
+    const titleEl = document.querySelector('#modal-celebrate .celebrate-title');
+    if (titleEl) {
+      setBilingualText(titleEl, 'Super Star! ⭐', g('أَحْسَنْتَ يَا بَطَل! ⭐', 'أَحْسَنْتِ يَا بَطَلَة! ⭐'));
+    }
     openModal('modal-celebrate');
 
     // Natural celebratory speech with short delay after fanfare
@@ -1218,6 +1223,7 @@
   function renderTraceLetterRibbon() {
     const ribbon = document.getElementById('trace-letter-ribbon');
     if (!ribbon) return;
+    const hadFocus = ribbon.contains(document.activeElement);
     ribbon.innerHTML = '';
 
     const list = getActiveAlphabet();
@@ -1225,6 +1231,8 @@
       const chip = document.createElement('button');
       chip.className = `trace-chip ${idx === state.currentIndex ? 'active' : ''}`;
       chip.textContent = item.char;
+      chip.setAttribute('aria-label', tr(`Trace ${item.name}`, `ارسم ${item.name}`));
+      if (idx === state.currentIndex) chip.setAttribute('aria-current', 'true');
       chip.addEventListener('click', () => {
         state.currentIndex = idx;
         renderTraceLetterRibbon();
@@ -1234,6 +1242,17 @@
       });
       ribbon.appendChild(chip);
     });
+
+    // Rebuilding the chips reset the strip to its start, so after tapping "M" (or arriving
+    // from Explore on a late letter) the chosen letter was scrolled out of sight. Centre it
+    // by scrolling only the strip; scrollIntoView could also scroll the page.
+    const active = ribbon.children[state.currentIndex];
+    if (active) {
+      const r = ribbon.getBoundingClientRect();
+      const c = active.getBoundingClientRect();
+      ribbon.scrollLeft += (c.left + c.width / 2) - (r.left + r.width / 2);
+      if (hadFocus) active.focus({ preventScroll: true });
+    }
   }
 
   // Pointer events cover mouse, touch and stylus (Windows touch screens and Android alike).
@@ -1400,6 +1419,7 @@
     balloon.dataset.char = item.char;
     balloon.textContent = item.char;
     balloon.style.background = randomItem(BALLOON_COLORS);
+    balloon.setAttribute('aria-label', tr(`Balloon letter ${item.char}`, `بالون حرف ${item.char}`));
   }
 
   function startBalloonSpawner() {
@@ -1420,6 +1440,8 @@
   function createBalloon(sky, delaySec, xPercent) {
     const balloon = document.createElement('div');
     balloon.className = 'flying-balloon';
+    balloon.setAttribute('role', 'button');
+    balloon.setAttribute('tabindex', '0');
     balloon.style.left = `${xPercent}%`;
     balloon.style.animationDelay = `${delaySec}s, ${Math.random() * 1.5}s`;
     sky.appendChild(balloon);
@@ -1535,7 +1557,12 @@
     if (hintEl) hintEl.classList.remove('is-hidden');
     const wrongChoices = [...grid.querySelectorAll('.match-choice-btn:not(.eliminated)')]
       .filter(b => b.textContent !== matchTarget.char);
-    if (wrongChoices.length > 1) randomItem(wrongChoices).classList.add('eliminated');
+    if (wrongChoices.length > 1) {
+      const eliminated = randomItem(wrongChoices);
+      eliminated.classList.add('eliminated');
+      eliminated.disabled = true;
+      eliminated.setAttribute('aria-disabled', 'true');
+    }
     laterInView(speakMatchPrompt, 1800);
   }
 
@@ -1613,6 +1640,13 @@
     memoryRound++;
     flippedCards = [];
     matchedPairsCount = 0;
+    // Set here (not only on tap) so the label follows a language switch too.
+    const lbl = document.getElementById('memory-diff-label');
+    if (lbl) {
+      lbl.textContent = memoryPairsCount === 3
+        ? tr('6 Cards (Easy)', '٦ بطاقات (سهل)')
+        : tr('8 Cards (Fun)', '٨ بطاقات (ممتع)');
+    }
     const list = getActiveAlphabet();
 
     // Pick random items
@@ -1639,6 +1673,9 @@
       const cardEl = document.createElement('div');
       cardEl.className = 'memory-card';
       cardEl.dataset.idx = idx;
+      cardEl.setAttribute('role', 'button');
+      cardEl.setAttribute('tabindex', '0');
+      cardEl.setAttribute('aria-label', tr(`Memory card ${idx + 1}`, `بطاقة ذاكرة ${idx + 1}`));
 
       cardEl.innerHTML = `
         <div class="memory-card-inner">
@@ -1663,6 +1700,9 @@
     }
 
     cardEl.classList.add('flipped');
+    cardEl.setAttribute('aria-expanded', 'true');
+    const labelVal = card.type === 'letter' ? card.item.name : card.item.word;
+    cardEl.setAttribute('aria-label', tr(`Card ${parseInt(cardEl.dataset.idx, 10) + 1}: ${labelVal}`, `بطاقة ${parseInt(cardEl.dataset.idx, 10) + 1}: ${labelVal}`));
     playMarimbaTone(card.pairId + 2);
     flippedCards.push({ card, cardEl });
 
@@ -1678,16 +1718,18 @@
       if (c1.card.pairId === c2.card.pairId) {
         // MATCH!
         setTimeout(() => {
-          if (round !== memoryRound) return;
+          if (round !== memoryRound || state.mode !== 'memory') return;
           c1.cardEl.classList.add('matched');
           c2.cardEl.classList.add('matched');
+          c1.cardEl.setAttribute('aria-disabled', 'true');
+          c2.cardEl.setAttribute('aria-disabled', 'true');
           playSparkleSound();
           addStars(2);
           matchedPairsCount++;
 
           if (matchedPairsCount === memoryPairsCount) {
             setTimeout(() => {
-              if (round !== memoryRound) return;
+              if (round !== memoryRound || state.mode !== 'memory') return;
               showCelebrateModal(tr('You found all the matching cards!', g('وَجَدْتَ كُلَّ البِطَاقَاتِ المُتَشَابِهَة!', 'وَجَدْتِ كُلَّ البِطَاقَاتِ المُتَشَابِهَة!')));
             }, 600);
           }
@@ -1696,9 +1738,13 @@
       } else {
         // NO MATCH
         setTimeout(() => {
-          if (round !== memoryRound) return;
+          if (round !== memoryRound || state.mode !== 'memory') return;
           c1.cardEl.classList.remove('flipped');
           c2.cardEl.classList.remove('flipped');
+          c1.cardEl.setAttribute('aria-expanded', 'false');
+          c2.cardEl.setAttribute('aria-expanded', 'false');
+          c1.cardEl.setAttribute('aria-label', tr(`Memory card ${parseInt(c1.cardEl.dataset.idx, 10) + 1}`, `بطاقة ذاكرة ${parseInt(c1.cardEl.dataset.idx, 10) + 1}`));
+          c2.cardEl.setAttribute('aria-label', tr(`Memory card ${parseInt(c2.cardEl.dataset.idx, 10) + 1}`, `بطاقة ذاكرة ${parseInt(c2.cardEl.dataset.idx, 10) + 1}`));
           flippedCards = [];
         }, 1200);
       }
@@ -1722,9 +1768,15 @@
       item.title = isUnlocked ? stk.title : tr(`Needs ${stk.cost} stars to unlock`, `يحتاج ${stk.cost} نجوم`);
 
       if (isUnlocked) {
+        item.setAttribute('role', 'button');
+        item.setAttribute('tabindex', '0');
+        item.setAttribute('aria-label', stk.title);
         item.addEventListener('click', () => {
           placeStickerOnPlayground(stk.emoji);
         });
+      } else {
+        item.setAttribute('aria-disabled', 'true');
+        item.setAttribute('aria-label', tr(`${stk.title}, locked, needs ${stk.cost} stars`, `${stk.title}، مغلق، يحتاج ${stk.cost} نجوم`));
       }
 
       tray.appendChild(item);
@@ -1906,7 +1958,8 @@
         state.deferredPrompt = null;
       });
     } else {
-      alert('To install on Android: Tap Chrome menu (three dots ⋮) and tap "Install app" or "Add to Home Screen".');
+      alert(tr('To install on Android: Tap Chrome menu (three dots ⋮) and tap "Install app" or "Add to Home Screen".',
+        'للتثبيت على أندرويد: افتح قائمة كروم (النقاط الثلاث ⋮) ثم اختر "تثبيت التطبيق" أو "إضافة إلى الشاشة الرئيسية".'));
     }
   }
 
@@ -1915,6 +1968,18 @@
   // ==========================================================================
 
   function bindEvents() {
+    // Brand Logo: return to Explore home, or cheer if already there
+    const brandLogo = document.getElementById('brand-logo');
+    if (brandLogo) {
+      brandLogo.addEventListener('click', () => {
+        if (state.mode !== 'explore') {
+          switchMode('explore');
+        } else {
+          speakCompanionGreeting();
+        }
+      });
+    }
+
     // Gender Profile Button
     const btnGender = document.getElementById('btn-gender');
     if (btnGender) {
@@ -2145,8 +2210,6 @@
     if (memDiff) {
       memDiff.addEventListener('click', () => {
         memoryPairsCount = memoryPairsCount === 3 ? 4 : 3;
-        const lbl = document.getElementById('memory-diff-label');
-        if (lbl) lbl.textContent = memoryPairsCount === 3 ? '6 Cards (Easy)' : '8 Cards (Fun)';
         initMemoryGame();
       });
     }
@@ -2234,9 +2297,19 @@
     const btnForget = document.getElementById('btn-forget-child');
     if (btnForget) {
       btnForget.addEventListener('click', () => {
-        if (!confirm("Erase the child's name, profile, settings and progress from this device?")) return;
+        if (!confirm(tr("Erase the child's name, profile, settings and progress from this device?",
+          'هل تريد مسح اسم الطفل وملفه والإعدادات والتقدم من هذا الجهاز؟'))) return;
         store.clearAll();
         window.location.reload();
+      });
+    }
+
+    const btnPrivacy = document.getElementById('btn-privacy-policy');
+    if (btnPrivacy) {
+      btnPrivacy.addEventListener('click', () => {
+        const frame = document.getElementById('privacy-frame');
+        if (frame) frame.src = `privacy.html#${state.lang}`;
+        openModal('modal-privacy');
       });
     }
 
@@ -2277,7 +2350,7 @@
     const btnReset = document.getElementById('btn-reset-progress');
     if (btnReset) {
       btnReset.addEventListener('click', () => {
-        if (confirm('Reset stars and stickers progress?')) {
+        if (confirm(tr('Reset stars and stickers progress?', 'هل تريد إعادة النجوم والملصقات من جديد؟'))) {
           state.stars = 0;
           state.unlockedStickers = ['s1'];
           store.set('alpha_stars', '0');
@@ -2293,6 +2366,11 @@
     { rate: 0.95, icon: '🐶' },
     { rate: 1.15, icon: '🐆' }
   ];
+  const VOICE_SPEED_LABELS = {
+    '0.75': ['Slow & Clear (Toddlers)', 'بطيء وواضح (للصغار)'],
+    '0.95': ['Natural (Preschoolers)', 'طبيعي (لما قبل المدرسة)'],
+    '1.15': ['Quick', 'سريع']
+  };
 
   function setVoiceSpeed(rate) {
     state.voiceSpeed = VOICE_SPEEDS.some(sp => sp.rate === rate) ? rate : 0.95;
@@ -2334,6 +2412,11 @@
     const btnAr = document.getElementById('btn-lang-ar');
     if (btnEn) btnEn.classList.toggle('active', isEn);
     if (btnAr) btnAr.classList.toggle('active', !isEn);
+    // An <option> can't hold the eng-text/ar-text pair, so its text is swapped here.
+    document.querySelectorAll('#setting-voice-speed option').forEach(opt => {
+      const label = VOICE_SPEED_LABELS[opt.value];
+      if (label) opt.textContent = isEn ? label[0] : label[1];
+    });
   }
 
   function setLanguage(lang, announce) {
@@ -2350,6 +2433,7 @@
 
   function switchMode(newMode) {
     viewEpoch++;
+    stopAllSpeechAndAudio();
     if (state.jukeboxPlaying && newMode !== 'explore') {
       toggleJukebox();
     }
@@ -2451,8 +2535,11 @@
           if (state.mode === 'explore') speakCurrentLetter();
           else speakCompanionGreeting();
         }
-        // Arrow keys browse letters in Explore (direction follows the reading direction).
-        if ((e.key === 'ArrowRight' || e.key === 'ArrowLeft') && state.mode === 'explore' && e.target === document.body) {
+        // Arrow keys browse letters in Explore (direction follows the reading direction),
+        // but not while a dialog is open over it or the child is typing.
+        if ((e.key === 'ArrowRight' || e.key === 'ArrowLeft') && state.mode === 'explore' &&
+            !document.querySelector('.modal-overlay.open') &&
+            (!e.target.matches || !e.target.matches('input, select, textarea'))) {
           const forward = (e.key === 'ArrowRight') === (state.lang === 'en');
           const list = getActiveAlphabet();
           state.currentIndex = (state.currentIndex + (forward ? 1 : -1) + list.length) % list.length;

@@ -23,6 +23,9 @@ final class WebViewController: UIViewController, WKNavigationDelegate {
         bridge.install(into: configuration.userContentController)
         #if DEBUG
         Self.recordScriptErrors(in: configuration.userContentController)
+        if ProcessInfo.processInfo.environment["SELFTEST_JS"] != nil {
+            Self.stopAnimations(in: configuration.userContentController)
+        }
         #endif
 
         webView = WKWebView(frame: .zero, configuration: configuration)
@@ -116,6 +119,17 @@ final class WebViewController: UIViewController, WKNavigationDelegate {
         window.__appErrors = [];
         window.addEventListener('error', function (e) { window.__appErrors.push(String(e.message)); });
         window.addEventListener('unhandledrejection', function (e) { window.__appErrors.push(String(e.reason)); });
+        """
+        controller.addUserScript(WKUserScript(source: source, injectionTime: .atDocumentStart, forMainFrameOnly: true))
+    }
+
+    /// Under UI test only: XCUITest waits for the app to go idle before every query, and the
+    /// page's endless animations (bouncing mascot, floating balloons) would keep it busy.
+    private static func stopAnimations(in controller: WKUserContentController) {
+        let source = """
+        var style = document.createElement('style');
+        style.textContent = '*, *::before, *::after { animation: none !important; transition: none !important; }';
+        document.documentElement.appendChild(style);
         """
         controller.addUserScript(WKUserScript(source: source, injectionTime: .atDocumentStart, forMainFrameOnly: true))
     }

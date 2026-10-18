@@ -95,6 +95,10 @@ jobs:
             | grep -vE "^(Testing failed:|The following build commands failed:)$" | awk '!seen[$0]++' | head -15 | esc \
             | while IFS= read -r line; do echo "::error title=iOS::$line"; done
           grep -hE "^\*\* [A-Z ]+ (SUCCEEDED|FAILED)" "$log" | esc | while IFS= read -r line; do echo "::notice title=xcodebuild::$line"; done
+          # Parallel UI tests don't print to the log; their results and messages are in the bundle.
+          if [ -d "$RUNNER_TEMP/AlphabetSafari.xcresult" ]; then
+            python3 ios/ci/report_xcresult.py "$RUNNER_TEMP/AlphabetSafari.xcresult"
+          fi
 
       - name: Upload Test Results (with screenshots)
         if: always()

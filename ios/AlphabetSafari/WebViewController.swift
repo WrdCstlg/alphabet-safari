@@ -11,9 +11,12 @@ final class WebViewController: UIViewController, WKNavigationDelegate {
     private var webView: WKWebView!
 
     // The app makes no network requests (privacy.html promises it), and the page, which has the
-    // native bridge attached, must never load anything from outside the app.
+    // native bridge attached, must never load anything from outside the app. One rule per scheme:
+    // WebKit's content-blocker patterns don't support "|", and a rule list that fails to compile
+    // blocks nothing.
     private static let blockNetwork = """
-    [{"trigger": {"url-filter": "^(https?|wss?)://"}, "action": {"type": "block"}}]
+    [{"trigger": {"url-filter": "^https?://"}, "action": {"type": "block"}},
+     {"trigger": {"url-filter": "^wss?://"}, "action": {"type": "block"}}]
     """
 
     override func loadView() {

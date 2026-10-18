@@ -23,7 +23,15 @@ process.on('uncaughtException', err => {
   process.exit(1);
 });
 
-const adb = (...args) => execFileSync(ADB, args, { encoding: 'utf8' }).trim();
+// Failures carry Android's own message (the last lines adb printed), not just "Command failed".
+const adb = (...args) => {
+  try {
+    return execFileSync(ADB, args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
+  } catch (err) {
+    const said = String(err.stderr || err.stdout || '').trim().split('\n').slice(-2).join(' / ');
+    throw new Error(`adb ${args.join(' ')} failed${said ? `: ${said}` : ''}`, { cause: err });
+  }
+};
 const shell = (cmd) => adb('shell', cmd);
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -75,8 +83,9 @@ async function launch({ fresh = false } = {}) {
       await page.waitForSelector('#letters-grid .grid-letter-card', { timeout: 45000 });
       return page;
     } catch (err) {
-      if (attempt >= 2) throw err;
+      if (attempt >= 3) throw err;
       console.log(`  (launch attempt ${attempt} failed: ${err.message.split('\n')[0]}; retrying)`);
+      await sleep(5000);
     }
   }
 }
@@ -94,7 +103,10 @@ function screenshot(name) {
 
 fs.mkdirSync(OUT, { recursive: true });
 await waitFor('the device to finish booting', () => shell('getprop sys.boot_completed') === '1', 120000);
+// "Booted" comes before the package and activity services answer on a slow CI emulator.
+await waitFor('the package manager', () => shell('pm path android').startsWith('package:'), 120000);
 if (process.argv[2]) adb('install', '-r', '-t', process.argv[2]);
+await waitFor('the activity manager', () => { shell(`am force-stop ${PKG}`); return true; }, 120000);
 // Talks to the adb server started above; the WebView is driven over its DevTools socket.
 const [device] = await android.devices({ omitDriverInstall: true });
 assert(device, 'no device or emulator attached');

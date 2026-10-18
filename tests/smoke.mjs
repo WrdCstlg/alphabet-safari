@@ -24,7 +24,11 @@ function serve() {
       res.writeHead(404).end();
       return;
     }
-    res.writeHead(200, { 'Content-Type': MIME[path.extname(file)] || 'application/octet-stream' });
+    // Content-Length as real hosts send it: without it, WebKit on Linux can't tell an MP3's duration.
+    res.writeHead(200, {
+      'Content-Type': MIME[path.extname(file)] || 'application/octet-stream',
+      'Content-Length': fs.statSync(file).size
+    });
     fs.createReadStream(file).pipe(res);
   });
   return new Promise(resolve => server.listen(0, '127.0.0.1', () => resolve(server)));

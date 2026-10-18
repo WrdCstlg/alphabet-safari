@@ -50,9 +50,13 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v7
 
+      # The newest stable Xcode on the runner: the newest simulators only run with it, and App
+      # Store uploads need the latest SDK. (The default Xcode can be older than the simulators.)
       - name: Toolchain
         run: |
-          echo "::notice title=Toolchain::$(xcodebuild -version | tr '\n' ' ')on macOS $(sw_vers -productVersion)"
+          xcode=$(ls -d /Applications/Xcode_*.app | grep -viE 'beta|release_candidate|_rc' | sort -V | tail -1)
+          sudo xcode-select -s "$xcode"
+          echo "::notice title=Toolchain::$(xcodebuild -version | tr '\n' ' ')($xcode) on macOS $(sw_vers -productVersion)"
           brew install xcodegen
 
       - name: Generate the Xcode Project
@@ -85,7 +89,10 @@ jobs:
           [ -f "$log" ] || exit 0
           esc() { sed -e 's/%/%25/g' | cut -c1-900; }
           grep -h "SELFTEST \[" "$log" | sort -u | esc | while IFS= read -r line; do echo "::notice title=iOS self-test::$line"; done
-          grep -hE "error:|: error |failed - " "$log" | grep -v "^Testing failed" | sort -u | head -12 | esc \
+          # Build errors, failed assertions, and xcodebuild's own summary of what failed.
+          { grep -hE "error:|: error |failed - |encountered an error|Test [Cc]ase .* failed|Unable to |Could not " "$log"
+            sed -n '/^Testing failed:/,+10p;/The following build commands failed:/,+6p' "$log"; } \
+            | grep -vE "^(Testing failed:|The following build commands failed:)$" | awk '!seen[$0]++' | head -15 | esc \
             | while IFS= read -r line; do echo "::error title=iOS::$line"; done
           grep -hE "^\*\* [A-Z ]+ (SUCCEEDED|FAILED)" "$log" | esc | while IFS= read -r line; do echo "::notice title=xcodebuild::$line"; done
 

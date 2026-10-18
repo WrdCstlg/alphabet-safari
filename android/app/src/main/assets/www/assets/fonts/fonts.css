@@ -211,3 +211,16 @@
   src: url(noto-emoji-subset-8ed309.woff2) format('woff2') tech(color-COLRv1);
   unicode-range: U+1F992-1F993, U+1F998, U+1F9E9, U+1F9F9, U+1FA80, U+1FABA, U+1FABC;
 }
+/* Safari Emoji, pictures Unicode has no emoji for, drawn for this app at Private Use code
+   points: U+E000 pomegranate (رُمَّان). Built by tools/build_picture_font.py. Flat COLRv0
+   colour layers, which every current browser draws, so no tech() filter; without colour
+   support the glyph still shows as a silhouette. "block" because no other font has these
+   characters: a fallback would only flash an empty box. */
+@font-face {
+  font-family: 'Safari Emoji';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: block;
+  src: url(safari-pictures-5bc820.woff2) format('woff2');
+  unicode-range: U+E000-E0FF;
+}

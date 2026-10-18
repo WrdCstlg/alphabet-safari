@@ -158,6 +158,9 @@ available the phrase is said without the name. Parents can erase everything from
 
 ## 🙏 Credits
 
+`assets/fonts/safari-pictures-*.woff2` holds pictures Unicode has no emoji for, drawn for this app
+by `tools/build_picture_font.py` (so far the pomegranate for ر = رُمَّان, at U+E000).
+
 `assets/fonts/noto-emoji-subset-*.woff2` is a subset of [Noto Color Emoji](https://github.com/googlefonts/noto-emoji)
 (SIL Open Font License 1.1), covering only the newer emoji (🦒 🦓 🦘 🧩 🧹 🪀 🪺 🪼) that
 Windows 10 and Android 7–9 would otherwise show as empty boxes.

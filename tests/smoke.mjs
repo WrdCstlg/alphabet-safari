@@ -102,6 +102,28 @@ await check('bundled emoji font loads for the newer animal emoji', async () => {
   assert(faces > 0, 'the Safari Emoji face did not load');
 });
 
+// Unicode has no pomegranate, so ر (رُمَّان) uses a picture drawn for the app (U+E000,
+// tools/build_picture_font.py). Without colour-font support it would draw as a black shape.
+await check('ر shows the app\'s own pomegranate, drawn in colour', async () => {
+  const emoji = await page.evaluate(() => window.ALPHABET_CONTENT.ar.find(i => i.char === 'ر').emoji);
+  assert(emoji === '', `ر picture is ${JSON.stringify(emoji)}, not the drawn pomegranate`);
+  const redPixels = await page.evaluate(async () => {
+    await document.fonts.load('64px "Safari Emoji"', '');
+    const canvas = document.createElement('canvas');
+    canvas.width = canvas.height = 96;
+    const ctx = canvas.getContext('2d');
+    ctx.font = '64px "Safari Emoji"';
+    ctx.textBaseline = 'top';
+    ctx.fillStyle = '#000';
+    ctx.fillText('', 8, 8);
+    const d = ctx.getImageData(0, 0, 96, 96).data;
+    let red = 0;
+    for (let i = 0; i < d.length; i += 4) if (d[i + 3] > 200 && d[i] > 150 && d[i + 1] < 100 && d[i + 2] < 100) red++;
+    return red;
+  });
+  assert(redPixels > 500, `the pomegranate did not draw in colour (${redPixels} red pixels)`);
+});
+
 await check('tapping Next plays the recorded clip for the new letter', async () => {
   await page.click('#btn-next-letter');
   await page.waitForTimeout(400);

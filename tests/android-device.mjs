@@ -16,6 +16,13 @@ const ADB = process.env.ADB || (process.env.ANDROID_HOME
   ? path.join(process.env.ANDROID_HOME, 'platform-tools', process.platform === 'win32' ? 'adb.exe' : 'adb')
   : 'adb');
 
+// A failure outside a check (boot, install, attaching to the app) still says why in the CI summary.
+process.on('uncaughtException', err => {
+  console.error(err);
+  if (process.env.GITHUB_ACTIONS) console.log(`::error title=Device test could not run::${String(err.message).split('\n')[0]}`);
+  process.exit(1);
+});
+
 const adb = (...args) => execFileSync(ADB, args, { encoding: 'utf8' }).trim();
 const shell = (cmd) => adb('shell', cmd);
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
@@ -53,16 +60,25 @@ const isResumed = () => /topResumedActivity.*com\.alphabetsafari\.app|mResumedAc
   .test(shell('dumpsys activity activities'));
 
 // (Re)start the app and attach to its WebView. Returns the page. Matching on the new process
-// id means a restart can't attach to the old, dead WebView.
+// id means a restart can't attach to the old, dead WebView. A cold CI emulator can take most
+// of a minute to start the WebView the first time, so the limits are generous and a launch
+// that still doesn't attach is tried once more.
 async function launch({ fresh = false } = {}) {
-  shell(`am force-stop ${PKG}`);
-  if (fresh) shell(`pm clear ${PKG}`);
-  shell(`am start -W -n ${PKG}/.MainActivity`);
-  const pid = Number(await waitFor('the app process', () => shell(`pidof ${PKG}`)));
-  const webview = await waitFor('the app WebView', () => device.webViews().find(w => w.pid() === pid));
-  const page = await Promise.race([webview.page(), sleep(30000).then(() => { throw new Error('WebView page did not attach'); })]);
-  await page.waitForSelector('#letters-grid .grid-letter-card', { timeout: 20000 });
-  return page;
+  for (let attempt = 1; ; attempt++) {
+    try {
+      shell(`am force-stop ${PKG}`);
+      if (fresh) shell(`pm clear ${PKG}`);
+      shell(`am start -W -n ${PKG}/.MainActivity`);
+      const pid = Number(await waitFor('the app process', () => shell(`pidof ${PKG}`)));
+      const webview = await waitFor('the app WebView', () => device.webViews().find(w => w.pid() === pid), 60000);
+      const page = await Promise.race([webview.page(), sleep(60000).then(() => { throw new Error('WebView page did not attach'); })]);
+      await page.waitForSelector('#letters-grid .grid-letter-card', { timeout: 45000 });
+      return page;
+    } catch (err) {
+      if (attempt >= 2) throw err;
+      console.log(`  (launch attempt ${attempt} failed: ${err.message.split('\n')[0]}; retrying)`);
+    }
+  }
 }
 
 async function passParentGate(page) {

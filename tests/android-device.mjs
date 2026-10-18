@@ -136,13 +136,13 @@ await check('recorded clips and bundled fonts load from inside the app', async (
   assert(faces >= 2, 'Fredoka or the bundled emoji font did not load');
   // The app's own pomegranate (U+E000) is a colour font glyph: count its red pixels.
   const redPixels = await page.evaluate(async () => {
-    await document.fonts.load('64px "Safari Emoji"', '');
+    await document.fonts.load('64px "Safari Emoji"', '\uE000');
     const canvas = document.createElement('canvas');
     canvas.width = canvas.height = 96;
     const ctx = canvas.getContext('2d');
     ctx.font = '64px "Safari Emoji"';
     ctx.textBaseline = 'top';
-    ctx.fillText('', 8, 8);
+    ctx.fillText('\uE000', 8, 8);
     const d = ctx.getImageData(0, 0, 96, 96).data;
     let red = 0;
     for (let i = 0; i < d.length; i += 4) if (d[i + 3] > 200 && d[i] > 150 && d[i + 1] < 100 && d[i + 2] < 100) red++;

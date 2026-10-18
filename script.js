@@ -525,11 +525,18 @@
     if (done) done(result);
   }
 
-  function hasNativeTTS() {
-    return !!(window.AndroidBridge && typeof window.AndroidBridge.speak === 'function');
+  // The native apps' bridge: Android injects window.AndroidBridge, iOS window.NativeBridge.
+  // Both offer speak(), stopSpeaking(), vibrate() and getPlatform().
+  function nativeBridge() {
+    return window.NativeBridge || window.AndroidBridge || null;
   }
 
-  // Called by MainActivity (Android) when a native TextToSpeech utterance finishes.
+  function hasNativeTTS() {
+    const bridge = nativeBridge();
+    return !!(bridge && typeof bridge.speak === 'function');
+  }
+
+  // Called by the native app (Android MainActivity, iOS SpeechBridge) when an utterance finishes.
   window.AlphabetSafariSpeechDone = function (id, ok) {
     const resolve = nativePending[id];
     if (resolve) {
@@ -547,9 +554,9 @@
     if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel();
     }
-    if (hasNativeTTS() && typeof window.AndroidBridge.stopSpeaking === 'function') {
+    if (hasNativeTTS() && typeof nativeBridge().stopSpeaking === 'function') {
       try {
-        window.AndroidBridge.stopSpeaking();
+        nativeBridge().stopSpeaking();
       } catch (e) {}
     }
     Object.keys(nativePending).forEach(id => window.AlphabetSafariSpeechDone(id, true));
@@ -703,7 +710,7 @@
     return new Promise((resolve) => {
       nativePending[id] = resolve;
       try {
-        window.AndroidBridge.speak(text, targetLang, state.voiceSpeed, id, !!localOnly);
+        nativeBridge().speak(text, targetLang, state.voiceSpeed, id, !!localOnly);
       } catch (e) {
         window.AlphabetSafariSpeechDone(id, false);
       }
@@ -1957,6 +1964,9 @@
         }
         state.deferredPrompt = null;
       });
+    } else if (PlatformBridge.isIOS) {
+      alert(tr('To install on iPhone or iPad: tap the Share button in Safari, then "Add to Home Screen".',
+        'للتثبيت على آيفون أو آيباد: اضغط زر المشاركة في سفاري، ثم اختر "إضافة إلى الشاشة الرئيسية".'));
     } else {
       alert(tr('To install on Android: Tap Chrome menu (three dots ⋮) and tap "Install app" or "Add to Home Screen".',
         'للتثبيت على أندرويد: افتح قائمة كروم (النقاط الثلاث ⋮) ثم اختر "تثبيت التطبيق" أو "إضافة إلى الشاشة الرئيسية".'));
@@ -2471,10 +2481,16 @@
   }
 
   // ==========================================================================
-  // UNIFIED PLATFORM BRIDGE (Android, Windows Desktop & Web/PWA)
+  // UNIFIED PLATFORM BRIDGE (Android, iOS, Windows Desktop & Web/PWA)
   // ==========================================================================
   const PlatformBridge = {
     isAndroid: !!(window.AndroidBridge || /Android/i.test(navigator.userAgent) || navigator.userAgent.includes('wv')),
+    // iPadOS reports itself as a Mac; its touch screen gives it away.
+    isIOS: /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1),
+    get isIOSApp() {
+      const bridge = nativeBridge();
+      return !!(bridge && typeof bridge.getPlatform === 'function' && bridge.getPlatform() === 'ios');
+    },
     // pywebview injects window.pywebview after this script runs, so check at use time.
     get isWindowsDesktop() {
       return !!(window.pywebview || /AlphabetSafariWin/i.test(navigator.userAgent));
@@ -2483,8 +2499,9 @@
 
     init() {
       if (this.isAndroid) document.documentElement.classList.add('platform-android');
+      if (this.isIOS) document.documentElement.classList.add('platform-ios');
       if (this.isWindowsDesktop) document.documentElement.classList.add('platform-windows');
-      if (window.AndroidBridge || this.isWindowsDesktop) document.documentElement.classList.add('native-app');
+      if (nativeBridge() || this.isWindowsDesktop) document.documentElement.classList.add('native-app');
       window.addEventListener('pywebviewready', () => {
         document.documentElement.classList.add('platform-windows', 'native-app');
       });
@@ -2497,6 +2514,7 @@
 
     getPlatformName() {
       if (this.isWindowsDesktop) return 'Windows Desktop (WebView2)';
+      if (this.isIOSApp) return 'iOS Native (WKWebView)';
       if (this.isAndroid) return 'Android Native (WebView)';
       if (this.isPWA) return 'PWA Standalone';
       return 'Web Browser';
@@ -2504,8 +2522,9 @@
 
     vibrate(pattern = [25]) {
       try {
-        if (window.AndroidBridge && typeof window.AndroidBridge.vibrate === 'function') {
-          window.AndroidBridge.vibrate(pattern[0] || 25);
+        const bridge = nativeBridge();
+        if (bridge && typeof bridge.vibrate === 'function') {
+          bridge.vibrate(pattern[0] || 25);
         } else if (navigator.vibrate) {
           navigator.vibrate(pattern);
         }

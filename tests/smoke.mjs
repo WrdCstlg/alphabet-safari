@@ -1,12 +1,13 @@
 // End-to-end smoke test: serves the app and drives it in a real browser.
 //
 //   npm run smoke                        (Playwright's bundled Chromium; CI)
+//   BROWSER=webkit npm run smoke         (WebKit: the engine of Safari and every iOS app; CI)
 //   BROWSER_CHANNEL=msedge npm run smoke (installed Microsoft Edge; no browser download)
 import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { chromium } from 'playwright';
+import { chromium, webkit } from 'playwright';
 
 const ROOT = path.resolve(process.env.SMOKE_ROOT || path.join(path.dirname(fileURLToPath(import.meta.url)), '..'));
 const MIME = {
@@ -56,11 +57,25 @@ function assert(cond, msg) {
 
 const server = await serve();
 const base = `http://127.0.0.1:${server.address().port}`;
-const browser = await chromium.launch({
-  channel: process.env.BROWSER_CHANNEL || undefined,
-  args: ['--autoplay-policy=no-user-gesture-required']
-});
+const isWebKit = process.env.BROWSER === 'webkit';
+const browser = isWebKit
+  ? await webkit.launch()
+  : await chromium.launch({
+    channel: process.env.BROWSER_CHANNEL || undefined,
+    args: ['--autoplay-policy=no-user-gesture-required']
+  });
 const context = await browser.newContext({ viewport: { width: 1280, height: 860 }, serviceWorkers: 'block' });
+// Every URL the app hands to new Audio(): recorded clips and, on the Windows desktop host, cloud
+// speech. Recorded in the page because WebKit's media loads don't show up as Playwright requests.
+await context.addInitScript(() => {
+  const NativeAudio = window.Audio;
+  window.__audioUrls = [];
+  window.Audio = function Audio(src) {
+    if (src !== undefined) window.__audioUrls.push(new URL(src, location.href).href);
+    return new NativeAudio(src);
+  };
+  window.Audio.prototype = NativeAudio.prototype;
+});
 const page = await context.newPage();
 
 const pageErrors = [];
@@ -70,19 +85,14 @@ page.on('console', msg => {
   if (msg.type() === 'error' && !/Failed to load resource/.test(msg.text())) pageErrors.push(msg.text());
 });
 page.on('dialog', d => d.accept());
-const clipResponses = [];
-page.on('response', res => {
-  if (res.url().includes('/assets/audio/')) clipResponses.push({ url: res.url(), status: res.status() });
-});
 
-// Pretend to be the Windows desktop host (which has a cloud TTS endpoint) and record every
-// phrase sent to it, so the test can prove the child's name never leaves the device.
-const ttsTexts = [];
+// Pretend to be the Windows desktop host (which has a cloud TTS endpoint) and collect every
+// phrase the app asks it to speak, so the test can prove the child's name never leaves the device.
 await page.route('**/api/health', route => route.fulfill({ json: { tts: true } }));
-await page.route('**/api/tts?*', route => {
-  ttsTexts.push(new URL(route.request().url()).searchParams.get('text'));
-  return route.fulfill({ status: 404 });
-});
+await page.route('**/api/tts?*', route => route.fulfill({ status: 404 }));
+const audioUrls = () => page.evaluate(() => window.__audioUrls);
+const ttsTextsSince = async (from) => (await audioUrls()).slice(from)
+  .filter(u => u.includes('/api/tts?')).map(u => new URL(u).searchParams.get('text'));
 
 const stars = () => page.$eval('#star-count', el => parseInt(el.textContent, 10));
 const store = (key) => page.evaluate(k => localStorage.getItem(k), key);
@@ -106,16 +116,16 @@ await check('bundled emoji font loads for the newer animal emoji', async () => {
 // tools/build_picture_font.py). Without colour-font support it would draw as a black shape.
 await check('ر shows the app\'s own pomegranate, drawn in colour', async () => {
   const emoji = await page.evaluate(() => window.ALPHABET_CONTENT.ar.find(i => i.char === 'ر').emoji);
-  assert(emoji === '', `ر picture is ${JSON.stringify(emoji)}, not the drawn pomegranate`);
+  assert(emoji === '\uE000', `ر picture is ${JSON.stringify(emoji)}, not the drawn pomegranate`);
   const redPixels = await page.evaluate(async () => {
-    await document.fonts.load('64px "Safari Emoji"', '');
+    await document.fonts.load('64px "Safari Emoji"', '\uE000');
     const canvas = document.createElement('canvas');
     canvas.width = canvas.height = 96;
     const ctx = canvas.getContext('2d');
     ctx.font = '64px "Safari Emoji"';
     ctx.textBaseline = 'top';
     ctx.fillStyle = '#000';
-    ctx.fillText('', 8, 8);
+    ctx.fillText('\uE000', 8, 8);
     const d = ctx.getImageData(0, 0, 96, 96).data;
     let red = 0;
     for (let i = 0; i < d.length; i += 4) if (d[i + 3] > 200 && d[i] > 150 && d[i + 1] < 100 && d[i + 2] < 100) red++;
@@ -125,10 +135,20 @@ await check('ر shows the app\'s own pomegranate, drawn in colour', async () => 
 });
 
 await check('tapping Next plays the recorded clip for the new letter', async () => {
+  const from = (await audioUrls()).length;
   await page.click('#btn-next-letter');
   await page.waitForTimeout(400);
-  const clip = clipResponses.find(r => r.url.endsWith('/assets/audio/en/boy/B.mp3'));
-  assert(clip && clip.status === 200, `clip responses: ${JSON.stringify(clipResponses)}`);
+  const clip = (await audioUrls()).slice(from).find(u => u.endsWith('/assets/audio/en/boy/B.mp3'));
+  assert(clip, `clips asked for: ${JSON.stringify((await audioUrls()).slice(from))}`);
+  // ...and this browser can actually load and decode it.
+  const duration = await page.evaluate(url => new Promise((resolve, reject) => {
+    const audio = new Audio(url);
+    audio.oncanplaythrough = () => resolve(audio.duration);
+    audio.onerror = () => reject(new Error(`clip failed to load (error ${audio.error && audio.error.code})`));
+    setTimeout(() => reject(new Error('clip did not load in 10s')), 10000);
+    audio.load();
+  }), clip);
+  assert(duration > 0.2, `clip duration ${duration}`);
 });
 
 await check('Y shows the yo-yo and its phrase says yo-yo', async () => {
@@ -151,11 +171,12 @@ await check('profile save closes the modal, persists, and treats the name as tex
 });
 
 await check("the child's name is never sent to the cloud TTS endpoint", async () => {
-  ttsTexts.length = 0;
+  const from = (await audioUrls()).length;
   await page.click('#interactive-mascot'); // greeting that includes the name
   await page.waitForTimeout(600);
   await page.click('.mode-tab[data-mode="match"]'); // a nameless prompt, which may use the cloud
   await page.waitForTimeout(600);
+  const ttsTexts = await ttsTextsSince(from);
   assert(ttsTexts.length > 0, 'the TTS route was never used, so this check proves nothing');
   const leaked = ttsTexts.filter(t => t.includes('Mira'));
   assert(leaked.length === 0, `name sent to TTS: ${JSON.stringify(leaked)}`);
@@ -166,13 +187,16 @@ await check("the child's name is never sent to the cloud TTS endpoint", async ()
 // stays local; without them (e.g. CI's Linux) the greeting falls back to a nameless version.
 // Force the second case so both paths are covered on every OS.
 await check('with no on-device voice, the greeting is spoken without the name', async () => {
-  ttsTexts.length = 0;
+  const from = (await audioUrls()).length;
+  // (A browser without speech synthesis, like Playwright's WebKit, has no voices already.)
   await page.evaluate(() => {
+    if (!window.speechSynthesis) return;
     window.speechSynthesis.getVoices = () => [];
     window.speechSynthesis.onvoiceschanged();
   });
   await page.click('#interactive-mascot');
   await page.waitForTimeout(600);
+  const ttsTexts = await ttsTextsSince(from);
   const greeting = ttsTexts.find(t => /safari buddy/.test(t));
   assert(greeting, `nameless greeting never reached the TTS route: ${JSON.stringify(ttsTexts)}`);
   assert(!greeting.includes('Mira') && /^Hello!/.test(greeting), `unexpected fallback text: ${greeting}`);
@@ -495,6 +519,8 @@ await check('layout from phone to desktop, any name: header, tabs and tracing to
 await check('phone (375px): header buttons fit on screen, trace strip keeps the letter in view', async () => {
   const phone = await browser.newContext({ viewport: { width: 375, height: 740 }, hasTouch: true, serviceWorkers: 'block' });
   const p = await phone.newPage();
+  // WebKit dropped this page twice on Windows mid-run (not reproducible alone); say so if it recurs.
+  p.on('crash', () => console.log('        (the phone page crashed)'));
   try {
     await p.goto(`${base}/index.html`);
     await p.waitForSelector('#letters-grid .grid-letter-card');
@@ -519,6 +545,61 @@ await check('phone (375px): header buttons fit on screen, trace strip keeps the 
     assert((await activeChipInView()).inView, 'the tapped letter scrolled out of the strip');
   } finally {
     await phone.close();
+  }
+});
+
+// The iOS app injects window.NativeBridge (ios/AlphabetSafari/WebBridge.swift) with the same
+// calls as Android's AndroidBridge. Stand in for it here, on an iPhone-sized touch screen.
+const IPHONE_UA = 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148';
+await check('iOS app: speech and haptics go through NativeBridge, the name stays on-device', async () => {
+  const ios = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, userAgent: IPHONE_UA, serviceWorkers: 'block' });
+  await ios.addInitScript(() => {
+    localStorage.setItem('alpha_child_name', 'Mira');
+    window.__bridgeCalls = [];
+    window.NativeBridge = {
+      getPlatform: () => 'ios',
+      vibrate: (ms) => window.__bridgeCalls.push({ op: 'vibrate', ms }),
+      stopSpeaking: () => window.__bridgeCalls.push({ op: 'stop' }),
+      speak: (text, lang, rate, id, localOnly) => {
+        window.__bridgeCalls.push({ op: 'speak', text, lang, localOnly });
+        setTimeout(() => window.AlphabetSafariSpeechDone(id, true), 20);
+      }
+    };
+  });
+  const p = await ios.newPage();
+  try {
+    await p.goto(`${base}/index.html`);
+    await p.waitForSelector('#letters-grid .grid-letter-card');
+    const classes = await p.evaluate(() => document.documentElement.className);
+    assert(/platform-ios/.test(classes) && /native-app/.test(classes), `classes: ${classes}`);
+    assert(!(await p.locator('#btn-android-app').isVisible()), 'the web "install the app" button shows inside the iOS app');
+    await p.tap('#interactive-mascot');
+    await p.waitForTimeout(400);
+    const calls = await p.evaluate(() => window.__bridgeCalls);
+    const greeting = calls.find(c => c.op === 'speak' && c.text.includes('Mira'));
+    assert(greeting, `no greeting through NativeBridge: ${JSON.stringify(calls)}`);
+    assert(greeting.localOnly === true, 'the phrase with the child\'s name was not marked on-device only');
+    assert(calls.some(c => c.op === 'vibrate'), 'no haptic tap through NativeBridge');
+  } finally {
+    await ios.close();
+  }
+});
+
+await check('iPhone Safari: the install button explains Add to Home Screen', async () => {
+  const safari = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, userAgent: IPHONE_UA, serviceWorkers: 'block' });
+  const p = await safari.newPage();
+  const messages = [];
+  p.on('dialog', d => { messages.push(d.message()); d.accept(); });
+  try {
+    await p.goto(`${base}/index.html`);
+    await p.waitForSelector('#letters-grid .grid-letter-card');
+    assert(await p.evaluate(() => document.documentElement.classList.contains('platform-ios')), 'iPhone not recognised');
+    await p.tap('#btn-android-app');
+    await p.tap('#btn-trigger-pwa-install');
+    await p.waitForTimeout(200);
+    assert(messages.some(m => /Add to Home Screen/.test(m) && /Share/.test(m)), `install hint: ${JSON.stringify(messages)}`);
+  } finally {
+    await safari.close();
   }
 });
 

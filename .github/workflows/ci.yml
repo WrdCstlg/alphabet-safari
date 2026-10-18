@@ -77,12 +77,19 @@ jobs:
           node-version: 24
           cache: npm
 
-      - name: Install Tooling and Chromium
+      - name: Install Tooling, Chromium and WebKit
         run: |
           npm ci --no-audit --no-fund
-          npx playwright install --with-deps chromium
+          npx playwright install --with-deps chromium webkit
 
-      - name: Run Smoke Test
+      - name: Run Smoke Test (Chromium, as in Android and Windows)
+        run: npm run smoke
+
+      # WebKit is the engine of Safari and of every iOS app, the iOS version included.
+      - name: Run Smoke Test (WebKit, as in Safari and iOS)
+        if: success() || failure()
+        env:
+          BROWSER: webkit
         run: npm run smoke
 
       # Play listing screenshots (phone, 7" and 10" tablet; English and Arabic), rendered from

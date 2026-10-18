@@ -2670,6 +2670,13 @@ body[data-gender="girl"] .name-input:focus {
   min-height: 44px;
 }
 
+/* iPhone and iPad: as a home-screen web app (translucent status bar) and in landscape, keep the
+   page clear of the notch, the Dynamic Island and the home indicator (viewport-fit=cover).
+   Zero everywhere else; the native apps keep their web view inside the safe area already. */
+body {
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
 /* Respect the OS "reduce motion" setting. Balloons keep rising because that is the game. */
 @media (prefers-reduced-motion: reduce) {
   *:not(.flying-balloon),

@@ -23,17 +23,23 @@ PLAY_LISTING_DIR = os.path.join(BASE_DIR, "fastlane", "metadata", "android")
 PLAY_LOCALES = ["en-US", "ar"]
 
 
+IOS_APP_ICON = os.path.join(BASE_DIR, "ios", "AlphabetSafari", "Assets.xcassets", "AppIcon.appiconset", "AppIcon.png")
+PNG_COLOUR_TYPES = {"RGB": 2, "RGBA": 6}  # IHDR colour type
+
+
 def launcher_icon_specs():
-    """(path, pixel size) of every generated app icon: the 48dp legacy launcher icons, the
-    108dp adaptive icon layer (mipmap-anydpi-v26/ic_launcher.xml uses it), and the 512px
-    Google Play listing icon, which must be a 32-bit (RGBA) PNG."""
+    """(path, pixel size, required colour or None) of every generated app icon: the 48dp
+    legacy launcher icons, the 108dp adaptive icon layer (mipmap-anydpi-v26/ic_launcher.xml
+    uses it), the 512px Google Play listing icon, which must be a 32-bit PNG (RGBA), and the
+    1024px iOS app icon, which the App Store rejects if it has an alpha channel (RGB)."""
     for density, scale in DENSITY_SCALE.items():
         folder = os.path.join(ANDROID_RES_DIR, f"mipmap-{density}")
-        yield os.path.join(folder, "ic_launcher.png"), int(48 * scale)
-        yield os.path.join(folder, "ic_launcher_round.png"), int(48 * scale)
-        yield os.path.join(folder, "ic_launcher_background.png"), int(108 * scale)
+        yield os.path.join(folder, "ic_launcher.png"), int(48 * scale), None
+        yield os.path.join(folder, "ic_launcher_round.png"), int(48 * scale), None
+        yield os.path.join(folder, "ic_launcher_background.png"), int(108 * scale), None
     for locale in PLAY_LOCALES:
-        yield os.path.join(PLAY_LISTING_DIR, locale, "images", "icon.png"), 512
+        yield os.path.join(PLAY_LISTING_DIR, locale, "images", "icon.png"), 512, "RGBA"
+    yield IOS_APP_ICON, 1024, "RGB"
 
 
 def compute_sha256(filepath):
@@ -72,9 +78,9 @@ def update_icon():
     shutil.copy2(target_ico, os.path.join(WINDOWS_DIR, "mascot.ico"))
 
 
-def is_png(path, size=None, rgba=False):
-    """True if `path` is a real PNG (optionally of `size` x `size` pixels, optionally with an
-    alpha channel). Reads the header only; no Pillow needed."""
+def is_png(path, size=None, colour=None):
+    """True if `path` is a real PNG (optionally of `size` x `size` pixels, optionally of a
+    colour type, "RGB" or "RGBA"). Reads the header only; no Pillow needed."""
     try:
         with open(path, "rb") as f:
             head = f.read(26)
@@ -82,7 +88,7 @@ def is_png(path, size=None, rgba=False):
         return False
     if head[:8] != b"\x89PNG\r\n\x1a\n":
         return False
-    if rgba and head[25] != 6:  # IHDR colour type 6 = truecolour with alpha
+    if colour and head[25] != PNG_COLOUR_TYPES[colour]:
         return False
     return size is None or (int.from_bytes(head[16:20], "big"), int.from_bytes(head[20:24], "big")) == (size, size)
 
@@ -96,9 +102,8 @@ def update_launcher_icons():
     src_img = os.path.join(BASE_DIR, "assets", "mascot.jpg")
     if not os.path.exists(src_img):
         return
-    stale = [(path, size) for path, size in launcher_icon_specs()
-             if not is_png(path, size, rgba=path.endswith("icon.png"))
-             or os.path.getmtime(src_img) > os.path.getmtime(path)]
+    stale = [(path, size) for path, size, colour in launcher_icon_specs()
+             if not is_png(path, size, colour) or os.path.getmtime(src_img) > os.path.getmtime(path)]
     if not stale:
         return
     try:
@@ -115,6 +120,10 @@ def update_launcher_icons():
                 inner = round(size * 76 / 108)
                 layer.paste(art.resize((inner, inner), Image.LANCZOS), ((size - inner) // 2,) * 2)
                 layer.convert("RGB").save(path, format="PNG", optimize=True)
+            elif path == IOS_APP_ICON:
+                # iOS rounds the corners itself; App Store icons must not be transparent.
+                os.makedirs(os.path.dirname(path), exist_ok=True)
+                art.resize((size, size), Image.LANCZOS).convert("RGB").save(path, format="PNG", optimize=True)
             elif name == "icon.png":
                 # Play adds its own rounded mask and shadow, so the full square art goes in.
                 os.makedirs(os.path.dirname(path), exist_ok=True)
@@ -128,7 +137,7 @@ def update_launcher_icons():
                 icon.save(path, format="PNG", optimize=True)
             else:
                 art.resize((size, size), Image.LANCZOS).convert("RGB").save(path, format="PNG", optimize=True)
-        print(f"  [Icon] Android launcher icons regenerated ({len(stale)} files).")
+        print(f"  [Icon] App icons regenerated ({len(stale)} files).")
     except Exception as e:  # Pillow missing: keep the committed icons; --verify reports bad ones
         print("  [Icon Warning]", e)
 

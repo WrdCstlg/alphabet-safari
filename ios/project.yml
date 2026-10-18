@@ -1,0 +1,91 @@
+# The iOS app's Xcode project, as text: `xcodegen generate` (in ios/) writes
+# AlphabetSafari.xcodeproj, which is not committed. See ios/README.md.
+name: AlphabetSafari
+options:
+  bundleIdPrefix: com.alphabetsafari
+  deploymentTarget:
+    iOS: "15.0"
+  developmentLanguage: en
+  createIntermediateGroups: true
+settings:
+  base:
+    MARKETING_VERSION: "1.0.0"
+    CURRENT_PROJECT_VERSION: "1"
+    SWIFT_VERSION: "5.0"
+    TARGETED_DEVICE_FAMILY: "1,2"
+    # The "Bundle Web App" phase reads the web app from the repo root, outside ios/.
+    ENABLE_USER_SCRIPT_SANDBOXING: NO
+targets:
+  AlphabetSafari:
+    type: application
+    platform: iOS
+    sources:
+      - path: AlphabetSafari
+        excludes: [PrivacyInfo.xcprivacy]
+      - path: AlphabetSafari/PrivacyInfo.xcprivacy
+        buildPhase: resources
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.alphabetsafari.app
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        CODE_SIGN_STYLE: Automatic
+    info:
+      path: AlphabetSafari/Info.plist
+      properties:
+        CFBundleDisplayName: Alphabet Safari
+        CFBundleDevelopmentRegion: en
+        CFBundleLocalizations: [en, ar]
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        LSRequiresIPhoneOS: true
+        ITSAppUsesNonExemptEncryption: false
+        UILaunchScreen:
+          UIColorName: PageBackground
+        UIStatusBarHidden: true
+        UIViewControllerBasedStatusBarAppearance: true
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        UISupportedInterfaceOrientations~ipad:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
+          UISceneConfigurations:
+            UIWindowSceneSessionRoleApplication:
+              - UISceneConfigurationName: Default
+                UISceneDelegateClassName: $(PRODUCT_MODULE_NAME).SceneDelegate
+    postBuildScripts:
+      - name: Bundle Web App
+        basedOnDependencyAnalysis: false
+        script: |
+          # The same web app as the website and the Android app, staged from the repo root.
+          set -euo pipefail
+          python3 "${SRCROOT}/../build.py" --site-dir "${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/www"
+  AlphabetSafariUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: AlphabetSafariUITests
+        excludes: [selftest.js]
+      - path: AlphabetSafariUITests/selftest.js
+        buildPhase: resources
+    dependencies:
+      - target: AlphabetSafari
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.alphabetsafari.app.uitests
+        TEST_TARGET_NAME: AlphabetSafari
+        GENERATE_INFOPLIST_FILE: YES
+schemes:
+  AlphabetSafari:
+    build:
+      targets:
+        AlphabetSafari: all
+        AlphabetSafariUITests: [test]
+    test:
+      targets:
+        - AlphabetSafariUITests

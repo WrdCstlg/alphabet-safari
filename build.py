@@ -57,6 +57,33 @@ def verify_play_listing():
     return ok
 
 
+PRIVATE_USE = "[" + chr(0xE000) + "-" + chr(0xF8FF) + "]"  # built with chr(): editors may turn escapes into the characters
+
+
+def verify_no_invisible_pictures():
+    """The app's own pictures sit at Private Use code points (U+E000...), which editors show as
+    nothing at all: source must spell them as escapes ("\\uE000") so they can't look missing."""
+    skip_dirs = {".git", "node_modules", "_site", "build", "dist", ".gradle", "DerivedData", "__pycache__"}
+    text_types = (".js", ".mjs", ".html", ".css", ".py", ".swift", ".json", ".md", ".kt", ".yml", ".txt")
+    found = []
+    for dirpath, dirnames, filenames in os.walk(BASE_DIR):
+        dirnames[:] = [d for d in dirnames if d not in skip_dirs]
+        for name in filenames:
+            if name.endswith(text_types):
+                path = os.path.join(dirpath, name)
+                try:
+                    text = open(path, encoding="utf-8").read()
+                except (UnicodeDecodeError, OSError):
+                    continue
+                if re.search(PRIVATE_USE, text):
+                    found.append(os.path.relpath(path, BASE_DIR))
+    for rel in found:
+        log(f"Invisible Private Use character in {rel}: write it as an escape, e.g. \\uE000", symbol="FAIL")
+    if not found:
+        log("No invisible Private Use characters in the source (pictures are written as escapes).", symbol="OK")
+    return not found
+
+
 def run_verify():
     from sync_assets import CORE_FILES, ANDROID_WWW_DIR, compute_sha256, iter_asset_files
 
@@ -87,16 +114,17 @@ def run_verify():
 
     # Release builds (the Play bundle) refuse launcher icons that aren't real PNGs.
     from sync_assets import launcher_icon_specs, is_png
-    bad_icons = [(os.path.relpath(p, BASE_DIR), size) for p, size in launcher_icon_specs()
-                 if not is_png(p, size, rgba=p.endswith("icon.png"))]
-    for rel, size in bad_icons:
-        log(f"Icon is not a {size}x{size} PNG of the right kind: {rel} (run `py build.py --sync`)", symbol="FAIL")
+    bad_icons = [(os.path.relpath(p, BASE_DIR), size, colour) for p, size, colour in launcher_icon_specs()
+                 if not is_png(p, size, colour)]
+    for rel, size, colour in bad_icons:
+        log(f"Icon is not a {size}x{size} {colour or ''} PNG: {rel} (run `py build.py --sync`)", symbol="FAIL")
     if bad_icons:
         ok = False
     else:
-        log("Launcher icons and the 32-bit Play listing icon are valid PNGs.", symbol="OK")
+        log("App icons are valid PNGs: Android launcher, Play (RGBA) and App Store (RGB, no alpha).", symbol="OK")
 
     ok = verify_play_listing() and ok
+    ok = verify_no_invisible_pictures() and ok
 
     # privacy.html and the Play Data safety answers say the Android app can't reach the
     # internet and asks only for vibration. A new permission must update those first.
@@ -176,10 +204,12 @@ def main():
     parser.add_argument("--android", action="store_true", help="Build Android APK")
     parser.add_argument("--all", action="store_true", help="Build both Windows and Android")
     parser.add_argument("--site", action="store_true", help="Stage the web app into _site/ for GitHub Pages")
+    parser.add_argument("--site-dir", metavar="DIR",
+                        help="Stage the web app into DIR instead (the iOS app's build phase uses this)")
 
     args = parser.parse_args()
 
-    if not any([args.sync, args.verify, args.windows, args.android, args.all, args.site]):
+    if not any([args.sync, args.verify, args.windows, args.android, args.all, args.site, args.site_dir]):
         # Default behavior: sync and verify
         run_sync()
         verified = run_verify()
@@ -195,8 +225,8 @@ def main():
         sys.exit(1)
     # A failed build must fail the command, or CI goes green without an artifact.
     ok = True
-    if args.site:
-        ok = build_site() and ok
+    if args.site or args.site_dir:
+        ok = build_site(args.site_dir) and ok
     if args.windows or args.all:
         ok = build_windows() and ok
     if args.android or args.all:

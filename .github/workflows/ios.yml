@@ -1,0 +1,99 @@
+name: iOS App
+
+# Builds the iOS app (ios/: an XcodeGen project around the same web app) and runs its UI tests
+# on an iPhone and an iPad simulator. macOS minutes are free while the repository is public and
+# count 10x if it becomes private, so this runs only when something the app is built from changes.
+on:
+  push:
+    branches: [ "main", "ios" ]
+    paths:
+      - "ios/**"
+      - "index.html"
+      - "script.js"
+      - "styles.css"
+      - "content.js"
+      - "privacy.html"
+      - "manifest.json"
+      - "sw.js"
+      - "assets/**"
+      - "build.py"
+      - "sync_assets.py"
+      - ".github/workflows/ios.yml"
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - "ios/**"
+      - "index.html"
+      - "script.js"
+      - "styles.css"
+      - "content.js"
+      - "privacy.html"
+      - "assets/**"
+      - "build.py"
+      - ".github/workflows/ios.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  ios:
+    name: iOS Build & Simulator Test
+    runs-on: macos-15
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v7
+
+      - name: Toolchain
+        run: |
+          echo "::notice title=Toolchain::$(xcodebuild -version | tr '\n' ' ')on macOS $(sw_vers -productVersion)"
+          brew install xcodegen
+
+      - name: Generate the Xcode Project
+        working-directory: ios
+        run: xcodegen generate
+
+      - name: Pick iPhone and iPad Simulators
+        id: sims
+        run: python3 ios/ci/pick_simulators.py | tee -a "$GITHUB_OUTPUT"
+
+      # Simulator builds need no signing identity.
+      - name: Build and Run UI Tests on iPhone and iPad
+        working-directory: ios
+        run: |
+          set -o pipefail
+          echo "::notice title=Simulators::${{ steps.sims.outputs.iphone_name }} and ${{ steps.sims.outputs.ipad_name }}"
+          xcodebuild test \
+            -project AlphabetSafari.xcodeproj -scheme AlphabetSafari \
+            -destination "id=${{ steps.sims.outputs.iphone }}" \
+            -destination "id=${{ steps.sims.outputs.ipad }}" \
+            -resultBundlePath "$RUNNER_TEMP/AlphabetSafari.xcresult" \
+            CODE_SIGNING_ALLOWED=NO 2>&1 | tee "$RUNNER_TEMP/xcodebuild.log"
+
+      # Reading job logs needs repository admin rights, so the self-test reports, the first
+      # errors and xcodebuild's verdicts are also posted as annotations on the run.
+      - name: Report Results
+        if: always()
+        run: |
+          log="$RUNNER_TEMP/xcodebuild.log"
+          [ -f "$log" ] || exit 0
+          esc() { sed -e 's/%/%25/g' | cut -c1-900; }
+          grep -h "SELFTEST \[" "$log" | sort -u | esc | while IFS= read -r line; do echo "::notice title=iOS self-test::$line"; done
+          grep -hE "error:|: error |failed - " "$log" | grep -v "^Testing failed" | sort -u | head -12 | esc \
+            | while IFS= read -r line; do echo "::error title=iOS::$line"; done
+          grep -hE "^\*\* [A-Z ]+ (SUCCEEDED|FAILED)" "$log" | esc | while IFS= read -r line; do echo "::notice title=xcodebuild::$line"; done
+
+      - name: Upload Test Results (with screenshots)
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: AlphabetSafari-iOS-Test-Results
+          path: ${{ runner.temp }}/AlphabetSafari.xcresult
+          if-no-files-found: ignore
+          retention-days: 14

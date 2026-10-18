@@ -32,3 +32,4 @@ keystore.properties
 device-test-output/
 fastlane/
 docs/
+ios/

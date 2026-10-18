@@ -2,7 +2,7 @@ name: Alphabet Safari Unified Multi-Target CI/CD
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "ios" ]
   pull_request:
     branches: [ "main" ]
   workflow_dispatch:

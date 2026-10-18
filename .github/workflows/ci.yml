@@ -216,16 +216,45 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
-      # pixel_6 has a camera cutout, which the cutout check needs.
+      # pixel_6 has a camera cutout, which the cutout check needs. SwiftShader through ANGLE and
+      # 4 GB of RAM: with the default software renderer the emulator crashed mid-run now and then.
       - name: Run Device Test on an API 36 Emulator
+        id: device
+        continue-on-error: true
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 36
           target: google_apis
           arch: x86_64
           profile: pixel_6
+          ram-size: 4096M
           disable-animations: true
+          emulator-options: -no-window -gpu swangle_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none
           script: node tests/android-device.mjs android/app/build/outputs/apk/debug/app-debug.apk
+
+      # Only when the emulator itself disappeared (the test leaves EMULATOR_LOST), not when the
+      # app failed: boot a fresh emulator and run once more.
+      - name: Run Device Test Again on a Fresh Emulator
+        id: device-retry
+        if: steps.device.outcome == 'failure' && hashFiles('device-test-output/EMULATOR_LOST') != ''
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 36
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          ram-size: 4096M
+          disable-animations: true
+          emulator-options: -no-window -gpu swangle_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none
+          script: |
+            rm -f device-test-output/EMULATOR_LOST
+            node tests/android-device.mjs android/app/build/outputs/apk/debug/app-debug.apk
+
+      - name: Device Test Result
+        if: steps.device.outcome == 'failure' && steps.device-retry.outcome != 'success'
+        run: |
+          echo "::error title=Device test::the Android device test failed; see the annotations above"
+          exit 1
 
       - name: Upload Device Test Screenshots and Log
         if: always()

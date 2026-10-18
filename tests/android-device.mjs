@@ -28,7 +28,13 @@ const adb = (...args) => {
   try {
     return execFileSync(ADB, args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
   } catch (err) {
-    const said = String(err.stderr || err.stdout || '').trim().split('\n').slice(-2).join(' / ');
+    const said = String(err.stderr || err.stdout || '').trim().split(/\r?\n/).slice(-2).join(' / ');
+    // The emulator itself went away (CI's software-rendered emulators sometimes crash): leave a
+    // marker so CI can boot a fresh one and run again, instead of reporting it as an app failure.
+    if (/device .* not found|no devices|device offline/.test(said)) {
+      fs.mkdirSync(OUT, { recursive: true });
+      fs.writeFileSync(path.join(OUT, 'EMULATOR_LOST'), said);
+    }
     throw new Error(`adb ${args.join(' ')} failed${said ? `: ${said}` : ''}`, { cause: err });
   }
 };

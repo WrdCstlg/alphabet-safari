@@ -2,6 +2,8 @@
 //  - App code: network-first, so updates arrive immediately, with an offline fallback.
 //  - Recorded phonics clips and images: cache-first (they only change with a new CACHE_NAME).
 //  - api/ (desktop text-to-speech) is never cached here.
+// `build.py --site` (the GitHub Pages deploy) replaces this name with a hash of the files it
+// publishes, so any change to a clip or image reaches returning visitors without a manual bump.
 const CACHE_NAME = 'alphabet-safari-v8';
 const ASSETS_TO_CACHE = [
   './',
@@ -44,11 +46,46 @@ function isCacheFirst(url) {
 }
 
 function putInCache(request, response) {
-  if (response && response.ok && response.type !== 'opaque') {
+  // Only whole (200) responses: the Cache API refuses partial (206) ones.
+  if (response && response.status === 200 && response.type !== 'opaque') {
     const copy = response.clone();
     caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
   }
   return response;
+}
+
+// Audio elements ask for clips in byte ranges ("Range: bytes=0-"), and the server answers with
+// partial 206 responses, which can't be cached: clips never worked offline. So keep the whole
+// clip (fetched without a range) and answer each range from it; Safari only plays media that
+// comes back as proper ranges.
+async function clipResponse(request) {
+  let whole = await caches.match(request.url);
+  if (!whole) {
+    const response = await fetch(request.url);
+    if (response.status !== 200) return response;
+    await caches.open(CACHE_NAME).then((cache) => cache.put(request.url, response.clone()));
+    whole = response;
+  }
+  const range = /^bytes=(\d*)-(\d*)$/.exec(request.headers.get('range') || '');
+  if (!range) return whole;
+  const body = await whole.blob();
+  const size = body.size;
+  let start = range[1] === '' ? size - Number(range[2]) : Number(range[1]);
+  let end = range[1] !== '' && range[2] !== '' ? Number(range[2]) : size - 1;
+  start = Math.max(0, start);
+  end = Math.min(end, size - 1);
+  if (start > end) {
+    return new Response(null, { status: 416, headers: { 'Content-Range': `bytes */${size}` } });
+  }
+  return new Response(body.slice(start, end + 1), {
+    status: 206,
+    headers: {
+      'Content-Type': whole.headers.get('Content-Type') || 'audio/mpeg',
+      'Content-Range': `bytes ${start}-${end}/${size}`,
+      'Content-Length': String(end - start + 1),
+      'Accept-Ranges': 'bytes'
+    }
+  });
 }
 
 self.addEventListener('fetch', (event) => {
@@ -57,6 +94,11 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(request.url);
   if (url.origin === self.location.origin && url.pathname.includes('/api/')) return;
+
+  if (url.origin === self.location.origin && url.pathname.includes('/assets/audio/')) {
+    event.respondWith(clipResponse(request));
+    return;
+  }
 
   if (isCacheFirst(url)) {
     event.respondWith(

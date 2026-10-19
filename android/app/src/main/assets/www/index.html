@@ -541,11 +541,11 @@
           <div class="modal-body">
             <div class="setting-row">
               <div class="setting-info">
-                <span class="setting-name"><span class="eng-text">Pronunciation Speed</span><span class="ar-text">سرعة النطق</span></span>
+                <span class="setting-name" id="label-voice-speed"><span class="eng-text">Pronunciation Speed</span><span class="ar-text">سرعة النطق</span></span>
                 <span class="setting-desc"><span class="eng-text">Pacing for speech synthesis</span><span class="ar-text">سرعة الكلام المنطوق</span></span>
               </div>
               <!-- Option text follows the language in applyLanguageChrome(). -->
-              <select id="setting-voice-speed" class="setting-select">
+              <select id="setting-voice-speed" class="setting-select" aria-labelledby="label-voice-speed">
                 <option value="0.75" selected>Slow & Clear (Toddlers)</option>
                 <option value="0.95">Natural (Preschoolers)</option>
                 <option value="1.15">Quick</option>
@@ -554,33 +554,33 @@
 
             <div class="setting-row">
               <div class="setting-info">
-                <span class="setting-name"><span class="eng-text">Arabic Harakat (Vowels)</span><span class="ar-text">الحركات (التشكيل)</span></span>
+                <span class="setting-name" id="label-arabic-vowels"><span class="eng-text">Arabic Harakat (Vowels)</span><span class="ar-text">الحركات (التشكيل)</span></span>
                 <span class="setting-desc"><span class="eng-text">Show Fat-ha, Damma, Kasra buttons</span><span class="ar-text">إظهار أزرار الفتحة والضمة والكسرة</span></span>
               </div>
               <label class="switch-toggle">
-                <input type="checkbox" id="setting-arabic-vowels" checked>
+                <input type="checkbox" id="setting-arabic-vowels" checked aria-labelledby="label-arabic-vowels">
                 <span class="slider round"></span>
               </label>
             </div>
 
             <div class="setting-row">
               <div class="setting-info">
-                <span class="setting-name"><span class="eng-text">English Transliteration</span><span class="ar-text">النطق بالحروف الإنجليزية</span></span>
+                <span class="setting-name" id="label-translit"><span class="eng-text">English Transliteration</span><span class="ar-text">النطق بالحروف الإنجليزية</span></span>
                 <span class="setting-desc"><span class="eng-text">Show phonetic names (e.g. Alif, Baa)</span><span class="ar-text">إظهار أسماء الحروف بالإنجليزية (مثل Alif و Baa)</span></span>
               </div>
               <label class="switch-toggle">
-                <input type="checkbox" id="setting-translit" checked>
+                <input type="checkbox" id="setting-translit" checked aria-labelledby="label-translit">
                 <span class="slider round"></span>
               </label>
             </div>
 
             <div class="setting-row">
               <div class="setting-info">
-                <span class="setting-name"><span class="eng-text">Sound Effects & Chimes</span><span class="ar-text">المؤثرات الصوتية والنغمات</span></span>
+                <span class="setting-name" id="label-sound-effects"><span class="eng-text">Sound Effects & Chimes</span><span class="ar-text">المؤثرات الصوتية والنغمات</span></span>
                 <span class="setting-desc"><span class="eng-text">Play marimba notes and cheers</span><span class="ar-text">تشغيل نغمات الماريمبا والتشجيع</span></span>
               </div>
               <label class="switch-toggle">
-                <input type="checkbox" id="setting-sound-effects" checked>
+                <input type="checkbox" id="setting-sound-effects" checked aria-labelledby="label-sound-effects">
                 <span class="slider round"></span>
               </label>
             </div>
@@ -672,10 +672,10 @@
           <!-- Gender Cards Selection -->
           <div class="gender-cards-grid">
             <!-- Little Boy Card -->
-            <div class="gender-card-option" id="card-gender-boy" data-gender="boy" role="button" tabindex="0">
+            <div class="gender-card-option" id="card-gender-boy" data-gender="boy">
               <div class="gender-card-badge">👦</div>
               <div class="gender-card-content">
-                <h3 class="gender-card-title"><span class="eng-text">Little Boy</span><span class="ar-text">البطل الصغير</span></h3>
+                <h3 class="gender-card-title"><button type="button" class="gender-card-select" aria-pressed="false"><span class="eng-text">Little Boy</span><span class="ar-text">البطل الصغير</span></button></h3>
                 <p class="gender-card-sub"><span class="eng-text">Brave Explorer • Blue & Gold Theme</span><span class="ar-text">بطل شجاع • أصوات مبهجة</span></p>
                 <div class="gender-voice-sample">
                   <button type="button" class="btn-voice-preview" data-preview="boy">🔊 <span class="eng-text">Hear Voice</span><span class="ar-text">اسمع الصوت</span></button>
@@ -685,10 +685,10 @@
             </div>
 
             <!-- Little Girl Card -->
-            <div class="gender-card-option" id="card-gender-girl" data-gender="girl" role="button" tabindex="0">
+            <div class="gender-card-option" id="card-gender-girl" data-gender="girl">
               <div class="gender-card-badge">👧</div>
               <div class="gender-card-content">
-                <h3 class="gender-card-title"><span class="eng-text">Little Girl</span><span class="ar-text">الأميرة الصغيرة</span></h3>
+                <h3 class="gender-card-title"><button type="button" class="gender-card-select" aria-pressed="false"><span class="eng-text">Little Girl</span><span class="ar-text">الأميرة الصغيرة</span></button></h3>
                 <p class="gender-card-sub"><span class="eng-text">Sweet Princess • Pink & Magic Theme</span><span class="ar-text">أميرة حلوة • أصوات رقيقة</span></p>
                 <div class="gender-voice-sample">
                   <button type="button" class="btn-voice-preview" data-preview="girl">🔊 <span class="eng-text">Hear Voice</span><span class="ar-text">اسمع الصوت</span></button>

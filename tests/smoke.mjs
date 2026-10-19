@@ -7,7 +7,10 @@ import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createRequire } from 'node:module';
 import { chromium, webkit } from 'playwright';
+
+const AXE = createRequire(import.meta.url).resolve('axe-core/axe.min.js');
 
 const ROOT = path.resolve(process.env.SMOKE_ROOT || path.join(path.dirname(fileURLToPath(import.meta.url)), '..'));
 const MIME = {
@@ -24,11 +27,19 @@ function serve() {
       res.writeHead(404).end();
       return;
     }
-    // Content-Length as real hosts send it: without it, WebKit on Linux can't tell an MP3's duration.
-    res.writeHead(200, {
-      'Content-Type': MIME[path.extname(file)] || 'application/octet-stream',
-      'Content-Length': fs.statSync(file).size
-    });
+    // As real hosts do: Content-Length (without it, WebKit on Linux can't tell an MP3's duration)
+    // and byte ranges, which audio elements ask for (GitHub Pages answers them with 206).
+    const size = fs.statSync(file).size;
+    const type = MIME[path.extname(file)] || 'application/octet-stream';
+    const range = /^bytes=(\d*)-(\d*)$/.exec(req.headers.range || '');
+    if (range && (range[1] !== '' || range[2] !== '')) {
+      const start = range[1] === '' ? Math.max(0, size - Number(range[2])) : Number(range[1]);
+      const end = range[1] !== '' && range[2] !== '' ? Math.min(Number(range[2]), size - 1) : size - 1;
+      res.writeHead(206, { 'Content-Type': type, 'Content-Length': end - start + 1, 'Content-Range': `bytes ${start}-${end}/${size}`, 'Accept-Ranges': 'bytes' });
+      fs.createReadStream(file, { start, end }).pipe(res);
+      return;
+    }
+    res.writeHead(200, { 'Content-Type': type, 'Content-Length': size, 'Accept-Ranges': 'bytes' });
     fs.createReadStream(file).pipe(res);
   });
   return new Promise(resolve => server.listen(0, '127.0.0.1', () => resolve(server)));
@@ -554,6 +565,40 @@ await check('phone (375px): header buttons fit on screen, trace strip keeps the 
   }
 });
 
+// axe-core, the usual WCAG checker, over every screen in both languages: no critical or serious
+// problems (unlabelled controls, low contrast, controls nested in controls).
+await check('accessibility: no critical or serious axe-core findings on any screen', async () => {
+  const problems = [];
+  async function scan(label, lang, setup) {
+    const ctx = await browser.newContext({ viewport: { width: 412, height: 900 }, serviceWorkers: 'block' });
+    await ctx.addInitScript(l => localStorage.setItem('alpha_lang', l), lang);
+    const p = await ctx.newPage();
+    try {
+      await p.goto(`${base}/index.html`);
+      await p.waitForSelector('#letters-grid .grid-letter-card');
+      if (setup) await setup(p);
+      await p.waitForTimeout(400);
+      await p.addScriptTag({ path: AXE });
+      const found = await p.evaluate(async () => (await window.axe.run(document, { resultTypes: ['violations'] })).violations
+        .filter(v => v.impact === 'critical' || v.impact === 'serious')
+        .map(v => `${v.id} (${v.nodes.slice(0, 2).map(n => n.target.join(' ')).join(', ')})`));
+      problems.push(...found.map(f => `${label}: ${f}`));
+    } finally {
+      await ctx.close();
+    }
+  }
+  const mode = m => async p => p.click(`.mode-tab[data-mode="${m}"]`);
+  for (const lang of ['en', 'ar']) await scan(`explore ${lang}`, lang);
+  for (const m of ['trace', 'balloon', 'match', 'memory', 'stickers']) await scan(m, 'en', mode(m));
+  await scan('parents corner', 'en', async p => {
+    await p.click('#btn-parents');
+    const [a, b] = (await p.locator('#gate-target-num').textContent()).split('+').map(n => parseInt(n, 10));
+    await p.locator('#gate-options .gate-btn', { hasText: new RegExp(`^${a + b}$`) }).click();
+  });
+  await scan('profile', 'en', async p => p.click('#btn-gender'));
+  assert(problems.length === 0, problems.slice(0, 6).join('; '));
+});
+
 // The iOS app injects window.NativeBridge (ios/AlphabetSafari/WebBridge.swift) with the same
 // calls as Android's AndroidBridge. Stand in for it here, on an iPhone-sized touch screen.
 const IPHONE_UA = 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148';
@@ -609,18 +654,37 @@ await check('iPhone Safari: the install button explains Add to Home Screen', asy
   }
 });
 
-await check('works offline once the service worker has cached it', async () => {
+// Offline means the letter sounds too: audio elements fetch clips in byte ranges (206), which the
+// service worker must turn into a cached copy of the whole clip.
+await check('works offline once the service worker has cached it, letter sounds included', async () => {
   const swContext = await browser.newContext({ viewport: { width: 1280, height: 860 } });
   const swPage = await swContext.newPage();
-  await swPage.goto(`${base}/index.html`);
-  await swPage.evaluate(() => navigator.serviceWorker.ready);
-  await swPage.reload(); // now controlled by the service worker
-  await swPage.waitForSelector('#letters-grid .grid-letter-card');
-  await swContext.setOffline(true);
-  await swPage.reload();
-  await swPage.waitForSelector('#letters-grid .grid-letter-card', { timeout: 10000 });
-  assert(await swPage.locator('#letters-grid .grid-letter-card').count() > 0, 'no letters offline');
-  await swContext.close();
+  const loadClip = () => swPage.evaluate(url => new Promise((resolve, reject) => {
+    const audio = new Audio(url);
+    audio.oncanplaythrough = () => resolve(audio.duration);
+    audio.onerror = () => reject(new Error(`clip failed to load (error ${audio.error && audio.error.code})`));
+    setTimeout(() => reject(new Error('clip did not load in 10s')), 10000);
+    audio.load();
+  }), 'assets/audio/en/boy/B.mp3');
+  try {
+    await swPage.goto(`${base}/index.html`);
+    await swPage.evaluate(() => navigator.serviceWorker.ready);
+    await swPage.reload(); // now controlled by the service worker
+    await swPage.waitForSelector('#letters-grid .grid-letter-card');
+    await loadClip(); // heard once online
+    if (!isWebKit) {
+      // So the offline clip can only come from the service worker, not the browser's HTTP cache.
+      await (await swContext.newCDPSession(swPage)).send('Network.clearBrowserCache');
+    }
+    await swContext.setOffline(true);
+    await swPage.reload();
+    await swPage.waitForSelector('#letters-grid .grid-letter-card', { timeout: 10000 });
+    assert(await swPage.locator('#letters-grid .grid-letter-card').count() > 0, 'no letters offline');
+    const duration = await loadClip();
+    assert(duration > 0.2 || (isWebKit && duration === 0), `offline clip duration ${duration}`);
+  } finally {
+    await swContext.close();
+  }
 });
 
 await browser.close();

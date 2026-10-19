@@ -361,6 +361,14 @@
   // GENDER CONFIGURATION & COMPANION CONTROLLER
   // ==========================================================================
 
+  // A profile card is chosen with its title button (the card also takes taps anywhere); the
+  // button's pressed state tells screen readers which one is selected.
+  function markGenderCard(card, selected) {
+    card.classList.toggle('selected', selected);
+    const button = card.querySelector('.gender-card-select');
+    if (button) button.setAttribute('aria-pressed', String(selected));
+  }
+
   // Builds <span class="eng-text">…</span><span class="ar-text">…</span> without innerHTML,
   // because the text can include the child's typed name.
   function setBilingualText(el, en, ar) {
@@ -404,9 +412,7 @@
     }
 
     // Modal selection highlight
-    document.querySelectorAll('.gender-card-option').forEach(card => {
-      card.classList.toggle('selected', card.dataset.gender === state.gender);
-    });
+    document.querySelectorAll('.gender-card-option').forEach(card => markGenderCard(card, card.dataset.gender === state.gender));
 
     // Modal avatar highlight
     document.querySelectorAll('.avatar-choice-btn').forEach(btn => {
@@ -611,6 +617,10 @@
     const isBoy = gender === 'boy';
 
     // localOnly: voices that synthesize on the device (network voices would upload the text).
+    // Android browsers may mark every voice as on-device, so there a phrase with the child's
+    // name gets no browser voice at all and is said without the name. (The Android app speaks
+    // through its own bridge, which checks each voice.)
+    if (localOnly && PlatformBridge.isAndroid && !nativeBridge()) return null;
     const langVoices = voices.filter(v => {
       if (localOnly && !v.localService) return false;
       if (isArabic) return v.lang.toLowerCase().startsWith('ar');
@@ -976,11 +986,13 @@
     list.forEach((item, idx) => {
       const card = document.createElement('button');
       card.className = `grid-letter-card ${idx === state.currentIndex ? 'active' : ''}`;
-      card.setAttribute('aria-label', `${item.char}, ${item.word}`);
+      const shown = state.lang === 'en' && state.caseMode !== 'upper' ? `${item.char}${item.lower}` : item.char;
+      // The name starts with the letters as shown ("Aa, Apple"), so voice control can use them.
+      card.setAttribute('aria-label', `${shown}, ${item.word}`);
 
       const charSpan = document.createElement('span');
       charSpan.className = 'grid-char';
-      charSpan.textContent = state.lang === 'en' && state.caseMode !== 'upper' ? `${item.char}${item.lower}` : item.char;
+      charSpan.textContent = shown;
 
       const emojiSpan = document.createElement('span');
       emojiSpan.className = 'grid-emoji';
@@ -1684,8 +1696,10 @@
       cardEl.setAttribute('tabindex', '0');
       cardEl.setAttribute('aria-label', tr(`Memory card ${idx + 1}`, `بطاقة ذاكرة ${idx + 1}`));
 
+      // The card's aria-label says what is face up; the faces are hidden from assistive tech,
+      // or a face-down card's answer could be read out.
       cardEl.innerHTML = `
-        <div class="memory-card-inner">
+        <div class="memory-card-inner" aria-hidden="true">
           <div class="memory-back">❓</div>
           <div class="memory-front">
             ${card.type === 'letter'
@@ -2009,8 +2023,7 @@
       card.addEventListener('click', (e) => {
         if (e.target.closest('.btn-voice-preview')) return;
         const chosen = card.dataset.gender;
-        document.querySelectorAll('.gender-card-option').forEach(c => c.classList.remove('selected'));
-        card.classList.add('selected');
+        document.querySelectorAll('.gender-card-option').forEach(c => markGenderCard(c, c === card));
         // Suggest the matching default avatar; nothing is applied until Save.
         const defaultAv = chosen === 'boy' ? '👦' : '👧';
         document.querySelectorAll('.avatar-choice-btn').forEach(btn => {
@@ -2318,7 +2331,8 @@
     if (btnPrivacy) {
       btnPrivacy.addEventListener('click', () => {
         const frame = document.getElementById('privacy-frame');
-        if (frame) frame.src = `privacy.html#${state.lang}`;
+        // The iPhone/iPad app shows only its own parts of the policy (see privacy.html).
+        if (frame) frame.src = `privacy.html${PlatformBridge.isIOSApp ? '?platform=ios' : ''}#${state.lang}`;
         openModal('modal-privacy');
       });
     }

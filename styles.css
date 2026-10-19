@@ -54,6 +54,10 @@
   -webkit-tap-highlight-color: transparent;
   user-select: none;
   -webkit-user-select: none;
+  /* No long-press menu on images (iOS offers Share and Save, a way out of the app with no
+     parental gate) and no dragging them out. */
+  -webkit-touch-callout: none;
+  -webkit-user-drag: none;
 }
 
 html, body {
@@ -812,7 +816,7 @@ button, input, select, textarea {
 
 .grid-tool-btn {
   background: #EDE9FE;
-  color: var(--grape-purple);
+  color: #6247D8; /* 5.2:1 on the lavender; the brand purple was 4.2:1 */
   border: 2px solid #C4B5FD;
   padding: 6px 14px;
   font-family: inherit;
@@ -1464,6 +1468,16 @@ button, input, select, textarea {
   background: var(--pure-white);
   border: 3px solid #E0E7FF;
   transform: rotateY(180deg);
+  /* A face-down card's letter is turned away but still rendered: hide it, so it is neither
+     "visible text" nor readable. It hides only after the 0.4s turn back, and shows at once. */
+  visibility: hidden;
+  transition: visibility 0s linear 0.4s;
+}
+
+.memory-card.flipped .memory-front,
+.memory-card.matched .memory-front {
+  visibility: visible;
+  transition-delay: 0s;
 }
 
 .memory-val-letter {
@@ -2376,7 +2390,7 @@ body[data-gender="girl"] .companion-tag {
 
 .gender-card-sub {
   font-size: 12px;
-  color: #64748B;
+  color: #475569; /* 6.6:1 on the card colours (#64748B was below 4.5:1) */
   margin-bottom: 12px;
   line-height: 1.3;
 }
@@ -2691,4 +2705,16 @@ body {
     animation-name: floatUpSky;
     animation-duration: 14s;
   }
+}
+
+/* Profile cards: the title is the selection button (the card itself also takes taps). It looks
+   like the title it replaces, with a visible focus ring for keyboards and switch access. */
+.gender-card-select {
+  all: unset;
+  cursor: pointer;
+}
+.gender-card-select:focus-visible {
+  outline: 3px solid #6366F1;
+  outline-offset: 3px;
+  border-radius: 6px;
 }

@@ -169,19 +169,40 @@ await check('recorded clips and bundled fonts load from inside the app', async (
   assert(redPixels > 500, `the drawn pomegranate is not in colour in the WebView (${redPixels} red pixels)`);
 });
 
+// 'spoken', 'no-voice' (the bridge reported failure) or 'timeout'.
+const speakThroughBridge = (p) => p.evaluate(() => new Promise(resolve => {
+  const original = window.AlphabetSafariSpeechDone;
+  window.AlphabetSafariSpeechDone = (id, ok) => {
+    if (id !== 'device-test') return original && original(id, ok);
+    window.AlphabetSafariSpeechDone = original;
+    resolve(ok ? 'spoken' : 'no-voice');
+  };
+  window.AndroidBridge.speak('Hello', 'en-US', 1, 'device-test', false);
+  setTimeout(() => resolve('timeout'), 15000);
+}));
+const TTS_ENGINE = 'com.google.android.tts';
+const hasTtsEngine = () => shell('cmd package query-services -a android.intent.action.TTS_SERVICE').includes(TTS_ENGINE);
+
 await check('speaking through the Android TextToSpeech bridge reports back to the page', async () => {
-  const outcome = await page.evaluate(() => new Promise(resolve => {
-    const original = window.AlphabetSafariSpeechDone;
-    window.AlphabetSafariSpeechDone = (id, ok) => {
-      if (id !== 'device-test') return original && original(id, ok);
-      window.AlphabetSafariSpeechDone = original;
-      resolve(ok ? 'spoken' : 'no-voice');
-    };
-    window.AndroidBridge.speak('Hello', 'en-US', 1, 'device-test', false);
-    setTimeout(() => resolve('timeout'), 15000);
-  }));
-  // An emulator image may have no speech engine ('no-voice'); the round trip is what matters.
-  assert(outcome !== 'timeout', 'no completion callback from the native speech bridge');
+  const outcome = await speakThroughBridge(page);
+  // With a speech engine installed (the CI image has Google's), the phrase must really be spoken.
+  if (hasTtsEngine()) assert(outcome === 'spoken', `speech with ${TTS_ENGINE} installed: ${outcome}`);
+  else assert(outcome !== 'timeout', 'no completion callback from the native speech bridge');
+});
+
+// Some devices have no speech engine, or it's switched off. The app used to crash on launch
+// then (TextToSpeech reports failure inside its own constructor); now speech just says so.
+await check('with no speech engine the app still starts, and speech reports no voice', async () => {
+  if (!hasTtsEngine()) return console.log('        (skipped: no speech engine to switch off)');
+  shell(`pm disable-user --user 0 ${TTS_ENGINE}`);
+  try {
+    page = await launch();
+    assert(await page.locator('#letters-grid .grid-letter-card').count() === 26, 'the app did not load without a speech engine');
+    assert(await speakThroughBridge(page) === 'no-voice', 'speech without an engine did not report failure');
+  } finally {
+    shell(`pm enable ${TTS_ENGINE}`);
+  }
+  page = await launch();
 });
 
 await check('the privacy policy opens inside the app, behind the parent gate', async () => {
@@ -235,6 +256,8 @@ await check('rotating and switching dark mode keep the page running (no reload)'
 await check('display cutout: the page stays clear of it in portrait and landscape', async () => {
   const cutout = shell('dumpsys display').match(/DisplayCutout\{insets=Rect\((\d+), (\d+) - (\d+), (\d+)\)/);
   const cutoutSize = cutout ? Math.max(...cutout.slice(1).map(Number)) : 0;
+  // CI picks the pixel_6 profile for its cutout, so there a missing cutout means this check broke.
+  if (cutoutSize === 0 && process.env.GITHUB_ACTIONS) throw new Error('no display cutout found: the pattern no longer matches dumpsys');
   if (cutoutSize === 0) return console.log('        (skipped: this device has no display cutout)');
   const [w, h] = shell('wm size').match(/(\d+)x(\d+)/).slice(1).map(Number);
   const [longSide, shortSide] = [Math.max(w, h), Math.min(w, h)];
@@ -256,6 +279,27 @@ await check('display cutout: the page stays clear of it in portrait and landscap
   } finally {
     tilt(false);
   }
+});
+
+// In the edge-to-edge window the system doesn't resize the page for the keyboard; the app pads
+// for it, so the field being typed in stays visible.
+await check('the on-screen keyboard leaves the child-name field visible', async () => {
+  await page.click('#btn-gender');
+  await page.click('#input-child-name');
+  const shown = await waitFor('the keyboard', () => /mInputShown=true/.test(shell('dumpsys input_method')), 8000).catch(() => false);
+  if (!shown) {
+    await page.keyboard.press('Escape');
+    return console.log('        (skipped: no on-screen keyboard on this device)');
+  }
+  await sleep(1200);
+  const field = await page.evaluate(() => {
+    const r = document.getElementById('input-child-name').getBoundingClientRect();
+    return { bottom: Math.round(r.bottom), viewport: window.innerHeight };
+  });
+  shell('input keyevent KEYCODE_BACK'); // closes the keyboard
+  await sleep(500);
+  await page.keyboard.press('Escape');
+  assert(field.bottom <= field.viewport, `the field ends at ${field.bottom}px below a ${field.viewport}px page: under the keyboard`);
 });
 
 await check('no crash and no uncaught script errors in the device log', async () => {

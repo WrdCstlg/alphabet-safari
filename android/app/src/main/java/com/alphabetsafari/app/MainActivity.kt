@@ -36,13 +36,18 @@ import java.util.Locale
  * Completion is reported back to the page via window.AlphabetSafariSpeechDone(id, ok).
  */
 class NativeSpeech(context: Context, private val webView: WebView) : TextToSpeech.OnInitListener {
-    private val tts = TextToSpeech(context.applicationContext, this)
-
+    // Declared before `tts`: with no speech engine installed or enabled, the TextToSpeech
+    // constructor calls onInit(ERROR) before it returns, while `tts` is still unassigned.
     @Volatile
     private var ready = false
 
-    override fun onInit(status: Int) {
-        ready = status == TextToSpeech.SUCCESS
+    /** Set while the app is in the background: a phrase queued by a page timer then is refused. */
+    @Volatile
+    var paused = false
+
+    private val tts = TextToSpeech(context.applicationContext, this)
+
+    init {
         tts.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
             override fun onStart(utteranceId: String?) {}
             override fun onDone(utteranceId: String?) = notifyDone(utteranceId, true)
@@ -53,13 +58,17 @@ class NativeSpeech(context: Context, private val webView: WebView) : TextToSpeec
         })
     }
 
+    override fun onInit(status: Int) {
+        ready = status == TextToSpeech.SUCCESS
+    }
+
     /**
      * [localOnly] is set for phrases containing the child's name: they may only be spoken by a
      * voice that runs on the device. If there is none, report failure and let the page fall
      * back to the same phrase without the name, rather than sending the name to a cloud voice.
      */
     fun speak(text: String, langTag: String, rate: Float, utteranceId: String, localOnly: Boolean) {
-        if (!ready) {
+        if (!ready || paused) {
             notifyDone(utteranceId, false)
             return
         }
@@ -70,28 +79,36 @@ class NativeSpeech(context: Context, private val webView: WebView) : TextToSpeec
             return
         }
         val onDevice = bestOnDeviceVoice(locale)
-        if (onDevice != null) {
-            tts.voice = onDevice
-        } else if (localOnly) {
+        val onDeviceVoiceSet = onDevice != null && tts.setVoice(onDevice) == TextToSpeech.SUCCESS
+        if (localOnly && !onDeviceVoiceSet) {
             notifyDone(utteranceId, false)
             return
         }
         tts.setSpeechRate(rate.coerceIn(0.5f, 1.5f))
-        tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, utteranceId)
+        // Without a callback the page would wait for this phrase forever.
+        if (tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, utteranceId) != TextToSpeech.SUCCESS) {
+            notifyDone(utteranceId, false)
+        }
     }
 
     fun stop() {
         if (ready) tts.stop()
     }
 
+    /**
+     * An installed voice for [locale] that runs on the device: the requested country first (an
+     * en-US phrase shouldn't come out British), and among those the engine's own choice when it
+     * qualifies, otherwise the best quality.
+     */
     private fun bestOnDeviceVoice(locale: Locale): Voice? = try {
-        tts.voices
-            ?.filter { v ->
-                v.locale.language == locale.language &&
-                    !v.isNetworkConnectionRequired &&
-                    TextToSpeech.Engine.KEY_FEATURE_NOT_INSTALLED !in v.features
-            }
-            ?.maxByOrNull { it.quality }
+        val onDevice = tts.voices.orEmpty().filter { v ->
+            v.locale.language == locale.language &&
+                !v.isNetworkConnectionRequired &&
+                TextToSpeech.Engine.KEY_FEATURE_NOT_INSTALLED !in v.features
+        }
+        val candidates = onDevice.filter { it.locale.country.equals(locale.country, ignoreCase = true) }.ifEmpty { onDevice }
+        val enginePick = tts.voice
+        if (enginePick != null && enginePick in candidates) enginePick else candidates.maxByOrNull { it.quality }
     } catch (_: Exception) {
         null
     }
@@ -126,6 +143,10 @@ class AndroidBridge(private val context: Context, private val speech: NativeSpee
                 vibrator?.vibrate(
                     VibrationEffect.createOneShot(durationMs.coerceIn(10, 500), VibrationEffect.DEFAULT_AMPLITUDE)
                 )
+            } else {
+                // Android 7.x (API 24-25), within minSdk: the older call.
+                @Suppress("DEPRECATION")
+                (context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator)?.vibrate(durationMs.coerceIn(10, 500))
             }
         } catch (_: Exception) {
             // Haptics optional
@@ -195,14 +216,18 @@ class MainActivity : AppCompatActivity() {
 
         // Immersive mode lets the window reach under a camera cutout (always, from targetSdk 35),
         // which hid the header buttons in landscape. Keep the page clear of it; the strip
-        // behind the cutout gets the page's top background colour.
+        // behind the cutout gets the page's top background colour. Also clear of the system
+        // bars when they can't be hidden (split screen, desktop windowing; hidden bars take no
+        // room) and of the on-screen keyboard, which would otherwise cover the name field:
+        // in this edge-to-edge window the system doesn't resize the page for it.
         val root = FrameLayout(this).apply {
             setBackgroundColor(ContextCompat.getColor(this@MainActivity, R.color.page_background))
             addView(webView, FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
         }
         ViewCompat.setOnApplyWindowInsetsListener(root) { view, insets ->
-            val cutout = insets.getInsets(WindowInsetsCompat.Type.displayCutout())
-            view.setPadding(cutout.left, cutout.top, cutout.right, cutout.bottom)
+            val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
+            val keyboard = insets.getInsets(WindowInsetsCompat.Type.ime())
+            view.setPadding(bars.left, bars.top, bars.right, maxOf(bars.bottom, keyboard.bottom))
             WindowInsetsCompat.CONSUMED
         }
         setContentView(root)
@@ -228,14 +253,19 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         webView.onResume()
+        webView.resumeTimers()
+        speech.paused = false
         enableImmersiveMode()
     }
 
     override fun onPause() {
-        // Don't keep talking or playing clips once the app is in the background.
+        // Don't keep talking or playing clips once the app is in the background, including a
+        // prompt a page timer would start a moment later (WebView.onPause doesn't stop timers).
+        speech.paused = true
         speech.stop()
         webView.evaluateJavascript("window.AlphabetSafariPause && window.AlphabetSafariPause()", null)
         webView.onPause()
+        webView.pauseTimers()
         super.onPause()
     }
 

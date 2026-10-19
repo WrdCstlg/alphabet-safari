@@ -67,9 +67,10 @@ py windows/alphabet_safari_app.py
   ```
 - Features:
   - Letters, recorded phonics clips and games work fully offline.
-  - Dynamic phrases (praise, the child's name, game prompts) use Microsoft neural voices via
-    `edge-tts` when online, cached in `%LOCALAPPDATA%\AlphabetSafari\tts_cache`; offline they fall
-    back to the installed Windows voices.
+  - General phrases (praise, game prompts) use Microsoft neural voices via `edge-tts` when online,
+    cached in `%LOCALAPPDATA%\AlphabetSafari\tts_cache`; offline they fall back to the installed
+    Windows voices. Phrases with the child's name are only ever spoken by Windows' own voices on
+    the computer; the name is never sent to the online service.
   - Progress (stars, stickers, settings) is kept between launches: the app uses a fixed local
     port (48127) and persistent WebView2 storage in `%LOCALAPPDATA%\AlphabetSafari\webview`.
   - Multi-resolution mascot icon (`assets/mascot.ico`).
@@ -141,14 +142,17 @@ The repository includes end-to-end continuous integration and deployment workflo
 
 One workflow, **`ci.yml`**, runs on every push and pull request:
 - `Core Web & Asset Parity Validation`: ESLint, syntax checks, manifest validation, Android asset parity, and content/audio validation.
-- `Browser Smoke Test`: Playwright drives every mode in headless Chromium, including privacy (the child's name never reaches cloud TTS), offline use, and the parent gate.
+- `Browser Smoke Test`: Playwright drives every mode in Chromium and in WebKit (Safari's engine), including privacy (the child's name never reaches cloud TTS), offline use with the letter sounds, the parent gate, layouts from phone to desktop, and an axe-core accessibility scan of every screen (no critical or serious findings).
 - `Android Build & Emulator Test`: AGP 9.4 / Gradle 9.7 on JDK 21, targetSdk 36; the Gradle wrapper is checksum-verified. Builds the debug APK and the Play bundle (`.aab`, versionCode = commit count), signed with the upload key when the repository has the signing secrets; runs Android lint, checks the shipped permissions, then drives the app on an API 36 emulator (`tests/android-device.mjs`).
-- `Windows Standalone Desktop Build`: compiles `AlphabetSafari.exe` from `requirements.txt`.
+- `Windows Standalone Desktop Build`: tests the desktop app's local server (`tests/desktop_server.py`: serves the app, refuses other websites, DNS rebinding and path traversal), then compiles `AlphabetSafari.exe` from the pinned `requirements.txt`.
 - `Docker Web Server Live Verification`: pinned nginx image; asserts real content types, the cache policy (app code revalidates, media is cached) and that missing assets are real 404s.
 - `Deploy to GitHub Pages`: runs only on `main` and only after validation, smoke and Docker pass. It publishes `_site/` from `py build.py --site` (the web app only, not the whole repo), including the privacy policy the Play listing links to.
 
-A second workflow, **`release.yml`**, is run by hand: it uploads the signed bundle of a commit
-whose CI passed to a Google Play track. See [docs/google-play/README.md](docs/google-play/README.md).
+**`ios.yml`** builds the iPhone/iPad app on macOS and runs its UI tests on iPhone and iPad
+simulators (see [ios/README.md](ios/README.md)). **`release.yml`** is run by hand from `main`: it
+uploads the signed bundle of a commit whose CI on `main` passed to a Google Play track. See
+[docs/google-play/README.md](docs/google-play/README.md). Dependabot proposes dependency updates
+monthly; third-party actions that handle secrets are pinned to commit SHAs.
 
 ## 🔒 Privacy
 

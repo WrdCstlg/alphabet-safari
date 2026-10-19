@@ -1,0 +1,20 @@
+# Monthly pull requests for outdated dependencies, one per ecosystem. Third-party actions that
+# receive secrets are pinned to commit SHAs (version in a comment); Dependabot keeps those current.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule: { interval: monthly }
+    groups: { actions: { patterns: ["*"] } }
+  - package-ecosystem: npm
+    directory: /
+    schedule: { interval: monthly }
+    groups: { dev-tools: { patterns: ["*"] } }
+  - package-ecosystem: pip
+    directory: /
+    schedule: { interval: monthly }
+    groups: { desktop: { patterns: ["*"] } }
+  - package-ecosystem: gradle
+    directory: /android
+    schedule: { interval: monthly }
+    groups: { android: { patterns: ["*"] } }

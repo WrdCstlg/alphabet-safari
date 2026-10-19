@@ -28,8 +28,11 @@ on:
       - "styles.css"
       - "content.js"
       - "privacy.html"
+      - "manifest.json"
+      - "sw.js"
       - "assets/**"
       - "build.py"
+      - "sync_assets.py"
       - ".github/workflows/ios.yml"
   workflow_dispatch:
 

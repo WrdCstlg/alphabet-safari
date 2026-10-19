@@ -36,6 +36,9 @@ permissions:
 jobs:
   release:
     name: Build and Upload to Google Play
+    # Only what is on main ships: a run started from another branch would also give that
+    # branch's commit count as the versionCode, which main would collide with later.
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
     # Add required reviewers to this environment (Settings > Environments) for a sign-off step.
     environment: google-play
@@ -69,7 +72,8 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          passed=$(gh run list --workflow ci.yml --commit "$GITHUB_SHA" --status success --json databaseId --jq length)
+          # A push to main, not a pull-request run (that one tested a merge commit, not this commit).
+          passed=$(gh run list --workflow ci.yml --commit "$GITHUB_SHA" --branch main --event push --status success --json databaseId --jq length)
           if [ "${passed:-0}" -eq 0 ]; then
             echo "::error::No successful CI run for $GITHUB_SHA. Wait for CI to pass on this commit, then run the release again."
             exit 1
@@ -109,8 +113,13 @@ jobs:
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
           VERSION_NAME: ${{ inputs.version_name }}
         run: |
+          version_args=()
+          if [ -n "$VERSION_NAME" ]; then
+            [[ "$VERSION_NAME" =~ ^[0-9]+(\.[0-9]+){1,3}$ ]] || { echo "::error::version_name must look like 1.0.1, not '$VERSION_NAME'"; exit 1; }
+            version_args+=("-PversionName=$VERSION_NAME")
+          fi
           chmod +x gradlew
-          ./gradlew bundleRelease -PversionCode=$VERSION_CODE ${VERSION_NAME:+-PversionName=$VERSION_NAME} --no-daemon --stacktrace
+          ./gradlew bundleRelease -PversionCode="$VERSION_CODE" "${version_args[@]}" --no-daemon --stacktrace
 
       - name: Remove Upload Key
         if: always()
@@ -130,7 +139,7 @@ jobs:
           ls "$RUNNER_TEMP/whatsnew"
 
       - name: Upload to Google Play
-        uses: r0adkll/upload-google-play@v1
+        uses: r0adkll/upload-google-play@e738b9dd8f2476ea806d921b64aacd24f34515a5 # v1.1.5 (pinned: it receives the Play key)
         with:
           serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
           packageName: com.alphabetsafari.app

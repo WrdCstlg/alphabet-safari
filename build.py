@@ -12,6 +12,7 @@ import os
 import re
 import sys
 import argparse
+import hashlib
 import shutil
 import subprocess
 
@@ -58,6 +59,34 @@ def verify_play_listing():
 
 
 PRIVATE_USE = "[" + chr(0xE000) + "-" + chr(0xF8FF) + "]"  # built with chr(): editors may turn escapes into the characters
+
+
+ANDROID_NS = "{http://schemas.android.com/apk/res/android}"
+# Declared by AndroidX for the app's own receivers; the app holds it, nothing else can.
+APP_OWN_PERMISSION = "com.alphabetsafari.app.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+
+
+def manifest_permissions(path):
+    """Every permission an Android manifest asks for, read as XML: in a merged manifest an
+    element's attributes can sit on separate lines and in any order."""
+    import xml.etree.ElementTree as ET
+
+    root = ET.parse(path).getroot()
+    return {el.get(ANDROID_NS + "name") for el in root.iter()
+            if el.tag in ("uses-permission", "uses-permission-sdk-23")}
+
+
+def check_shipped_permissions(path):
+    """For CI: the merged release manifest (libraries can add permissions) asks for nothing
+    privacy.html and the Play Data safety answers don't cover."""
+    extra = sorted(manifest_permissions(path) - ALLOWED_ANDROID_PERMISSIONS - {APP_OWN_PERMISSION})
+    if extra:
+        log(f"Permissions the privacy policy doesn't cover: {', '.join(extra)}", symbol="FAIL")
+        if os.environ.get("GITHUB_ACTIONS"):
+            print(f"::error::Permissions the privacy policy doesn't cover: {', '.join(extra)}")
+        return False
+    log(f"Shipped permissions are covered by the privacy policy: {', '.join(sorted(manifest_permissions(path)))}", symbol="OK")
+    return True
 
 
 def verify_no_invisible_pictures():
@@ -129,8 +158,7 @@ def run_verify():
     # privacy.html and the Play Data safety answers say the Android app can't reach the
     # internet and asks only for vibration. A new permission must update those first.
     manifest = os.path.join(ANDROID_DIR, "app", "src", "main", "AndroidManifest.xml")
-    with open(manifest, encoding="utf-8") as f:
-        permissions = set(re.findall(r'<uses-permission\s+android:name="([^"]+)"', f.read()))
+    permissions = manifest_permissions(manifest)
     if permissions != ALLOWED_ANDROID_PERMISSIONS:
         log(f"Android permissions changed: {sorted(permissions)}. Update privacy.html and "
             "docs/google-play/README.md (Data safety), then ALLOWED_ANDROID_PERMISSIONS in build.py.", symbol="FAIL")
@@ -157,6 +185,28 @@ def build_site(out_dir=None):
     for f in CORE_FILES:
         shutil.copy2(os.path.join(BASE_DIR, f), out_dir)
     shutil.copytree(os.path.join(BASE_DIR, "assets"), os.path.join(out_dir, "assets"), dirs_exist_ok=True, ignore=ASSET_IGNORE)
+
+    # The service worker keeps clips and images cache-first under CACHE_NAME, so name the cache
+    # after what is published: any changed file then reaches returning visitors.
+    digest = hashlib.sha256()
+    for dirpath, _, files in sorted(os.walk(out_dir)):
+        for name in sorted(files):
+            if name != "sw.js":
+                path = os.path.join(dirpath, name)
+                digest.update(os.path.relpath(path, out_dir).replace(os.sep, "/").encode())
+                with open(path, "rb") as f:
+                    digest.update(f.read())
+    sw_path = os.path.join(out_dir, "sw.js")
+    with open(sw_path, encoding="utf-8", newline="") as f:
+        sw_text = f.read()
+    sw_text, stamped = re.subn(r"const CACHE_NAME = '[^']*';",
+                               f"const CACHE_NAME = 'alphabet-safari-{digest.hexdigest()[:10]}';", sw_text)
+    if stamped != 1:
+        log("sw.js has no CACHE_NAME to stamp", symbol="FAIL")
+        return False
+    with open(sw_path, "w", encoding="utf-8", newline="") as f:
+        f.write(sw_text)
+
     count = sum(len(files) for _, _, files in os.walk(out_dir))
     log(f"Web site staged in {out_dir} ({count} files)", symbol="SITE")
     return True
@@ -204,12 +254,14 @@ def main():
     parser.add_argument("--android", action="store_true", help="Build Android APK")
     parser.add_argument("--all", action="store_true", help="Build both Windows and Android")
     parser.add_argument("--site", action="store_true", help="Stage the web app into _site/ for GitHub Pages")
+    parser.add_argument("--check-permissions", metavar="MANIFEST",
+                        help="Fail if a (merged) Android manifest asks for a permission the privacy policy doesn't cover")
     parser.add_argument("--site-dir", metavar="DIR",
                         help="Stage the web app into DIR instead (the iOS app's build phase uses this)")
 
     args = parser.parse_args()
 
-    if not any([args.sync, args.verify, args.windows, args.android, args.all, args.site, args.site_dir]):
+    if not any([args.sync, args.verify, args.windows, args.android, args.all, args.site, args.site_dir, args.check_permissions]):
         # Default behavior: sync and verify
         run_sync()
         verified = run_verify()
@@ -225,6 +277,8 @@ def main():
         sys.exit(1)
     # A failed build must fail the command, or CI goes green without an artifact.
     ok = True
+    if args.check_permissions:
+        ok = check_shipped_permissions(args.check_permissions) and ok
     if args.site or args.site_dir:
         ok = build_site(args.site_dir) and ok
     if args.windows or args.all:

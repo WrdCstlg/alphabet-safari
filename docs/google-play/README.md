@@ -41,8 +41,12 @@ person (accounts, keys, Play Console forms) and the answers to give in Play Cons
       service account and download a JSON key.
    2. In Play Console, *Users and permissions > Invite new users*: the service account's email,
       with *Release apps to testing tracks* (and *Release to production* if wanted) for this app.
-   3. Save the JSON as the repository (or `google-play` environment) secret `PLAY_SERVICE_ACCOUNT_JSON`.
-   4. Then: *Actions > Release to Google Play > Run workflow*. Use status `draft` until the app's
+   3. In GitHub, *Settings > Environments > New environment* `google-play`: under *Deployment
+      branches* allow only `main`, and add yourself as a *Required reviewer*. Save the JSON there
+      as the secret `PLAY_SERVICE_ACCOUNT_JSON` (not as a repository secret), so only an approved
+      run from `main` can use it.
+   4. Then: *Actions > Release to Google Play > Run workflow* (from `main`; the workflow refuses
+      any other branch and any commit whose CI on `main` didn't pass). Use status `draft` until the app's
       first release has been published, `completed` after.
 8. **Closed test → production.** Promote the build to a closed track, invite at least 12 testers,
    keep them opted in for 14 days, then apply for production access from the dashboard.

@@ -2601,6 +2601,15 @@
     stopAllSpeechAndAudio();
     if (state.jukeboxPlaying) toggleJukebox();
   };
+  // When the on-screen keyboard makes the page shorter (the Android app resizes it), keep the
+  // field being typed in on screen; it can otherwise sit under the keyboard.
+  window.addEventListener('resize', () => {
+    const field = document.activeElement;
+    if (field && field.matches && field.matches('input[type="text"], input:not([type]), textarea')) {
+      field.scrollIntoView({ block: 'center', behavior: 'instant' });
+    }
+  });
+
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) window.AlphabetSafariPause();
   });

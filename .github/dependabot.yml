@@ -18,3 +18,7 @@ updates:
     directory: /android
     schedule: { interval: monthly }
     groups: { android: { patterns: ["*"] } }
+    ignore:
+      # 1.18 and later need compileSdk 37; the app builds against 36 (Play's current target).
+      - dependency-name: "androidx.core:core-ktx"
+        versions: [">=1.18"]

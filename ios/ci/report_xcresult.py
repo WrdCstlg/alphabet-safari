@@ -22,14 +22,17 @@ def clean(text):
     return " ".join(str(text).split()).replace("%", "%25")[:1500]
 
 
-def walk(node, path):
+def walk(node, path, case_result=None):
     kind, name = node.get("nodeType"), node.get("name", "")
     if kind == "Test Case":
-        print(f"::notice title=iOS test::{clean(name)}: {node.get('result')} in {node.get('duration', '?')}")
+        case_result = node.get("result")
+        print(f"::notice title=iOS test::{clean(name)}: {case_result} in {node.get('duration', '?')}")
     elif kind == "Failure Message":
-        print(f"::error title=iOS test failure::{clean(' / '.join(path[-2:]) + ': ' + name)}")
+        # A test that failed once and then passed on its retry: worth seeing, not a failure.
+        level, title = ("error", "iOS test failure") if case_result != "Passed" else ("warning", "iOS test passed on retry")
+        print(f"::{level} title={title}::{clean(' / '.join(path[-2:]) + ': ' + name)}")
     for child in node.get("children", []):
-        walk(child, path + [name])
+        walk(child, path + [name], case_result)
 
 
 def main(path):

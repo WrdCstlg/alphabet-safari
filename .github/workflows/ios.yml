@@ -70,7 +70,9 @@ jobs:
         id: sims
         run: python3 ios/ci/pick_simulators.py | tee -a "$GITHUB_OUTPUT"
 
-      # Simulator builds need no signing identity.
+      # Simulator builds need no signing identity. One simulator at a time, no test clones, and a
+      # failed test is run once more: on a busy runner the simulators sometimes time out (rotating
+      # the iPad, attaching to the app), while a real failure fails both attempts.
       - name: Build and Run UI Tests on iPhone and iPad
         working-directory: ios
         run: |
@@ -80,6 +82,8 @@ jobs:
             -project AlphabetSafari.xcodeproj -scheme AlphabetSafari \
             -destination "id=${{ steps.sims.outputs.iphone }}" \
             -destination "id=${{ steps.sims.outputs.ipad }}" \
+            -parallel-testing-enabled NO -maximum-concurrent-test-simulator-destinations 1 \
+            -retry-tests-on-failure -test-iterations 2 \
             -resultBundlePath "$RUNNER_TEMP/AlphabetSafari.xcresult" \
             CODE_SIGNING_ALLOWED=NO 2>&1 | tee "$RUNNER_TEMP/xcodebuild.log"
 

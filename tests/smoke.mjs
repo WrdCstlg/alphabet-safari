@@ -565,6 +565,28 @@ await check('phone (375px): header buttons fit on screen, trace strip keeps the 
   }
 });
 
+// The Android app makes the page shorter when the on-screen keyboard opens (412x915 -> 412x530 on
+// the CI emulator); the name field being typed in must end up on screen, not under the keyboard.
+await check('when the keyboard makes the page shorter, the field being typed in stays on screen', async () => {
+  const ctx = await browser.newContext({ viewport: { width: 412, height: 915 }, hasTouch: true, serviceWorkers: 'block' });
+  const p = await ctx.newPage();
+  try {
+    await p.goto(`${base}/index.html`);
+    await p.waitForSelector('#letters-grid .grid-letter-card');
+    await p.click('#btn-gender');
+    await p.click('#input-child-name');
+    await p.setViewportSize({ width: 412, height: 530 });
+    await p.waitForTimeout(400);
+    const r = await p.evaluate(() => {
+      const box = document.getElementById('input-child-name').getBoundingClientRect();
+      return { top: Math.round(box.top), bottom: Math.round(box.bottom), height: window.innerHeight };
+    });
+    assert(r.top >= 0 && r.bottom <= r.height, `field at ${r.top}-${r.bottom}px in a ${r.height}px page`);
+  } finally {
+    await ctx.close();
+  }
+});
+
 // axe-core, the usual WCAG checker, over every screen in both languages: no critical or serious
 // problems (unlabelled controls, low contrast, controls nested in controls).
 await check('accessibility: no critical or serious axe-core findings on any screen', async () => {

@@ -18,8 +18,10 @@ copied into `ios/`: at build time Xcode stages the web files from the repo root
 from changes. It generates the project, builds it, and runs the UI tests on the largest iPhone
 and iPad simulators. The self-test (`AlphabetSafariUITests/selftest.js`, the counterpart of
 `tests/android-device.mjs`) checks the native bridge, recorded clips, fonts (including the drawn
-pomegranate), speech, that the internet is blocked, the privacy policy, the layout in portrait
-and landscape, and that the chosen language survives a relaunch. Its report and any errors appear
+pomegranate), that speech is really spoken, that the internet is blocked (only counted when the
+test machine itself is online), the privacy policy (iPhone/iPad parts only), the layout in
+portrait and landscape, that the chosen language survives a relaunch, and that Parents Corner's
+"Erase Everything" asks first (a native dialog the test answers) and then removes the child's data. Its report and any errors appear
 as annotations on the run; screenshots are in the `AlphabetSafari-iOS-Test-Results` artifact.
 
 ## Building on a Mac
@@ -37,6 +39,13 @@ cd ios && xcodegen generate && open AlphabetSafari.xcodeproj
 - **No network:** a content rule blocks every `http(s)`/`ws(s)` request inside the web view, so
   the privacy policy's "no internet" promise holds on iOS too (iOS has no internet permission
   to leave out, as Android does).
+- **Dialogs:** the page's `alert()`/`confirm()` are native dialogs (`WKUIDelegate`); without them
+  WebKit cancels every `confirm()`, and "Erase Everything" did nothing.
+- **Voices:** only Apple's own voices (all on-device), never the novelty voices or Personal Voice;
+  the requested region first, then the system's default at the best installed quality.
+- **Background:** speech queued by a page timer after the app leaves the screen is refused.
+- **In-app privacy policy:** shows only the iPhone/iPad parts (`privacy.html?platform=ios`); App
+  Store review asks apps not to name other platforms.
 - **Safe area:** the web view sits inside the safe area natively; the page's own
   `env(safe-area-inset-*)` padding is for the home-screen web app in Safari.
 
@@ -44,4 +53,6 @@ cd ios && xcodegen generate && open AlphabetSafari.xcodeproj
 
 1. Signing and TestFlight uploads from CI with an App Store Connect API key.
 2. App Store listing (reusing the English and Arabic Play text), screenshots at Apple's sizes,
-   App Privacy answer "Data Not Collected", age rating 4+, Kids category, review.
+   App Privacy answer "Data Not Collected", age rating 4+, Kids category, review. In the review
+   notes, point out what makes it an app rather than a website (guideline 4.2): all content works
+   offline, speech and haptics are native, and Parents Corner sits behind a parental gate.

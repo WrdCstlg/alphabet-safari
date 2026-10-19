@@ -7,9 +7,9 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
     func application(_ application: UIApplication,
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // The letter sounds are the lesson, so they play even with the ring/silent switch on.
-        // To follow the switch instead, use .ambient.
+        // To follow the switch instead, use .ambient. The session isn't activated here: it
+        // becomes active with the first sound, so opening the app doesn't stop a parent's music.
         try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .default)
-        try? AVAudioSession.sharedInstance().setActive(true)
         return true
     }
 

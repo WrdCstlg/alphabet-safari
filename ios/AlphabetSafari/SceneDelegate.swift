@@ -16,4 +16,8 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     func sceneWillResignActive(_ scene: UIScene) {
         (window?.rootViewController as? WebViewController)?.pause()
     }
+
+    func sceneDidBecomeActive(_ scene: UIScene) {
+        (window?.rootViewController as? WebViewController)?.resume()
+    }
 }

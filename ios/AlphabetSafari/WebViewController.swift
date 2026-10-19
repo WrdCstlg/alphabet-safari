@@ -33,6 +33,7 @@ final class WebViewController: UIViewController, WKNavigationDelegate {
 
         webView = WKWebView(frame: .zero, configuration: configuration)
         webView.navigationDelegate = self
+        webView.uiDelegate = self
         webView.isOpaque = false
         webView.backgroundColor = .clear
         webView.scrollView.backgroundColor = .clear
@@ -77,10 +78,16 @@ final class WebViewController: UIViewController, WKNavigationDelegate {
         webView.loadFileURL(wwwURL.appendingPathComponent("index.html"), allowingReadAccessTo: wwwURL)
     }
 
-    /// The app is going to the background: stop talking and playing.
+    /// The app is going to the background: stop talking and playing, and refuse phrases a page
+    /// timer would start a moment later.
     func pause() {
+        bridge.paused = true
         bridge.stopSpeaking()
         webView.evaluateJavaScript("window.AlphabetSafariPause && window.AlphabetSafariPause()", completionHandler: nil)
+    }
+
+    func resume() {
+        bridge.paused = false
     }
 
     // Full screen for small hands: no status bar, the home indicator fades, and a swipe at a
@@ -170,4 +177,31 @@ final class WebViewController: UIViewController, WKNavigationDelegate {
         ])
     }
     #endif
+}
+
+// MARK: - Dialogs
+
+/// The page's alert() and confirm() as native dialogs. Without a UI delegate WebKit answers
+/// confirm() with Cancel, so Parents Corner's "Erase Everything" and "Reset Progress" did
+/// nothing. Button titles follow the page's language (its message is Arabic or English).
+extension WebViewController: WKUIDelegate {
+    private func titles(for message: String) -> (ok: String, cancel: String) {
+        message.range(of: #"\p{Arabic}"#, options: .regularExpression) != nil ? ("نعم", "إلغاء") : ("OK", "Cancel")
+    }
+
+    func webView(_ webView: WKWebView, runJavaScriptAlertPanelWithMessage message: String,
+                 initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping () -> Void) {
+        let alert = UIAlertController(title: nil, message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: titles(for: message).ok, style: .default) { _ in completionHandler() })
+        present(alert, animated: true)
+    }
+
+    func webView(_ webView: WKWebView, runJavaScriptConfirmPanelWithMessage message: String,
+                 initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping (Bool) -> Void) {
+        let names = titles(for: message)
+        let alert = UIAlertController(title: nil, message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: names.cancel, style: .cancel) { _ in completionHandler(false) })
+        alert.addAction(UIAlertAction(title: names.ok, style: .destructive) { _ in completionHandler(true) })
+        present(alert, animated: true)
+    }
 }

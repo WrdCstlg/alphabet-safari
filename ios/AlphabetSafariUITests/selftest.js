@@ -36,6 +36,17 @@ function click(selector) {
   el.click();
 }
 
+async function openParentsCorner() {
+  click('#btn-parents');
+  await sleep(300);
+  const [a, b] = $('#gate-target-num').textContent.split('+').map(n => parseInt(n, 10));
+  const answer = [...document.querySelectorAll('#gate-options .gate-btn')].find(btn => btn.textContent.trim() === String(a + b));
+  assert(answer, 'no button with the right answer');
+  answer.click();
+  await sleep(300);
+  assert($('#parents-settings-view').offsetParent !== null, 'Parents Corner did not open');
+}
+
 // Header buttons on screen, tabs not overlapping, no sideways scroll, tracing toolbar in its card.
 async function layoutProblems() {
   const problems = [];
@@ -106,7 +117,8 @@ if (PHASE === 'first-launch') {
     assert(red > 500, `${red} red pixels`);
   });
 
-  await check('speech through AVSpeechSynthesizer reports back', async () => {
+  await check('speech through AVSpeechSynthesizer is really spoken', async () => {
+    const started = Date.now();
     const outcome = await new Promise(resolve => {
       const original = window.AlphabetSafariSpeechDone;
       window.AlphabetSafariSpeechDone = (id, ok) => {
@@ -118,33 +130,44 @@ if (PHASE === 'first-launch') {
       setTimeout(() => resolve('timeout'), 20000);
     });
     assert(outcome === 'spoken', `English speech: ${outcome}`);
+    // Reported done at once would mean cancelled, not said.
+    assert(Date.now() - started > 250, `"Hello" was over after ${Date.now() - started} ms`);
   });
 
-  await check('no internet: requests leaving the app are blocked', async () => {
-    const loaded = await new Promise(resolve => {
-      const img = new Image();
-      img.onload = () => resolve(true);
-      img.onerror = () => resolve(false);
-      setTimeout(() => resolve(false), 10000);
-      img.src = `https://www.apple.com/favicon.ico?selftest=${Date.now()}`;
+  if (NETWORK_ONLINE) {
+    await check('no internet: requests leaving the app are blocked', async () => {
+      const loaded = await new Promise(resolve => {
+        const img = new Image();
+        img.onload = () => resolve(true);
+        img.onerror = () => resolve(false);
+        setTimeout(() => resolve(false), 10000);
+        img.src = `https://www.apple.com/favicon.ico?selftest=${Date.now()}`;
+      });
+      assert(!loaded, 'an image loaded from the internet');
     });
-    assert(!loaded, 'an image loaded from the internet');
-  });
+  } else {
+    results.push(['(no-internet check skipped: the test machine was offline too)', null]);
+  }
 
-  await check('the privacy policy opens behind the parent gate', async () => {
-    click('#btn-parents');
-    await sleep(300);
-    const [a, b] = $('#gate-target-num').textContent.split('+').map(n => parseInt(n, 10));
-    const answer = [...document.querySelectorAll('#gate-options .gate-btn')].find(btn => btn.textContent.trim() === String(a + b));
-    assert(answer, 'no button with the right answer');
-    answer.click();
-    await sleep(300);
-    const frame = $('#privacy-frame');
-    const loaded = new Promise(resolve => frame.addEventListener('load', () => resolve(true), { once: true }));
-    click('#btn-privacy-policy');
-    assert(await Promise.race([loaded, sleep(10000).then(() => false)]), 'privacy.html did not load in its frame');
-    const doc = frame.contentDocument;
-    if (doc) assert(/does not collect, share or sell/.test(doc.body.textContent), 'policy text missing');
+  await check('the privacy policy opens behind the parent gate and names no other platform', async () => {
+    await openParentsCorner();
+    // privacy.html posts its visible text to the page it's framed in (file frames can't read
+    // each other directly).
+    const text = await new Promise(resolve => {
+      const onMessage = (e) => {
+        if (!e.data || typeof e.data.privacyPolicy !== 'string') return;
+        removeEventListener('message', onMessage);
+        resolve(e.data.privacyPolicy);
+      };
+      addEventListener('message', onMessage);
+      setTimeout(() => resolve(null), 10000);
+      click('#btn-privacy-policy');
+    });
+    assert(text, 'privacy.html did not load in its frame');
+    assert(/does not collect, share or sell/.test(text), 'policy text missing');
+    // App Store review asks apps not to name other platforms.
+    const others = text.match(/Android|Windows|Google|Microsoft|أندرويد|ويندوز/g);
+    assert(!others, `the in-app policy names ${[...new Set(others)].join(', ')}`);
     click('#modal-privacy .modal-close-btn');
     click('#modal-parents [data-close="modal-parents"]');
     await sleep(300);
@@ -170,6 +193,17 @@ if (PHASE === 'first-launch') {
     await waitFor('landscape', () => innerWidth > innerHeight, 10000);
     const problems = await layoutProblems();
     assert(problems.length === 0, problems.join(', '));
+  });
+} else if (PHASE === 'erase') {
+  localStorage.setItem('alpha_child_name', 'Mira');
+  localStorage.setItem('alpha_stars', '7');
+  await check('Parents Corner opens behind the parent gate', openParentsCorner);
+  // The UI test answers the confirmation this raises, then checks the result after a relaunch.
+  setTimeout(() => click('#btn-forget-child'), 500);
+} else if (PHASE === 'after-erase') {
+  await check("Erase Everything removed the child's name and progress", async () => {
+    assert(localStorage.getItem('alpha_child_name') === null, "the child's name is still stored");
+    assert(localStorage.getItem('alpha_stars') === null, 'the stars are still stored');
   });
 }
 

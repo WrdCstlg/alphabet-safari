@@ -10,11 +10,19 @@ final class AlphabetSafariUITests: XCTestCase {
         continueAfterFailure = false
     }
 
+    /// Whether this machine can reach the internet. Only then does "the app's requests were
+    /// blocked" prove the block works, rather than that there was no network to reach.
+    private static let online: Bool = {
+        guard let url = URL(string: "https://www.apple.com/favicon.ico") else { return false }
+        return (try? Data(contentsOf: url)) != nil
+    }()
+
     private func launch(phase: String) throws -> (app: XCUIApplication, report: String) {
         let url = try XCTUnwrap(Bundle(for: Self.self).url(forResource: "selftest", withExtension: "js"),
                                 "selftest.js is not in the test bundle")
         let app = XCUIApplication()
-        app.launchEnvironment["SELFTEST_JS"] = "const PHASE = '\(phase)';\n" + (try String(contentsOf: url, encoding: .utf8))
+        app.launchEnvironment["SELFTEST_JS"] = "const PHASE = '\(phase)'; const NETWORK_ONLINE = \(Self.online);\n"
+            + (try String(contentsOf: url, encoding: .utf8))
         app.launch()
         let label = app.staticTexts["selfTestResult"]
         XCTAssertTrue(label.waitForExistence(timeout: 120), "the in-app self-test never reported back")
@@ -37,6 +45,22 @@ final class AlphabetSafariUITests: XCTestCase {
         let second = try launch(phase: "relaunch")
         XCTAssertTrue(second.report.hasPrefix("PASS"), second.report)
         second.app.terminate()
+    }
+
+    /// Parents Corner's "Erase Everything" asks first (the page's confirm(), shown as a native
+    /// dialog), then removes the child's name and progress, as the privacy policy promises.
+    func testEraseEverything() throws {
+        let erase = try launch(phase: "erase")
+        XCTAssertTrue(erase.report.hasPrefix("PASS"), erase.report)
+        let dialog = erase.app.alerts.firstMatch
+        XCTAssertTrue(dialog.waitForExistence(timeout: 20), "no confirmation dialog before erasing")
+        dialog.buttons["OK"].tap()
+        sleep(2) // the page erases and reloads
+        erase.app.terminate()
+
+        let after = try launch(phase: "after-erase")
+        XCTAssertTrue(after.report.hasPrefix("PASS"), after.report)
+        after.app.terminate()
     }
 
     /// Children turn tablets and phones sideways: the layout must still fit, clear of the notch.
